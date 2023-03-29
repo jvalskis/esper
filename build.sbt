@@ -1,4 +1,8 @@
 val scala3Version = "3.2.2"
+val zioVersion = "2.0.10"
+val zioConfigVersion = "3.0.7"
+val sttpVersion = "4.0.0-M1"
+val circeVersion = "0.14.3"
 
 lazy val root = project
   .in(file("."))
@@ -9,10 +13,17 @@ lazy val root = project
     scalaVersion := scala3Version,
 
     libraryDependencies ++= Seq(
-      "dev.zio" %% "zio" % "2.0.10",
-      "dev.zio" %% "zio-streams" % "2.0.10",
+      "dev.zio" %% "zio" % zioVersion,
+      "dev.zio" %% "zio-streams" % zioVersion,
+      "dev.zio" %% "zio-nio" % "2.0.1",
       "dev.zio" %% "zio-json" % "0.4.2",
       "dev.zio" %% "zio-http" % "0.0.5",
+      "dev.zio" %% "zio-config" % zioConfigVersion,
+      "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
+      "dev.zio" %% "zio-config-magnolia" % zioConfigVersion,
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion,
       "org.scalameta" %% "munit" % "0.7.29" % Test
     )
   )
