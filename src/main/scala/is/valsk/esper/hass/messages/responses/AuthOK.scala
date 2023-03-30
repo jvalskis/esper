@@ -7,7 +7,7 @@ import zio.json.{DeriveJsonDecoder, JsonDecoder}
 case class AuthOK(
     `type`: String,
     ha_version: String,
-) extends HassMessage with HassResponseMessage
+) extends HassResponseMessage
 
 object AuthOK {
   implicit val decoder: JsonDecoder[AuthOK] = DeriveJsonDecoder.gen[AuthOK]

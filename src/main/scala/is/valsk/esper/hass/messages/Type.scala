@@ -5,7 +5,7 @@ import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 enum Type(val typeName: String) {
   case Auth extends Type("auth")
-  case DeviceRegistryList extends Type("config/device_registry")
+  case DeviceRegistryList extends Type("config/device_registry/list")
 
   case AuthRequired extends Type("auth_required")
   case AuthOK extends Type("auth_ok")
