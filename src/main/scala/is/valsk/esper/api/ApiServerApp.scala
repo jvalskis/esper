@@ -4,7 +4,7 @@ import is.valsk.esper.EsperConfig
 import is.valsk.esper.model.Device.encoder
 import is.valsk.esper.services.{DeviceRepository, InMemoryDeviceRepository}
 import zio.http.*
-import zio.http.model.Method
+import zio.http.model.{Method, Status}
 import zio.http.netty.NettyServerConfig
 import zio.json.*
 import zio.{Random, Task, ZIO, ZLayer}
@@ -23,7 +23,10 @@ class ApiServerApp(
 
     case Method.GET -> !! / "devices" / deviceId => for {
       device <- deviceRepository.get(deviceId)
-      response <- ZIO.succeed(Response.json(device.toJson))
+      response = device match {
+        case Some(value) => Response.json(value.toJson)
+        case None => Response.status(Status.NotFound)
+      }
     } yield response
   }
 
