@@ -1,6 +1,6 @@
 package is.valsk.esper.hass.messages
 
-import is.valsk.esper.hass.messages.HassMessageParser.ParseError
+import is.valsk.esper.hass.messages.MessageParser.ParseError
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 enum Type(val typeName: String) {

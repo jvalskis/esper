@@ -3,6 +3,7 @@ package is.valsk.esper.hass.messages
 import io.circe.*
 import io.circe.parser.*
 import io.netty.channel.{ChannelFactory, EventLoopGroup}
+import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
 import is.valsk.esper.hass.messages.responses.{AuthInvalid, AuthOK, AuthRequired, Result}
 import is.valsk.esper.hass.messages.{HassMessage, HassResponseMessage, Type}
@@ -22,26 +23,12 @@ import zio.stream.ZStream
 
 import java.io.IOException
 
-object HassMessageParser {
+trait MessageParser[T] {
 
-  def parseMessage(json: String): IO[ParseError, HassResponseMessage] = {
-    parse(json) match {
-      case Left(value) =>
-        ZIO.fail(ParseError(value.message, Some(value.underlying)))
-      case Right(value) =>
-        val parseResult = (value \\ "type").collectFirst(_.asString.map(Type.parse)).flatten match {
-          case Some(Right(Type.AuthRequired)) => json.fromJson[AuthRequired]
-          case Some(Right(Type.AuthOK)) => json.fromJson[AuthOK]
-          case Some(Right(Type.AuthInvalid)) => json.fromJson[AuthInvalid]
-          case Some(Right(Type.Result)) => json.fromJson[Result]
-          case Some(Left(error)) => Left(error.message)
-          case other => Left(s"Unsupported type: $other")
-        }
-        parseResult match
-          case Left(value) => ZIO.fail(ParseError(value))
-          case Right(value) => ZIO.succeed(value)
-    }
-  }
+  def parseMessage(json: String): IO[ParseError, T]
+}
+
+object MessageParser {
 
   case class ParseError(message: String, underlying: Option[Throwable] = None) extends Exception(message, underlying.orNull)
 }

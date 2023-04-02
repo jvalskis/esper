@@ -26,7 +26,7 @@ object EsperConfig {
     }
   }
 
-  def port: ZIO[EsperConfig, Throwable, Int] = ZIO.serviceWith[EsperConfig](_.port)
+  def port: RIO[EsperConfig, Int] = ZIO.serviceWith[EsperConfig](_.port)
 
-  def hassConfig: ZIO[EsperConfig, Throwable, HassConfig] = ZIO.serviceWith[EsperConfig](_.hassConfig)
+  def hassConfig: RIO[EsperConfig, HassConfig] = ZIO.serviceWith[EsperConfig](_.hassConfig)
 }

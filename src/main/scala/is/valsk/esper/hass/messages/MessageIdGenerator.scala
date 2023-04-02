@@ -2,17 +2,12 @@ package is.valsk.esper.hass.messages
 
 import zio.*
 
-class MessageIdGenerator {
+trait MessageIdGenerator {
 
-  private val messageId = Ref.make[Int](1)
-
-  def generate(): UIO[Int] = for {
-    messageIdRef <- messageId
-    id <- messageIdRef.getAndUpdate(_ + 1)
-  } yield id
+  def generate(): UIO[Int]
 }
 
 object MessageIdGenerator {
 
-  val layer: ULayer[MessageIdGenerator] = ZLayer.succeed(MessageIdGenerator())
+  def generate(): RIO[MessageIdGenerator, Int] = ZIO.serviceWithZIO[MessageIdGenerator](_.generate())
 }

@@ -5,18 +5,30 @@ import is.valsk.esper.hass.HassWebsocketClient
 import zio.*
 import zio.http.*
 
-object HassWebsocketApp {
+class HassWebsocketApp(
+    hassWebsocketClient: HassWebsocketClient,
+    esperConfig: EsperConfig,
+) {
 
-  def apply(): ZIO[EsperConfig, Throwable, Nothing] = for {
-    esperConfig <- ZIO.service[EsperConfig]
-    client = HassWebsocketClient.hassWebsocketClient
-      .provideLayer(EsperConfig.layer)
+  def run: ZIO[Any, Throwable, Nothing] = {
+    val client = hassWebsocketClient
+      .get
       .toSocketApp
       .connect(esperConfig.hassConfig.webSocketUrl)
-    app <- (client *> ZIO.never)
-      .provide(
-        Client.default,
-        Scope.default,
-      )
-  } yield app
+    (client *> ZIO.never).provide(
+      Client.default,
+      Scope.default,
+    )
+  }
+}
+
+object HassWebsocketApp {
+
+  val layer: URLayer[EsperConfig & HassWebsocketClient, HassWebsocketApp] = ZLayer {
+    for {
+      esperConfig <- ZIO.service[EsperConfig]
+      hassWebsocketClient <- ZIO.service[HassWebsocketClient]
+    } yield HassWebsocketApp(hassWebsocketClient, esperConfig)
+  }
+
 }

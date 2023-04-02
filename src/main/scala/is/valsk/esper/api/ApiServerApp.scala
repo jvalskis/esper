@@ -1,33 +1,52 @@
 package is.valsk.esper.api
 
 import is.valsk.esper.EsperConfig
+import is.valsk.esper.model.Device.encoder
+import is.valsk.esper.services.{DeviceRepository, InMemoryDeviceRepository}
+import zio.http.*
 import zio.http.model.Method
 import zio.http.netty.NettyServerConfig
-import zio.http.*
-import zio.{Random, ZIO}
+import zio.json.*
+import zio.{Random, Task, ZIO, ZLayer}
+
+class ApiServerApp(
+    deviceRepository: DeviceRepository,
+    esperConfig: EsperConfig,
+) {
+
+  private val zApp: HttpApp[Any, Response] = Http.collectZIO[Request] {
+    case Method.GET -> !! / "devices" =>
+      for {
+        deviceList <- deviceRepository.list
+        response <- ZIO.succeed(Response.json(deviceList.toJson))
+      } yield response
+
+    case Method.GET -> !! / "devices" / deviceId => for {
+      device <- deviceRepository.get(deviceId)
+      response <- ZIO.succeed(Response.json(device.toJson))
+    } yield response
+  }
+
+  def run: Task[Nothing] =
+    val serverConfigLayer = ServerConfig.live(
+      ServerConfig.default.port(esperConfig.port)
+    )
+    val httpServer = Server.install(zApp).flatMap { port =>
+      ZIO.logInfo(s"Starting server on http://localhost:$port")
+    }
+    (httpServer *> ZIO.never).provide(
+      serverConfigLayer,
+      NettyServerConfig.live,
+      Server.customized,
+    )
+}
 
 object ApiServerApp {
 
-  private val app: HttpApp[Any, Nothing] = Http.collect[Request] {
-    case Method.GET -> !! / "text" => Response.text("Hello World!")
+  val layer: ZLayer[DeviceRepository with EsperConfig, Throwable, ApiServerApp] = ZLayer {
+    for {
+      esperConfig <- ZIO.service[EsperConfig]
+      deviceRepository <- ZIO.service[DeviceRepository]
+    } yield ApiServerApp(deviceRepository, esperConfig)
   }
-
-  private val zApp: UHttpApp = Http.collectZIO[Request] {
-    case Method.POST -> !! / "text" => Random.nextIntBetween(3, 5).map(n => Response.text("Hello" * n + " World!"))
-  }
-
-  def apply(): ZIO[EsperConfig, Throwable, Nothing] = for {
-    port <- EsperConfig.port
-    serverConfigLayer = ServerConfig.live(
-      ServerConfig.default.port(port)
-    )
-    httpServer = Server.install(app ++ zApp).flatMap { port =>
-      ZIO.logInfo(s"Starting server on http://localhost:$port")
-    }
-    server <- (httpServer *> ZIO.never).provide(
-      serverConfigLayer,
-      NettyServerConfig.live,
-      Server.customized
-    )
-  } yield server
 }
