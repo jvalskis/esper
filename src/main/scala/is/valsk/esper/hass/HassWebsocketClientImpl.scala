@@ -1,7 +1,6 @@
 package is.valsk.esper.hass
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.hass.mappers.toDomain
 import is.valsk.esper.hass.messages.MessageIdGenerator
 import is.valsk.esper.hass.messages.commands.DeviceRegistryList
 import is.valsk.esper.hass.messages.responses.Result

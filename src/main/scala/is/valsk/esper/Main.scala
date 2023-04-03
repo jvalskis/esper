@@ -1,12 +1,15 @@
 package is.valsk.esper
 
 import is.valsk.esper.api.ApiServerApp
+import is.valsk.esper.device.shelly.ShellyDevice
+import is.valsk.esper.hass.device.DeviceManufacturerHandler.Manufacturer
+import is.valsk.esper.hass.device.{DeviceManufacturerHandler, InMemoryManufacturerRegistry}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassWebsocketApp, HassWebsocketClient, HassWebsocketClientImpl}
 import is.valsk.esper.model.Device
-import is.valsk.esper.services.{DeviceRepository, InMemoryDeviceRepository}
+import is.valsk.esper.services.{DeviceRepository, InMemoryDeviceRepository, ScheduleService}
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -41,6 +44,14 @@ object Main extends ZIOAppDefault {
     } yield List(protocolHandler, textHandler, unhandledMessageHandler)
   }
 
+  private val manufacturerRegistryLayer: URLayer[ShellyDevice, Map[Manufacturer, DeviceManufacturerHandler]] = ZLayer {
+    for {
+      shellyDevice <- ZIO.service[ShellyDevice]
+    } yield Map(
+      "Shelly" -> shellyDevice
+    )
+  }
+
   override val run: URIO[Any, ExitCode] = for {
     x <- ZIO.scoped(scopedApp)
       .provide(
@@ -57,8 +68,11 @@ object Main extends ZIOAppDefault {
         hassResponseMessageHandlerLayer,
         HassResponseMessageParser.layer,
         TextHandler.layer,
-        ProtocolHandler.layer, 
-        UnhandledMessageHandler.layer
+        ProtocolHandler.layer,
+        UnhandledMessageHandler.layer,
+        InMemoryManufacturerRegistry.layer,
+        manufacturerRegistryLayer,
+        ShellyDevice.layer,
       )
       .logError("Failed to start the application")
       .exitCode

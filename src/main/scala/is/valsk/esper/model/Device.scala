@@ -10,8 +10,9 @@ case class Device(
     url: DeviceUrl,
     name: String,
     nameByUser: Option[String],
-    swVersion: Option[String],
-    hwVersion: Option[String],
+    model: String,
+    hardware: Option[String],
+    softwareVersion: Option[String],
     manufacturer: String,
 )
 
