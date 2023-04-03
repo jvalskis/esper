@@ -1,8 +1,7 @@
 val scala3Version = "3.2.2"
 val zioVersion = "2.0.10"
 val zioConfigVersion = "3.0.7"
-val sttpVersion = "4.0.0-M1"
-val circeVersion = "0.14.3"
+val circeVersion = "0.14.5"
 
 lazy val root = project
   .in(file("."))
