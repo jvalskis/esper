@@ -18,7 +18,7 @@ import zio.json.*
 class TextHandler(
     handleHassMessages: PartialHassResponseMessageHandler,
     messageParser: MessageParser[HassResponseMessage],
-) extends ProtocolHandler {
+) extends ChannelHandler {
 
   override def get: PartialChannelHandler = {
     case ChannelEvent(channel, ChannelRead(WebSocketFrame.Text(json))) =>
