@@ -1,8 +1,9 @@
 package is.valsk.esper.api
 
 import is.valsk.esper.EsperConfig
+import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.model.Device.encoder
-import is.valsk.esper.services.{DeviceRepository, InMemoryDeviceRepository}
+import is.valsk.esper.services.{DeviceRepository, FirmwareDownloader, InMemoryDeviceRepository}
 import zio.http.*
 import zio.http.model.{Method, Status}
 import zio.http.netty.NettyServerConfig
@@ -11,6 +12,7 @@ import zio.{Random, Task, ZIO, ZLayer}
 
 class ApiServerApp(
     deviceRepository: DeviceRepository,
+    firmwareDownloader: FirmwareDownloader,
     esperConfig: EsperConfig,
 ) {
 
@@ -28,6 +30,11 @@ class ApiServerApp(
         case None => Response.status(Status.NotFound)
       }
     } yield response
+
+    case Method.GET -> !! / "firmware" / manufacturer / model => for {
+      _ <- firmwareDownloader.downloadFirmware(DeviceDescriptor(manufacturer, None, model))
+        .mapError(_ => Response.status(Status.BadRequest))
+    } yield Response.status(Status.Ok)
   }
 
   def run: Task[Nothing] =
@@ -46,10 +53,11 @@ class ApiServerApp(
 
 object ApiServerApp {
 
-  val layer: ZLayer[DeviceRepository with EsperConfig, Throwable, ApiServerApp] = ZLayer {
+  val layer: ZLayer[DeviceRepository & EsperConfig & FirmwareDownloader, Throwable, ApiServerApp] = ZLayer {
     for {
       esperConfig <- ZIO.service[EsperConfig]
       deviceRepository <- ZIO.service[DeviceRepository]
-    } yield ApiServerApp(deviceRepository, esperConfig)
+      firmwareDownloader <- ZIO.service[FirmwareDownloader]
+    } yield ApiServerApp(deviceRepository, firmwareDownloader, esperConfig)
   }
 }

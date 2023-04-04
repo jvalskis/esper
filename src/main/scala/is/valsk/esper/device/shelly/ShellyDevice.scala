@@ -2,15 +2,21 @@ package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.api.RefType
 import eu.timepit.refined.string.Url
+import is.valsk.esper.device.DeviceDescriptor
+import is.valsk.esper.errors.FirmwareDownloadError
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.messages.responses.HassResult
+import is.valsk.esper.http.HttpClient
 import is.valsk.esper.model.Device
 import is.valsk.esper.model.Device.DeviceUrl
-import zio.{IO, ULayer, ZIO, ZLayer}
+import zio.http.{Client, ClientConfig}
+import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
 
-class ShellyDevice extends DeviceManufacturerHandler {
+class ShellyDevice(httpClient: HttpClient) extends DeviceManufacturerHandler {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
+
+  private def getShellyFirmwareUrl(model: String) = s"http://archive.shelly-tools.de/archive.php?type=$model"
 
   override def toDomain(hassDevice: HassResult): IO[String, Device] = ZIO.fromEither(
     for {
@@ -29,6 +35,16 @@ class ShellyDevice extends DeviceManufacturerHandler {
     )
   )
 
+  override def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[FirmwareDownloadError, String] = {
+    val firmwareUrl = getShellyFirmwareUrl(deviceDescriptor.model)
+    for {
+      _ <- ZIO.logInfo(s"Getting firmware from: $firmwareUrl")
+      result <- httpClient.get(firmwareUrl)
+        .flatMap(_.body.asString)
+        .mapError(FirmwareDownloadError(deviceDescriptor, _))
+    } yield result
+  }
+
   private def resolveHardwareModel(hassDevice: HassResult) = {
     hassDevice.hw_version
       .flatMap {
@@ -42,5 +58,9 @@ class ShellyDevice extends DeviceManufacturerHandler {
 
 object ShellyDevice {
 
-  def layer: ULayer[ShellyDevice] = ZLayer.succeed(ShellyDevice())
+  val layer: URLayer[HttpClient, ShellyDevice] = ZLayer {
+    for {
+      httpClient <- ZIO.service[HttpClient]
+    } yield ShellyDevice(httpClient)
+  }
 }
