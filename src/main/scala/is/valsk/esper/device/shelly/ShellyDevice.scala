@@ -3,14 +3,22 @@ package is.valsk.esper.device.shelly
 import eu.timepit.refined.api.RefType
 import eu.timepit.refined.string.Url
 import is.valsk.esper.device.DeviceDescriptor
-import is.valsk.esper.errors.FirmwareDownloadError
+import is.valsk.esper.device.shelly.ShellyDevice.ShellyFirmwareEntry
+import is.valsk.esper.errors.FirmwareDownloadFailed
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
+import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
+import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.http.HttpClient
 import is.valsk.esper.model.Device
 import is.valsk.esper.model.Device.DeviceUrl
+import is.valsk.esper.utils.SemanticVersion
 import zio.http.{Client, ClientConfig}
+import zio.json.*
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
+
+import scala.annotation.tailrec
+import scala.util.Try
 
 class ShellyDevice(httpClient: HttpClient) extends DeviceManufacturerHandler {
 
@@ -35,14 +43,19 @@ class ShellyDevice(httpClient: HttpClient) extends DeviceManufacturerHandler {
     )
   )
 
-  override def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[FirmwareDownloadError, String] = {
+  override def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[FirmwareDownloadFailed, FirmwareDescriptor] = {
     val firmwareUrl = getShellyFirmwareUrl(deviceDescriptor.model)
     for {
       _ <- ZIO.logInfo(s"Getting firmware from: $firmwareUrl")
-      result <- httpClient.get(firmwareUrl)
+      firmwareList <- httpClient.get(firmwareUrl)
         .flatMap(_.body.asString)
-        .mapError(FirmwareDownloadError(deviceDescriptor, _))
-    } yield result
+        .flatMap(response => ZIO
+          .fromEither(response.fromJson[Seq[ShellyFirmwareEntry]])
+          .mapError(ParseError(_))
+        )
+        .mapError(FirmwareDownloadFailed(deviceDescriptor, _))
+      latestFirmware = firmwareList.max
+    } yield FirmwareDescriptor(latestFirmware.file, latestFirmware.version.version)
   }
 
   private def resolveHardwareModel(hassDevice: HassResult) = {
@@ -62,5 +75,20 @@ object ShellyDevice {
     for {
       httpClient <- ZIO.service[HttpClient]
     } yield ShellyDevice(httpClient)
+  }
+
+  case class ShellyFirmwareEntry(
+      version: SemanticVersion,
+      file: String,
+  ) extends Ordered[ShellyFirmwareEntry] {
+
+    override def compare(that: ShellyFirmwareEntry): Int = version.compare(that.version)
+  }
+
+  object ShellyFirmwareEntry {
+
+    import is.valsk.esper.utils.SemanticVersion.decoder
+
+    implicit val decoder: JsonDecoder[ShellyFirmwareEntry] = DeriveJsonDecoder.gen[ShellyFirmwareEntry]
   }
 }

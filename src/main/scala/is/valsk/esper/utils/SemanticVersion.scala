@@ -1,7 +1,9 @@
 package is.valsk.esper.utils
 
-import scala.annotation.tailrec
+import is.valsk.esper.utils.SemanticVersion.SemanticVersionSegment
+import zio.json.JsonDecoder
 
+import scala.annotation.tailrec
 
 case class SemanticVersion(
     version: String,
@@ -30,17 +32,21 @@ case class SemanticVersion(
   }
 }
 
-case class SemanticVersionSegment(
-    number: Int,
-    suffix: String
-)
+object SemanticVersion {
+  implicit val decoder: JsonDecoder[SemanticVersion] = JsonDecoder[String].map(SemanticVersion(_))
 
-object SemanticVersionSegment {
+  case class SemanticVersionSegment(
+      number: Int,
+      suffix: String
+  )
 
-  def unapply(string: String): Option[SemanticVersionSegment] = {
-    val prefix = string.takeWhile(x => !x.isDigit)
-    val number = string.drop(prefix.length).takeWhile(_.isDigit)
-    val suffix = string.drop(prefix.length + number.length)
-    Some(SemanticVersionSegment(number.toIntOption.getOrElse(0), suffix))
+  object SemanticVersionSegment {
+
+    def unapply(string: String): Option[SemanticVersionSegment] = {
+      val prefix = string.takeWhile(x => !x.isDigit)
+      val number = string.drop(prefix.length).takeWhile(_.isDigit)
+      val suffix = string.drop(prefix.length + number.length)
+      Some(SemanticVersionSegment(number.toIntOption.getOrElse(0), suffix))
+    }
   }
 }

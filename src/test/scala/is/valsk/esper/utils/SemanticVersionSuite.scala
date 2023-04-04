@@ -1,18 +1,6 @@
-package is.valsk.esper
+package is.valsk.esper.utils
 
-import io.circe
-import io.circe.Decoder
-import io.circe.*
-import io.circe.generic.semiauto.*
-import io.circe.generic.semiauto.deriveDecoder
-import is.valsk.esper.hass.messages.Type.*
-import is.valsk.esper.hass.messages.responses.AuthRequired.decoder
-import zio.json.*
-import io.circe.syntax.*
-import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
-import is.valsk.esper.hass.messages.responses.{AuthRequired, Result}
 import is.valsk.esper.utils.SemanticVersion
-import munit.Suite
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*

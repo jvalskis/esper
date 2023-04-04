@@ -7,4 +7,4 @@ sealed trait EsperError extends Exception
 
 case class ManufacturerNotSupported(manufacturer: Manufacturer) extends EsperError
 
-case class FirmwareDownloadError(deviceDescriptor: DeviceDescriptor, cause: Throwable) extends EsperError
+case class FirmwareDownloadFailed(deviceDescriptor: DeviceDescriptor, cause: Throwable) extends EsperError
