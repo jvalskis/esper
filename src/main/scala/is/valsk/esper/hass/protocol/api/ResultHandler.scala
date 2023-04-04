@@ -1,7 +1,7 @@
 package is.valsk.esper.hass.protocol.api
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.device.ManufacturerRegistry
+import is.valsk.esper.device.ManufacturerRepository
 import is.valsk.esper.device.shelly.ShellyDevice
 import is.valsk.esper.errors.ManufacturerNotSupported
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
@@ -12,7 +12,7 @@ import is.valsk.esper.hass.messages.{HassResponseMessage, MessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import is.valsk.esper.hass.protocol.api.{HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.model.Device
-import is.valsk.esper.services.DeviceRepository
+import is.valsk.esper.services.{DeviceRepository, Repository}
 import is.valsk.esper.types.Manufacturer
 import zio.*
 import zio.http.*
@@ -23,7 +23,7 @@ import zio.json.*
 
 class ResultHandler(
     deviceRepository: DeviceRepository,
-    manufacturerRegistry: ManufacturerRegistry
+    manufacturerRegistry: ManufacturerRepository
 ) extends HassResponseMessageHandler {
 
   override def get: PartialHassResponseMessageHandler = {
@@ -31,7 +31,7 @@ class ResultHandler(
       ZIO.foreachDiscard(result.result.toSeq.flatten)(hassDevice =>
         val result = for {
           manufacturer <- ZIO.fromEither(Manufacturer.from(hassDevice.manufacturer)).mapError(ParseError(_))
-          result <- manufacturerRegistry.findHandler(manufacturer).flatMap {
+          result <- manufacturerRegistry.get(manufacturer).flatMap {
             case Some(deviceManufacturerHandler) => deviceManufacturerHandler.toDomain(hassDevice).either.flatMap {
               case Right(domainDevice) =>
                 addDeviceToRegistry(domainDevice)
@@ -52,10 +52,10 @@ class ResultHandler(
 }
 
 object ResultHandler {
-  val layer: URLayer[DeviceRepository & ManufacturerRegistry, ResultHandler] = ZLayer {
+  val layer: URLayer[DeviceRepository & ManufacturerRepository, ResultHandler] = ZLayer {
     for {
       deviceRepository <- ZIO.service[DeviceRepository]
-      manufacturerRegistry <- ZIO.service[ManufacturerRegistry]
+      manufacturerRegistry <- ZIO.service[ManufacturerRepository]
     } yield ResultHandler(deviceRepository, manufacturerRegistry)
   }
 }

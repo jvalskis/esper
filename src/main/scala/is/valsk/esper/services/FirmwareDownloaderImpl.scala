@@ -1,17 +1,17 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.device.{DeviceDescriptor, ManufacturerRegistry}
+import is.valsk.esper.device.{DeviceDescriptor, ManufacturerRepository}
 import is.valsk.esper.errors.{EsperError, ManufacturerNotSupported}
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
 
 class FirmwareDownloaderImpl(
     esperConfig: EsperConfig,
-    manufacturerRegistry: ManufacturerRegistry
+    manufacturerRegistry: ManufacturerRepository
 ) extends FirmwareDownloader {
 
   def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[EsperError, Unit] = for {
-    manufacturerHandler <- manufacturerRegistry.findHandler(deviceDescriptor.manufacturer).flatMap {
+    manufacturerHandler <- manufacturerRegistry.get(deviceDescriptor.manufacturer).flatMap {
       case Some(value) => ZIO.succeed(value)
       case None => ZIO.fail(ManufacturerNotSupported(deviceDescriptor.manufacturer))
     }
@@ -25,10 +25,10 @@ class FirmwareDownloaderImpl(
 
 object FirmwareDownloaderImpl {
 
-  val layer: URLayer[EsperConfig & ManufacturerRegistry, FirmwareDownloader] = ZLayer {
+  val layer: URLayer[EsperConfig & ManufacturerRepository, FirmwareDownloader] = ZLayer {
     for {
       esperConfig <- ZIO.service[EsperConfig]
-      manufacturerRegistry <- ZIO.service[ManufacturerRegistry]
+      manufacturerRegistry <- ZIO.service[ManufacturerRepository]
     } yield FirmwareDownloaderImpl(esperConfig, manufacturerRegistry)
   }
 }

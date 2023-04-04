@@ -4,7 +4,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.model.Device.encoder
-import is.valsk.esper.services.{DeviceRepository, FirmwareDownloader, InMemoryDeviceRepository}
+import is.valsk.esper.services.{DeviceRepository, FirmwareDownloader, InMemoryDeviceRepository, Repository}
 import zio.http.*
 import zio.http.model.{Method, Status}
 import zio.http.netty.NettyServerConfig
