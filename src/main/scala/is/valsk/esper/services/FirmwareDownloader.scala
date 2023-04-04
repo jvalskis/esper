@@ -8,6 +8,4 @@ trait FirmwareDownloader {
 
   def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[EsperError, Unit]
 
-  def hasLatestFirmware(deviceDescriptor: DeviceDescriptor): Boolean
-
 }

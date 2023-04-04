@@ -6,10 +6,10 @@ import zio.json.JsonDecoder
 import scala.annotation.tailrec
 
 case class SemanticVersion(
-    version: String,
+    value: String,
 ) extends Ordered[SemanticVersion] {
   override def compare(that: SemanticVersion): Int = {
-    compareSemantically(version.split("\\.").toList, that.version.split("\\.").toList)
+    compareSemantically(value.split("\\.").toList, that.value.split("\\.").toList)
   }
 
   @tailrec

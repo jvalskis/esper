@@ -1,7 +1,6 @@
 package is.valsk.esper
 
 import is.valsk.esper.api.ApiServerApp
-import is.valsk.esper.device.InMemoryManufacturerRepository
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDevice}
 import is.valsk.esper.types.Manufacturer
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
@@ -11,7 +10,8 @@ import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandle
 import is.valsk.esper.hass.{HassWebsocketApp, HassWebsocketClient, HassWebsocketClientImpl}
 import is.valsk.esper.http.HttpClient
 import is.valsk.esper.model.Device
-import is.valsk.esper.services.{Repository, FirmwareDownloaderImpl, InMemoryDeviceRepository, ScheduleService}
+import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
+import is.valsk.esper.services.{FirmwareDownloaderImpl}
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -72,7 +72,8 @@ object Main extends ZIOAppDefault {
         TextHandler.layer,
         ProtocolHandler.layer,
         UnhandledMessageHandler.layer,
-        InMemoryManufacturerRegistry.layer,
+        InMemoryManufacturerRepository.layer,
+        InMemoryFirmwareRepository.layer,
         manufacturerRegistryLayer,
         ShellyConfig.layer,
         ShellyDevice.layer,

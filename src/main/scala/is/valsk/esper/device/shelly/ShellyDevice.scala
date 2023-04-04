@@ -3,14 +3,14 @@ package is.valsk.esper.device.shelly
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.device.shelly.ShellyDevice.ShellyFirmwareEntry
-import is.valsk.esper.errors.FirmwareDownloadFailed
+import is.valsk.esper.errors.{EsperError, FirmwareDownloadError, FirmwareDownloadFailed, FirmwareDownloadLinkResolutionFailed, FailedToParseFirmwareResponse}
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.http.HttpClient
 import is.valsk.esper.model.Device
-import is.valsk.esper.types.UrlString
+import is.valsk.esper.types.{Model, UrlString}
 import is.valsk.esper.utils.SemanticVersion
 import zio.http.{Client, ClientConfig}
 import zio.json.*
@@ -21,12 +21,20 @@ import scala.util.Try
 
 class ShellyDevice(
     shellyConfig: ShellyConfig,
-    httpClient: HttpClient
+    httpClient: HttpClient,
 ) extends DeviceManufacturerHandler {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
 
-  private def getShellyFirmwareUrl(model: NonEmptyString) = shellyConfig.firmwareListUrlPattern.replace("{{model}}", model.toString)
+  private def getFirmwareListUrl(model: Model): Either[String, UrlString] = UrlString.from(
+    shellyConfig.firmwareListUrlPattern.replace("{{model}}", model.toString)
+  )
+
+  private def getFirmwareDownloadUrl(firmwareEntry: ShellyFirmwareEntry): Either[String, UrlString] = UrlString.from(
+    shellyConfig.firmwareDownloadUrlPattern
+      .replace("{{file}}", firmwareEntry.file)
+      .replace("{{version}}", firmwareEntry.version.value)
+  )
 
   override def toDomain(hassDevice: HassResult): IO[String, Device] = ZIO.fromEither(
     for {
@@ -49,19 +57,22 @@ class ShellyDevice(
     )
   )
 
-  override def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[FirmwareDownloadFailed, FirmwareDescriptor] = {
-    val firmwareUrl = getShellyFirmwareUrl(deviceDescriptor.model)
+  override def getFirmwareDownloadDetails(deviceDescriptor: DeviceDescriptor): IO[FirmwareDownloadError, FirmwareDescriptor] = {
     for {
-      _ <- ZIO.logInfo(s"Getting firmware from: $firmwareUrl")
-      firmwareList <- httpClient.get(firmwareUrl)
+      firmwareListUrl <- ZIO.fromEither(getFirmwareListUrl(deviceDescriptor.model))
+        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceDescriptor))
+      _ <- ZIO.logInfo(s"Getting firmware list from: $firmwareListUrl")
+      firmwareList <- httpClient.get(firmwareListUrl.toString)
         .flatMap(_.body.asString)
         .flatMap(response => ZIO
           .fromEither(response.fromJson[Seq[ShellyFirmwareEntry]])
-          .mapError(ParseError(_))
+          .mapError(FailedToParseFirmwareResponse(_, deviceDescriptor))
         )
-        .mapError(FirmwareDownloadFailed(deviceDescriptor, _))
+        .mapError(e => FirmwareDownloadFailed(deviceDescriptor, Some(e)))
       latestFirmware = firmwareList.max
-    } yield FirmwareDescriptor(latestFirmware.file, latestFirmware.version.version)
+      latestFirmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(latestFirmware))
+        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceDescriptor))
+    } yield FirmwareDescriptor(deviceDescriptor, latestFirmwareDownloadUrl, latestFirmware.version)
   }
 
   private def resolveHardwareModel(hassDevice: HassResult) = {

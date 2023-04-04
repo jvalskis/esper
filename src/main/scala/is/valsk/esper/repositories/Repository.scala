@@ -1,4 +1,4 @@
-package is.valsk.esper.services
+package is.valsk.esper.repositories
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.model.Device

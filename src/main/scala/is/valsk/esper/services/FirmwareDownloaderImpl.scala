@@ -1,13 +1,14 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.device.{DeviceDescriptor, ManufacturerRepository}
+import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.errors.{EsperError, ManufacturerNotSupported}
+import is.valsk.esper.repositories.{FirmwareRepository, ManufacturerRepository}
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
 
 class FirmwareDownloaderImpl(
-    esperConfig: EsperConfig,
-    manufacturerRegistry: ManufacturerRepository
+    manufacturerRegistry: ManufacturerRepository,
+    firmwareRepository: FirmwareRepository,
 ) extends FirmwareDownloader {
 
   def downloadFirmware(deviceDescriptor: DeviceDescriptor): IO[EsperError, Unit] = for {
@@ -15,20 +16,19 @@ class FirmwareDownloaderImpl(
       case Some(value) => ZIO.succeed(value)
       case None => ZIO.fail(ManufacturerNotSupported(deviceDescriptor.manufacturer))
     }
-    firmware <- manufacturerHandler.downloadFirmware(deviceDescriptor)
-    _ <- ZIO.logInfo(s"Firmware downloaded: $firmware")
+    firmwareDetails <- manufacturerHandler.getFirmwareDownloadDetails(deviceDescriptor)
+    _ <- firmwareRepository.add(firmwareDetails)
+    _ <- ZIO.logInfo(s"Firmware downloaded: $firmwareDetails")
   } yield ()
-
-  def hasLatestFirmware(deviceDescriptor: DeviceDescriptor): Boolean = ???
 
 }
 
 object FirmwareDownloaderImpl {
 
-  val layer: URLayer[EsperConfig & ManufacturerRepository, FirmwareDownloader] = ZLayer {
+  val layer: URLayer[FirmwareRepository & ManufacturerRepository, FirmwareDownloader] = ZLayer {
     for {
-      esperConfig <- ZIO.service[EsperConfig]
+      firmwareRepository <- ZIO.service[FirmwareRepository]
       manufacturerRegistry <- ZIO.service[ManufacturerRepository]
-    } yield FirmwareDownloaderImpl(esperConfig, manufacturerRegistry)
+    } yield FirmwareDownloaderImpl(manufacturerRegistry, firmwareRepository)
   }
 }

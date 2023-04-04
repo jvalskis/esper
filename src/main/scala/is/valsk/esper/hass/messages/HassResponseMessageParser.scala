@@ -7,7 +7,7 @@ import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
 import is.valsk.esper.hass.messages.responses.{AuthInvalid, AuthOK, AuthRequired, Result}
 import is.valsk.esper.hass.messages.{HassMessage, HassResponseMessage, Type}
-import is.valsk.esper.services.{Repository, InMemoryDeviceRepository}
+import is.valsk.esper.repositories.{InMemoryDeviceRepository, Repository}
 import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.UserEvent.{HandshakeComplete, HandshakeTimeout}
