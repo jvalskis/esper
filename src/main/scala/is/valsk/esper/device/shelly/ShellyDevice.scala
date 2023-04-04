@@ -1,7 +1,6 @@
 package is.valsk.esper.device.shelly
 
-import eu.timepit.refined.api.RefType
-import eu.timepit.refined.string.Url
+import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.device.shelly.ShellyDevice.ShellyFirmwareEntry
 import is.valsk.esper.errors.FirmwareDownloadFailed
@@ -11,7 +10,7 @@ import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.http.HttpClient
 import is.valsk.esper.model.Device
-import is.valsk.esper.model.Device.DeviceUrl
+import is.valsk.esper.types.UrlString
 import is.valsk.esper.utils.SemanticVersion
 import zio.http.{Client, ClientConfig}
 import zio.json.*
@@ -20,26 +19,33 @@ import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
 import scala.annotation.tailrec
 import scala.util.Try
 
-class ShellyDevice(httpClient: HttpClient) extends DeviceManufacturerHandler {
+class ShellyDevice(
+    shellyConfig: ShellyConfig,
+    httpClient: HttpClient
+) extends DeviceManufacturerHandler {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
 
-  private def getShellyFirmwareUrl(model: String) = s"http://archive.shelly-tools.de/archive.php?type=$model"
+  private def getShellyFirmwareUrl(model: NonEmptyString) = shellyConfig.firmwareListUrlPattern.replace("{{model}}", model.toString)
 
   override def toDomain(hassDevice: HassResult): IO[String, Device] = ZIO.fromEither(
     for {
       hardwareModel <- resolveHardwareModel(hassDevice)
       (hardware, model) = hardwareModel
-      refinedUrl <- hassDevice.configuration_url.map(DeviceUrl.from).getOrElse(Left("Configuration URL is empty"))
+      refinedUrl <- hassDevice.configuration_url.map(UrlString.from).getOrElse(Left("Configuration URL is empty"))
+      refinedId <- NonEmptyString.from(hassDevice.id)
+      refinedName <- NonEmptyString.from(hassDevice.name)
+      refinedModel <- NonEmptyString.from(model)
+      refinedManufacturer <- NonEmptyString.from(hassDevice.manufacturer)
     } yield Device(
-      id = hassDevice.id,
+      id = refinedId,
       url = refinedUrl,
-      name = hassDevice.name,
+      name = refinedName,
       nameByUser = hassDevice.name_by_user,
       softwareVersion = hassDevice.sw_version,
       hardware = Some(hardware),
-      model = model,
-      manufacturer = hassDevice.manufacturer,
+      model = refinedModel,
+      manufacturer = refinedManufacturer,
     )
   )
 
@@ -71,10 +77,11 @@ class ShellyDevice(httpClient: HttpClient) extends DeviceManufacturerHandler {
 
 object ShellyDevice {
 
-  val layer: URLayer[HttpClient, ShellyDevice] = ZLayer {
+  val layer: URLayer[HttpClient & ShellyConfig, ShellyDevice] = ZLayer {
     for {
       httpClient <- ZIO.service[HttpClient]
-    } yield ShellyDevice(httpClient)
+      shellyConfig <- ZIO.service[ShellyConfig]
+    } yield ShellyDevice(shellyConfig, httpClient)
   }
 
   case class ShellyFirmwareEntry(

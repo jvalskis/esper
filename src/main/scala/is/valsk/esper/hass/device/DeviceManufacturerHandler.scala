@@ -1,5 +1,6 @@
 package is.valsk.esper.hass.device
 
+import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.errors.FirmwareDownloadFailed
 import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
@@ -16,8 +17,6 @@ trait DeviceManufacturerHandler {
 }
 
 object DeviceManufacturerHandler {
-
-  type Manufacturer = String
 
   case class FirmwareDescriptor(path: String, version: String)
 }

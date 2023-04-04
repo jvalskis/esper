@@ -1,8 +1,8 @@
 package is.valsk.esper
 
 import is.valsk.esper.api.ApiServerApp
-import is.valsk.esper.device.shelly.ShellyDevice
-import is.valsk.esper.hass.device.DeviceManufacturerHandler.Manufacturer
+import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDevice}
+import is.valsk.esper.types.Manufacturer
 import is.valsk.esper.hass.device.{DeviceManufacturerHandler, InMemoryManufacturerRegistry}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
@@ -49,7 +49,7 @@ object Main extends ZIOAppDefault {
     for {
       shellyDevice <- ZIO.service[ShellyDevice]
     } yield Map(
-      "Shelly" -> shellyDevice
+      Manufacturer.unsafeFrom("Shelly") -> shellyDevice
     )
   }
 
@@ -73,6 +73,7 @@ object Main extends ZIOAppDefault {
         UnhandledMessageHandler.layer,
         InMemoryManufacturerRegistry.layer,
         manufacturerRegistryLayer,
+        ShellyConfig.layer,
         ShellyDevice.layer,
         HttpClient.layer,
         Client.default,

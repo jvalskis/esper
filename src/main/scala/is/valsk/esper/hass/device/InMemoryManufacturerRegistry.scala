@@ -2,7 +2,7 @@ package is.valsk.esper.hass.device
 
 import is.valsk.esper.device.ManufacturerRegistry
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
-import is.valsk.esper.hass.device.DeviceManufacturerHandler.Manufacturer
+import is.valsk.esper.types.Manufacturer
 import zio.*
 
 class InMemoryManufacturerRegistry(deviceMap: Ref[Map[Manufacturer, DeviceManufacturerHandler]]) extends ManufacturerRegistry {

@@ -1,5 +1,6 @@
 package is.valsk.esper.api
 
+import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.model.Device.encoder
@@ -23,18 +24,21 @@ class ApiServerApp(
         response <- ZIO.succeed(Response.json(deviceList.toJson))
       } yield response
 
-    case Method.GET -> !! / "devices" / deviceId => for {
+    case Method.GET -> !! / "devices" / deviceId => (for {
+      deviceId <- ZIO.fromEither(NonEmptyString.from(deviceId))
       device <- deviceRepository.get(deviceId)
       response = device match {
         case Some(value) => Response.json(value.toJson)
         case None => Response.status(Status.NotFound)
       }
-    } yield response
+    } yield response)
+      .mapError(_ => Response.status(Status.BadRequest))
 
-    case Method.GET -> !! / "firmware" / manufacturer / model => for {
-      _ <- firmwareDownloader.downloadFirmware(DeviceDescriptor(manufacturer, None, model))
-        .mapError(_ => Response.status(Status.BadRequest))
-    } yield Response.status(Status.Ok)
+    case Method.GET -> !! / "firmware" / manufacturer / model => (for {
+      deviceDescriptor <- ZIO.fromEither(DeviceDescriptor(manufacturer, None, model))
+      _ <- firmwareDownloader.downloadFirmware(deviceDescriptor)
+    } yield Response.status(Status.Ok))
+      .mapError(_ => Response.status(Status.BadRequest))
   }
 
   def run: Task[Nothing] =

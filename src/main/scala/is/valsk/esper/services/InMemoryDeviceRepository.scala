@@ -1,11 +1,12 @@
 package is.valsk.esper.services
 
+import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.model.Device
 import zio.*
 
-class InMemoryDeviceRepository(deviceMap: Ref[Map[String, Device]]) extends DeviceRepository {
+class InMemoryDeviceRepository(deviceMap: Ref[Map[NonEmptyString, Device]]) extends DeviceRepository {
 
-  override def get(id: String): UIO[Option[Device]] = deviceMap.get.map(_.get(id))
+  override def get(id: NonEmptyString): UIO[Option[Device]] = deviceMap.get.map(_.get(id))
 
   override def list: UIO[List[Device]] = deviceMap.get.map(_.values.toList)
 
