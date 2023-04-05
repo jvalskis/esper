@@ -1,12 +1,12 @@
 package is.valsk.esper
 
 import is.valsk.esper.api.ApiServerApp
+import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDevice}
-import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
-import is.valsk.esper.hass.HassWebsocketApp
+import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.domain.Device
 import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
 import is.valsk.esper.services.{FirmwareDownloaderImpl, HttpClient, LatestFirmwareMonitorApp}
@@ -47,7 +47,7 @@ object Main extends ZIOAppDefault {
     } yield List(protocolHandler, textHandler, unhandledMessageHandler)
   }
 
-  private val manufacturerRegistryLayer: URLayer[ShellyDevice, Map[Manufacturer, DeviceManufacturerHandler]] = ZLayer {
+  private val manufacturerRegistryLayer: URLayer[ShellyDevice, Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper]] = ZLayer {
     for {
       shellyDevice <- ZIO.service[ShellyDevice]
     } yield Map(

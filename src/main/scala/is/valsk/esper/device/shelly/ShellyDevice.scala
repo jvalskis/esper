@@ -1,17 +1,18 @@
 package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
+import is.valsk.esper.device.DeviceManufacturerHandler
+import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.device.shelly.ShellyDevice.ShellyFirmwareEntry
-import is.valsk.esper.hass.device.DeviceManufacturerHandler
-import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
+import is.valsk.esper.domain.*
+import is.valsk.esper.domain.Types.{Model, UrlString}
+import is.valsk.esper.hass.HassToDomainMapper
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
-import is.valsk.esper.domain.{Device, DeviceModel, EsperError, FailedToParseFirmwareResponse, FirmwareDownloadError, FirmwareDownloadFailed, FirmwareDownloadLinkResolutionFailed, SemanticVersion}
-import is.valsk.esper.domain.Types.{Model, UrlString}
+import is.valsk.esper.services.HttpClient
 import zio.http.{Client, ClientConfig}
 import zio.json.*
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
-import is.valsk.esper.services.HttpClient
 
 import scala.annotation.tailrec
 import scala.util.Try
@@ -19,7 +20,7 @@ import scala.util.Try
 class ShellyDevice(
     shellyConfig: ShellyConfig,
     httpClient: HttpClient,
-) extends DeviceManufacturerHandler {
+) extends DeviceManufacturerHandler with HassToDomainMapper {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
 

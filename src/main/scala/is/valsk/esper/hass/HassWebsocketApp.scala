@@ -1,7 +1,7 @@
 package is.valsk.esper.hass
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.hass.HassWebsocketClient
+import is.valsk.esper.hass.protocol.ChannelHandler
 import is.valsk.esper.hass.protocol.ChannelHandler.PartialChannelHandler
 import zio.*
 import zio.http.*

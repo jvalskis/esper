@@ -1,7 +1,6 @@
 package is.valsk.esper.repositories
 
-import is.valsk.esper.hass.device.DeviceManufacturerHandler
-import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
+import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.DeviceModel
 import is.valsk.esper.domain.Types.Manufacturer
 import zio.*
