@@ -10,11 +10,20 @@ case class EsperConfig(
     port: Int = 9000,
     firmwareStoragePath: String,
     hassConfig: HassConfig,
+    scheduleConfig: ScheduleConfig,
 )
 
 case class HassConfig(
     webSocketUrl: String,
     accessToken: String,
+)
+
+case class ScheduleConfig(
+    initialDelay: Int,
+    interval: Int,
+    jitter: Boolean,
+    maxRetries: Int,
+    exponentialRetryBase: Int
 )
 
 object EsperConfig {
@@ -30,4 +39,6 @@ object EsperConfig {
   def port: RIO[EsperConfig, Int] = ZIO.serviceWith[EsperConfig](_.port)
 
   def hassConfig: RIO[EsperConfig, HassConfig] = ZIO.serviceWith[EsperConfig](_.hassConfig)
+
+  def scheduleConfig: RIO[EsperConfig, ScheduleConfig] = ZIO.serviceWith[EsperConfig](_.scheduleConfig)
 }

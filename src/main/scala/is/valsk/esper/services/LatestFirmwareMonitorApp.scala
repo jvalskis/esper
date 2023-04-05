@@ -1,11 +1,13 @@
 package is.valsk.esper.services
 
+import is.valsk.esper.{EsperConfig, ScheduleConfig}
 import is.valsk.esper.domain.{DeviceModel, EsperError}
 import is.valsk.esper.repositories.DeviceRepository
 import zio.Schedule.{WithState, exponential, identity, recurs, spaced}
-import zio.{IO, Random, Ref, Schedule, Task, UIO, ZIO, ZLayer, durationInt}
+import zio.{IO, RLayer, Random, Ref, Schedule, Task, UIO, ZIO, ZLayer, durationInt}
 
 class LatestFirmwareMonitorApp(
+    scheduleConfig: ScheduleConfig,
     deviceRepository: DeviceRepository,
     firmwareDownloader: FirmwareDownloader,
 ) {
@@ -16,7 +18,7 @@ class LatestFirmwareMonitorApp(
   } yield deviceModel
 
   def run: UIO[Unit] = for {
-    _ <- ZIO.sleep(1.minute)
+    _ <- ZIO.sleep(scheduleConfig.initialDelay.seconds)
     modelsToMonitor <- getDistinctDeviceModels
     _ <- ZIO.foreachPar(modelsToMonitor)(scheduleFirmwareMonitor)
   } yield ()
@@ -37,22 +39,24 @@ class LatestFirmwareMonitorApp(
   } yield deviceTypes
 
   private def withExponentialRetry(action: IO[EsperError, DeviceModel]): IO[EsperError, DeviceModel] = {
-    val policy = exponential(10.seconds) && recurs(3)
-    action.retry(policy)
+    val schedule = exponential(scheduleConfig.exponentialRetryBase.seconds) && recurs(scheduleConfig.maxRetries)
+    action.retry(schedule)
   }
 
   private def schedule(action: UIO[DeviceModel]): UIO[DeviceModel] = {
-    val policy = spaced(30.seconds).jittered *> identity[DeviceModel]
-    action.repeat(policy)
+    val baseSchedule = spaced(scheduleConfig.interval.seconds)
+    val finalSchedule = if (scheduleConfig.jitter) baseSchedule.jittered else baseSchedule
+    action.repeat(finalSchedule *> identity[DeviceModel])
   }
 }
 
 object LatestFirmwareMonitorApp {
 
-  val layer: ZLayer[DeviceRepository & FirmwareDownloader, Nothing, LatestFirmwareMonitorApp] = ZLayer {
+  val layer: RLayer[EsperConfig & DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ZLayer {
     for {
+      scheduleConfig <- EsperConfig.scheduleConfig
       deviceRepository <- ZIO.service[DeviceRepository]
       firmwareDownloader <- ZIO.service[FirmwareDownloader]
-    } yield LatestFirmwareMonitorApp(deviceRepository, firmwareDownloader)
+    } yield LatestFirmwareMonitorApp(scheduleConfig, deviceRepository, firmwareDownloader)
   }
 }
