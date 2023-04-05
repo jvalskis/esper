@@ -2,7 +2,6 @@ package is.valsk.esper.hass.protocol.api
 
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.shelly.ShellyDevice
-import is.valsk.esper.errors.ManufacturerNotSupported
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
@@ -10,9 +9,9 @@ import is.valsk.esper.hass.messages.responses.*
 import is.valsk.esper.hass.messages.{HassResponseMessage, MessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import is.valsk.esper.hass.protocol.api.{HassResponseMessageHandler, ResultHandler}
-import is.valsk.esper.model.Device
+import is.valsk.esper.domain.{Device, ManufacturerNotSupported}
 import is.valsk.esper.repositories.{DeviceRepository, ManufacturerRepository}
-import is.valsk.esper.types.Manufacturer
+import is.valsk.esper.domain.Types.Manufacturer
 import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.*

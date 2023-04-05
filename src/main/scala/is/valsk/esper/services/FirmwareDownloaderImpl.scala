@@ -1,8 +1,7 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.errors.{EsperError, ManufacturerNotSupported}
-import is.valsk.esper.model.DeviceModel
+import is.valsk.esper.domain.{DeviceModel, EsperError, ManufacturerNotSupported}
 import is.valsk.esper.repositories.{FirmwareRepository, ManufacturerRepository}
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
 

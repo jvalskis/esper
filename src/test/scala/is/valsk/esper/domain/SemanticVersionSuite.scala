@@ -1,6 +1,6 @@
-package is.valsk.esper.utils
+package is.valsk.esper.domain
 
-import is.valsk.esper.utils.SemanticVersion
+import is.valsk.esper.domain.SemanticVersion
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*
@@ -12,6 +12,7 @@ object SemanticVersionSuite extends ZIOSpecDefault {
       ("v1.0.0", "1.0.0", 0),
       ("v1.0.0", "v1.0.0", 0),
       ("1.0.0", "1.0.0", 0),
+      ("1.0", "1.0.0", -1),
       ("1.0.0", "1.0.1", -1),
       ("1.0.1", "1.0.0", 1),
       ("1.0.1", "1.0.10", -1),

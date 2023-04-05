@@ -1,8 +1,8 @@
 package is.valsk.esper.repositories
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.model.Device
-import zio.{RIO, *}
+import is.valsk.esper.domain.Device
+import zio.*
 
 trait Repository[K, R] {
   def get(id: K): UIO[Option[R]]

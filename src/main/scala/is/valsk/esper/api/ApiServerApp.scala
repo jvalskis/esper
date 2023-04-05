@@ -2,8 +2,8 @@ package is.valsk.esper.api
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.model.Device.encoder
-import is.valsk.esper.model.DeviceModel
+import is.valsk.esper.domain.Device.encoder
+import is.valsk.esper.domain.DeviceModel
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, Repository}
 import is.valsk.esper.services.FirmwareDownloader
 import zio.http.*

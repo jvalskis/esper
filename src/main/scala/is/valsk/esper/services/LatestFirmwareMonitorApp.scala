@@ -1,7 +1,6 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.errors.EsperError
-import is.valsk.esper.model.DeviceModel
+import is.valsk.esper.domain.{DeviceModel, EsperError}
 import is.valsk.esper.repositories.DeviceRepository
 import zio.Schedule.{WithState, exponential, identity, recurs, spaced}
 import zio.{IO, Random, Ref, Schedule, Task, UIO, ZIO, ZLayer, durationInt}

@@ -2,8 +2,8 @@ package is.valsk.esper.repositories
 
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
-import is.valsk.esper.model.DeviceModel
-import is.valsk.esper.types.Manufacturer
+import is.valsk.esper.domain.DeviceModel
+import is.valsk.esper.domain.Types.Manufacturer
 import zio.*
 
 class InMemoryFirmwareRepository(map: Ref[Map[DeviceModel, FirmwareDescriptor]]) extends FirmwareRepository {

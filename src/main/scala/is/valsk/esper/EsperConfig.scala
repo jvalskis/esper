@@ -8,6 +8,7 @@ import zio.http.Response
 
 case class EsperConfig(
     port: Int = 9000,
+    firmwareStoragePath: String,
     hassConfig: HassConfig,
 )
 

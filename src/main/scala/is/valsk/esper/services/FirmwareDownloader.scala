@@ -1,7 +1,6 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.errors.EsperError
-import is.valsk.esper.model.DeviceModel
+import is.valsk.esper.domain.{DeviceModel, EsperError}
 import zio.IO
 
 trait FirmwareDownloader {

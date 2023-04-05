@@ -1,7 +1,7 @@
 package is.valsk.esper.repositories
 
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
-import is.valsk.esper.types.Manufacturer
+import is.valsk.esper.domain.Types.Manufacturer
 import zio.*
 
 class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceManufacturerHandler]]) extends ManufacturerRepository {

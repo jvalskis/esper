@@ -1,7 +1,7 @@
-package is.valsk.esper.errors
+package is.valsk.esper.domain
 
-import is.valsk.esper.model.DeviceModel
-import is.valsk.esper.types.Manufacturer
+import is.valsk.esper.domain.DeviceModel
+import is.valsk.esper.domain.Types.Manufacturer
 
 sealed trait EsperError extends Exception
 

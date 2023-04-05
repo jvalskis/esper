@@ -1,6 +1,6 @@
-package is.valsk.esper.utils
+package is.valsk.esper.domain
 
-import is.valsk.esper.utils.SemanticVersion.SemanticVersionSegment
+import is.valsk.esper.domain.SemanticVersion.SemanticVersionSegment
 import zio.json.JsonDecoder
 
 import scala.annotation.tailrec

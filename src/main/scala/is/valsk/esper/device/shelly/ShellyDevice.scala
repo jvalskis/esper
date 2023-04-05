@@ -2,15 +2,13 @@ package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.shelly.ShellyDevice.ShellyFirmwareEntry
-import is.valsk.esper.errors.{EsperError, FirmwareDownloadError, FirmwareDownloadFailed, FirmwareDownloadLinkResolutionFailed, FailedToParseFirmwareResponse}
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.http.HttpClient
-import is.valsk.esper.model.{Device, DeviceModel}
-import is.valsk.esper.types.{Model, UrlString}
-import is.valsk.esper.utils.SemanticVersion
+import is.valsk.esper.domain.{Device, DeviceModel, EsperError, FailedToParseFirmwareResponse, FirmwareDownloadError, FirmwareDownloadFailed, FirmwareDownloadLinkResolutionFailed, SemanticVersion}
+import is.valsk.esper.domain.Types.{Model, UrlString}
 import zio.http.{Client, ClientConfig}
 import zio.json.*
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
@@ -104,7 +102,7 @@ object ShellyDevice {
 
   object ShellyFirmwareEntry {
 
-    import is.valsk.esper.utils.SemanticVersion.decoder
+    import SemanticVersion.decoder
 
     implicit val decoder: JsonDecoder[ShellyFirmwareEntry] = DeriveJsonDecoder.gen[ShellyFirmwareEntry]
   }

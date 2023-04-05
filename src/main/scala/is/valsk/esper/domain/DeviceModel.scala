@@ -1,7 +1,7 @@
-package is.valsk.esper.model
+package is.valsk.esper.domain
 
-import is.valsk.esper.model.Device
-import is.valsk.esper.types.{Manufacturer, Model}
+import is.valsk.esper.domain.Device
+import is.valsk.esper.domain.Types.{Manufacturer, Model}
 
 case class DeviceModel(
     manufacturer: Manufacturer,
