@@ -6,7 +6,7 @@ import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
-import is.valsk.esper.hass.{HassWebsocketApp, HassWebsocketClient, HassWebsocketClientImpl}
+import is.valsk.esper.hass.HassWebsocketApp
 import is.valsk.esper.http.HttpClient
 import is.valsk.esper.domain.Device
 import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
@@ -67,7 +67,6 @@ object Main extends ZIOAppDefault {
         ConnectHandler.layer,
         ResultHandler.layer,
         channelHandlerLayer,
-        HassWebsocketClientImpl.layer,
         HassWebsocketApp.layer,
         hassResponseMessageHandlerLayer,
         HassResponseMessageParser.layer,

@@ -2,17 +2,18 @@ package is.valsk.esper.hass
 
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.hass.HassWebsocketClient
+import is.valsk.esper.hass.protocol.ChannelHandler.PartialChannelHandler
 import zio.*
 import zio.http.*
+import zio.http.socket.WebSocketChannelEvent
 
 class HassWebsocketApp(
-    hassWebsocketClient: HassWebsocketClient,
+    channelHandler: PartialChannelHandler,
     esperConfig: EsperConfig,
 ) {
 
   def run: ZIO[Any, Throwable, Nothing] = {
-    val client = hassWebsocketClient
-      .get
+    val client = Http.collectZIO[WebSocketChannelEvent](channelHandler)
       .toSocketApp
       .connect(esperConfig.hassConfig.webSocketUrl)
     (client *> ZIO.never).provide(
@@ -24,11 +25,11 @@ class HassWebsocketApp(
 
 object HassWebsocketApp {
 
-  val layer: URLayer[EsperConfig & HassWebsocketClient, HassWebsocketApp] = ZLayer {
+  val layer: URLayer[EsperConfig & List[ChannelHandler], HassWebsocketApp] = ZLayer {
     for {
       esperConfig <- ZIO.service[EsperConfig]
-      hassWebsocketClient <- ZIO.service[HassWebsocketClient]
-    } yield HassWebsocketApp(hassWebsocketClient, esperConfig)
+      channelHandlers <- ZIO.service[List[ChannelHandler]]
+      combinedHandler = channelHandlers.foldLeft(ChannelHandler.empty) { (a, b) => a orElse b.get }
+    } yield HassWebsocketApp(combinedHandler, esperConfig)
   }
-
 }
