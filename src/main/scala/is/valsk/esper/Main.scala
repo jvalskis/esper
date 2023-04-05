@@ -2,7 +2,6 @@ package is.valsk.esper
 
 import is.valsk.esper.api.ApiServerApp
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDevice}
-import is.valsk.esper.types.Manufacturer
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
@@ -11,7 +10,8 @@ import is.valsk.esper.hass.{HassWebsocketApp, HassWebsocketClient, HassWebsocket
 import is.valsk.esper.http.HttpClient
 import is.valsk.esper.model.Device
 import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
-import is.valsk.esper.services.{FirmwareDownloaderImpl}
+import is.valsk.esper.services.{FirmwareDownloaderImpl, LatestFirmwareMonitorApp}
+import is.valsk.esper.types.Manufacturer
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -19,13 +19,15 @@ import zio.stream.ZStream
 
 object Main extends ZIOAppDefault {
 
-  private val scopedApp: ZIO[HassWebsocketApp & ApiServerApp, Throwable, Unit] = for {
+  private val scopedApp: ZIO[HassWebsocketApp & ApiServerApp & LatestFirmwareMonitorApp, Throwable, Unit] = for {
     hassWebsockerApp <- ZIO.service[HassWebsocketApp]
     apiServerApp <- ZIO.service[ApiServerApp]
+    periodicLatestFirmwareDownloadApp <- ZIO.service[LatestFirmwareMonitorApp]
     _ <- ZStream
       .mergeAllUnbounded(16)(
         ZStream.fromZIO(hassWebsockerApp.run),
-        ZStream.fromZIO(apiServerApp.run)
+        ZStream.fromZIO(apiServerApp.run),
+        ZStream.fromZIO(periodicLatestFirmwareDownloadApp.run),
       )
       .runDrain
   } yield ()
@@ -80,6 +82,7 @@ object Main extends ZIOAppDefault {
         HttpClient.layer,
         Client.default,
         FirmwareDownloaderImpl.layer,
+        LatestFirmwareMonitorApp.layer,
       )
       .logError("Failed to start the application")
       .exitCode

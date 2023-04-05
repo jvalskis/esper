@@ -1,19 +1,19 @@
-package is.valsk.esper.device
+package is.valsk.esper.model
 
 import is.valsk.esper.model.Device
 import is.valsk.esper.types.{Manufacturer, Model}
 
-case class DeviceDescriptor(
+case class DeviceModel(
     manufacturer: Manufacturer,
     model: Model
 )
 
-object DeviceDescriptor {
+object DeviceModel {
 
-  def apply(manufacturer: String, model: String): Either[String, DeviceDescriptor] = for {
+  def apply(manufacturer: String, model: String): Either[String, DeviceModel] = for {
     manufacturerRefined <- Manufacturer.from(manufacturer)
     modelRefined <- Model.from(model)
-  } yield DeviceDescriptor(
+  } yield DeviceModel(
     manufacturerRefined,
     modelRefined
   )

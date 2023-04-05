@@ -2,8 +2,8 @@ package is.valsk.esper.api
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.model.Device.encoder
+import is.valsk.esper.model.DeviceModel
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, Repository}
 import is.valsk.esper.services.FirmwareDownloader
 import zio.http.*
@@ -36,7 +36,7 @@ class ApiServerApp(
       .mapError(_ => Response.status(Status.BadRequest))
 
     case Method.GET -> !! / "firmware" / manufacturer / model => (for {
-      deviceDescriptor <- ZIO.fromEither(DeviceDescriptor(manufacturer, model))
+      deviceDescriptor <- ZIO.fromEither(DeviceModel(manufacturer, model))
       _ <- firmwareDownloader.downloadFirmware(deviceDescriptor)
     } yield Response.status(Status.Ok))
       .mapError(_ => Response.status(Status.BadRequest))

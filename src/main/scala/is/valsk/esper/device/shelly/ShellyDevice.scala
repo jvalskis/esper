@@ -1,7 +1,6 @@
 package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.device.DeviceDescriptor
 import is.valsk.esper.device.shelly.ShellyDevice.ShellyFirmwareEntry
 import is.valsk.esper.errors.{EsperError, FirmwareDownloadError, FirmwareDownloadFailed, FirmwareDownloadLinkResolutionFailed, FailedToParseFirmwareResponse}
 import is.valsk.esper.hass.device.DeviceManufacturerHandler
@@ -9,7 +8,7 @@ import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.http.HttpClient
-import is.valsk.esper.model.Device
+import is.valsk.esper.model.{Device, DeviceModel}
 import is.valsk.esper.types.{Model, UrlString}
 import is.valsk.esper.utils.SemanticVersion
 import zio.http.{Client, ClientConfig}
@@ -57,22 +56,22 @@ class ShellyDevice(
     )
   )
 
-  override def getFirmwareDownloadDetails(deviceDescriptor: DeviceDescriptor): IO[FirmwareDownloadError, FirmwareDescriptor] = {
+  override def getFirmwareDownloadDetails(deviceModel: DeviceModel): IO[FirmwareDownloadError, FirmwareDescriptor] = {
     for {
-      firmwareListUrl <- ZIO.fromEither(getFirmwareListUrl(deviceDescriptor.model))
-        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceDescriptor))
+      firmwareListUrl <- ZIO.fromEither(getFirmwareListUrl(deviceModel.model))
+        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceModel))
       _ <- ZIO.logInfo(s"Getting firmware list from: $firmwareListUrl")
       firmwareList <- httpClient.get(firmwareListUrl.toString)
         .flatMap(_.body.asString)
         .flatMap(response => ZIO
           .fromEither(response.fromJson[Seq[ShellyFirmwareEntry]])
-          .mapError(FailedToParseFirmwareResponse(_, deviceDescriptor))
+          .mapError(FailedToParseFirmwareResponse(_, deviceModel))
         )
-        .mapError(e => FirmwareDownloadFailed(deviceDescriptor, Some(e)))
+        .mapError(e => FirmwareDownloadFailed(deviceModel, Some(e)))
       latestFirmware = firmwareList.max
       latestFirmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(latestFirmware))
-        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceDescriptor))
-    } yield FirmwareDescriptor(deviceDescriptor, latestFirmwareDownloadUrl, latestFirmware.version)
+        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceModel))
+    } yield FirmwareDescriptor(deviceModel, latestFirmwareDownloadUrl, latestFirmware.version)
   }
 
   private def resolveHardwareModel(hassDevice: HassResult) = {
