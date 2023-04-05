@@ -6,12 +6,12 @@ import is.valsk.esper.hass.device.DeviceManufacturerHandler
 import is.valsk.esper.hass.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
-import is.valsk.esper.http.HttpClient
 import is.valsk.esper.domain.{Device, DeviceModel, EsperError, FailedToParseFirmwareResponse, FirmwareDownloadError, FirmwareDownloadFailed, FirmwareDownloadLinkResolutionFailed, SemanticVersion}
 import is.valsk.esper.domain.Types.{Model, UrlString}
 import zio.http.{Client, ClientConfig}
 import zio.json.*
 import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
+import is.valsk.esper.services.HttpClient
 
 import scala.annotation.tailrec
 import scala.util.Try

@@ -1,7 +1,7 @@
-package is.valsk.esper.http
+package is.valsk.esper.services
 
-import zio.{URLayer, ZIO, ZLayer}
 import zio.http.{Client, Response}
+import zio.{URLayer, ZIO, ZLayer}
 
 class HttpClient {
 

@@ -7,10 +7,9 @@ import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerat
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.HassWebsocketApp
-import is.valsk.esper.http.HttpClient
 import is.valsk.esper.domain.Device
 import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
-import is.valsk.esper.services.{FirmwareDownloaderImpl, LatestFirmwareMonitorApp}
+import is.valsk.esper.services.{FirmwareDownloaderImpl, HttpClient, LatestFirmwareMonitorApp}
 import is.valsk.esper.domain.Types.Manufacturer
 import zio.*
 import zio.config.ReadError
