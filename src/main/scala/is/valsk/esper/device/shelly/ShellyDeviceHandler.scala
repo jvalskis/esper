@@ -2,7 +2,7 @@ package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
-import is.valsk.esper.device.shelly.ShellyDevice.{ApiEndpoints, ShellyFirmwareEntry}
+import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyDevice, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy}
@@ -19,10 +19,10 @@ import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
 import scala.annotation.tailrec
 import scala.util.Try
 
-class ShellyDevice(
+class ShellyDeviceHandler(
     shellyConfig: ShellyConfig,
     httpClient: HttpClient,
-) extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy[SemanticVersion] {
+) extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy[ShellyDevice] {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r
@@ -97,15 +97,17 @@ class ShellyDevice(
       .getOrElse(Left("Invalid hw_version format"))
       .flatMap(Model.from)
   }
+
+  override def flashFirmware(firmware: Firmware): IO[DeviceApiError, Unit] = ???
 }
 
-object ShellyDevice {
+object ShellyDeviceHandler {
 
-  val layer: URLayer[HttpClient & ShellyConfig, ShellyDevice] = ZLayer {
+  val layer: URLayer[HttpClient & ShellyConfig, ShellyDeviceHandler] = ZLayer {
     for {
       httpClient <- ZIO.service[HttpClient]
       shellyConfig <- ZIO.service[ShellyConfig]
-    } yield ShellyDevice(shellyConfig, httpClient)
+    } yield ShellyDeviceHandler(shellyConfig, httpClient)
   }
 
   case class ShellyFirmwareEntry(
@@ -126,4 +128,6 @@ object ShellyDevice {
   object ApiEndpoints {
     def ota(baseUrl: UrlString): String = s"$baseUrl/ota"
   }
+
+  type ShellyDevice = SemanticVersion
 }

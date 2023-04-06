@@ -2,7 +2,7 @@ package is.valsk.esper
 
 import is.valsk.esper.api.ApiServerApp
 import is.valsk.esper.device.DeviceManufacturerHandler
-import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDevice}
+import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
@@ -47,11 +47,11 @@ object Main extends ZIOAppDefault {
     } yield List(protocolHandler, textHandler, unhandledMessageHandler)
   }
 
-  private val manufacturerRegistryLayer: URLayer[ShellyDevice, Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper]] = ZLayer {
+  private val manufacturerRegistryLayer: URLayer[ShellyDeviceHandler, Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper]] = ZLayer {
     for {
-      shellyDevice <- ZIO.service[ShellyDevice]
+      shellyDeviceHandler <- ZIO.service[ShellyDeviceHandler]
     } yield Map(
-      Manufacturer.unsafeFrom("Shelly") -> shellyDevice
+      Manufacturer.unsafeFrom("Shelly") -> shellyDeviceHandler
     )
   }
 
@@ -76,7 +76,7 @@ object Main extends ZIOAppDefault {
         InMemoryFirmwareRepository.layer,
         manufacturerRegistryLayer,
         ShellyConfig.layer,
-        ShellyDevice.layer,
+        ShellyDeviceHandler.layer,
         HttpClient.layer,
         Client.default,
         FirmwareDownloaderImpl.layer,

@@ -3,6 +3,7 @@ package is.valsk.esper.api
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceProxy
+import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyDevice
 import is.valsk.esper.domain.Device.encoder
 import is.valsk.esper.domain.SemanticVersion.encoder
 import is.valsk.esper.domain.{DeviceModel, SemanticVersion}
@@ -17,7 +18,7 @@ import zio.{Random, Task, ZIO, ZLayer}
 class ApiServerApp(
     deviceRepository: DeviceRepository,
     firmwareDownloader: FirmwareDownloader,
-    deviceProxy: DeviceProxy[SemanticVersion],
+    deviceProxy: DeviceProxy[ShellyDevice],
     esperConfig: EsperConfig,
 ) {
 
@@ -76,12 +77,12 @@ class ApiServerApp(
 
 object ApiServerApp {
 
-  val layer: ZLayer[DeviceRepository & DeviceProxy[SemanticVersion] & EsperConfig & FirmwareDownloader, Throwable, ApiServerApp] = ZLayer {
+  val layer: ZLayer[DeviceRepository & DeviceProxy[ShellyDevice] & EsperConfig & FirmwareDownloader, Throwable, ApiServerApp] = ZLayer {
     for {
       esperConfig <- ZIO.service[EsperConfig]
       deviceRepository <- ZIO.service[DeviceRepository]
       firmwareDownloader <- ZIO.service[FirmwareDownloader]
-      deviceProxy <- ZIO.service[DeviceProxy[SemanticVersion]]
+      deviceProxy <- ZIO.service[DeviceProxy[ShellyDevice]]
     } yield ApiServerApp(deviceRepository, firmwareDownloader, deviceProxy, esperConfig)
   }
 }

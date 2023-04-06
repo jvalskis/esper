@@ -2,7 +2,6 @@ package is.valsk.esper.hass.protocol.api
 
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler
-import is.valsk.esper.device.shelly.ShellyDevice
 import is.valsk.esper.domain.Types.Manufacturer
 import is.valsk.esper.domain.{Device, ManufacturerNotSupported, PersistenceException}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
