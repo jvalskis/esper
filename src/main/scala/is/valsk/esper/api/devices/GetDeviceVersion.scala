@@ -6,7 +6,7 @@ import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyDevice
 import is.valsk.esper.domain.SemanticVersion.encoder
 import is.valsk.esper.repositories.DeviceRepository
 import zio.http.Response
-import zio.http.model.Status
+import zio.http.model.{HttpError, Status}
 import zio.json.*
 import zio.{IO, URLayer, ZIO, ZLayer}
 
@@ -15,19 +15,17 @@ class GetDeviceVersion(
     deviceRepository: DeviceRepository
 ) {
 
-  def apply(deviceId: NonEmptyString): IO[Response, Response] = (for {
+  def apply(deviceId: NonEmptyString): IO[HttpError, Response] = for {
     device <- deviceRepository.get(deviceId)
+      .mapError(_ => HttpError.InternalServerError())
     response <- device match {
       case Some(value) =>
-        for {
-          version <- deviceProxy.getCurrentFirmwareVersion(value)
-        } yield Response.json(version.toJson)
+        deviceProxy.getCurrentFirmwareVersion(value).map(version => Response.json(version.toJson))
+          .mapError(e => HttpError.BadGateway(e.getMessage))
       case None =>
-        ZIO.succeed(Response.status(Status.NotFound))
+        ZIO.fail(HttpError.NotFound(""))
     }
-  } yield response)
-    .catchSome { case e: Throwable => ZIO.logError(e.getMessage) *> ZIO.fail(e) }
-    .mapError(_ => Response.status(Status.BadRequest))
+  } yield response
 }
 
 object GetDeviceVersion {

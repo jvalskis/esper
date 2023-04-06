@@ -25,9 +25,12 @@ class ApiServerApp(
     val serverConfigLayer = ServerConfig.live(
       ServerConfig.default.port(esperConfig.port)
     )
-    val httpServer = Server.install(firmwareApi.app ++ deviceApi.аpp).flatMap { port =>
-      ZIO.logInfo(s"Starting server on http://localhost:$port")
-    }
+    val app = (firmwareApi.app ++ deviceApi.аpp)
+      .mapError(e => Response(status = e.status, body = Body.fromCharSequence(e.message)))
+    val httpServer = Server.install(app)
+      .flatMap { port =>
+        ZIO.logInfo(s"Starting server on http://localhost:$port")
+      }
     (httpServer *> ZIO.never).provide(
       serverConfigLayer,
       NettyServerConfig.live,
