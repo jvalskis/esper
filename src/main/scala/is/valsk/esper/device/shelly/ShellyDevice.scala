@@ -69,7 +69,7 @@ class ShellyDevice(
       firmwareList <- httpClient.getJson[Seq[ShellyFirmwareEntry]](firmwareListUrl.toString)
         .mapError {
           case e: ParseError => FailedToParseFirmwareResponse(e.message, deviceModel, Some(e))
-          case e => FirmwareDownloadFailed(deviceModel, Some(e))
+          case e => FirmwareDownloadFailed(e.getMessage, deviceModel, Some(e))
         }
       latestFirmware = firmwareList.max
       latestFirmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(latestFirmware))

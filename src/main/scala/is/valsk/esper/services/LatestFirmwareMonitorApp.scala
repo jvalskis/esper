@@ -1,7 +1,7 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.{EsperConfig, ScheduleConfig}
-import is.valsk.esper.domain.{DeviceModel, EsperError}
+import is.valsk.esper.domain.{DeviceModel, EsperError, PersistenceException}
 import is.valsk.esper.repositories.DeviceRepository
 import zio.Schedule.{WithState, exponential, identity, recurs, spaced}
 import zio.{IO, RLayer, Random, Ref, Schedule, Task, UIO, ZIO, ZLayer, durationInt}
@@ -19,7 +19,7 @@ class LatestFirmwareMonitorApp(
 
   def run: UIO[Unit] = for {
     _ <- ZIO.sleep(scheduleConfig.initialDelay.seconds)
-    modelsToMonitor <- getDistinctDeviceModels
+    modelsToMonitor <- getDistinctDeviceModels.orDie
     _ <- ZIO.foreachPar(modelsToMonitor)(scheduleFirmwareMonitor)
   } yield ()
 
@@ -33,7 +33,7 @@ class LatestFirmwareMonitorApp(
     )
   } yield ()
 
-  private def getDistinctDeviceModels: UIO[List[DeviceModel]] = for {
+  private def getDistinctDeviceModels: IO[PersistenceException, List[DeviceModel]] = for {
     allDevices <- deviceRepository.list
     deviceTypes = allDevices.map(device => DeviceModel(device.manufacturer, device.model)).distinct
   } yield deviceTypes

@@ -24,7 +24,7 @@ class ApiServerApp(
   private val zApp: HttpApp[Any, Response] = Http.collectZIO[Request] {
     case Method.GET -> !! / "devices" =>
       for {
-        deviceList <- deviceRepository.list
+        deviceList <- deviceRepository.list.orDie
         response <- ZIO.succeed(Response.json(deviceList.toJson))
       } yield response
 

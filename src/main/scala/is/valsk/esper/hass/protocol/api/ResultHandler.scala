@@ -4,7 +4,7 @@ import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.shelly.ShellyDevice
 import is.valsk.esper.domain.Types.Manufacturer
-import is.valsk.esper.domain.{Device, ManufacturerNotSupported}
+import is.valsk.esper.domain.{Device, ManufacturerNotSupported, PersistenceException}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
 import is.valsk.esper.hass.messages.responses.*
@@ -43,7 +43,7 @@ class ResultHandler(
       )
   }
 
-  private def addDeviceToRegistry(domainDevice: Device): UIO[Unit] = for {
+  private def addDeviceToRegistry(domainDevice: Device): IO[PersistenceException, Unit] = for {
     _ <- deviceRepository.add(domainDevice)
     _ <- ZIO.logInfo(s"Updated device registry with device: $domainDevice")
   } yield ()

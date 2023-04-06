@@ -11,7 +11,7 @@ class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceManufactur
 
   override def list: UIO[List[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.values.toList)
 
-  override def add(handler: DeviceManufacturerHandler with HassToDomainMapper): UIO[Unit] = ???
+  override def add(handler: DeviceManufacturerHandler with HassToDomainMapper): UIO[DeviceManufacturerHandler with HassToDomainMapper] = ???
 }
 
 object InMemoryManufacturerRepository {
