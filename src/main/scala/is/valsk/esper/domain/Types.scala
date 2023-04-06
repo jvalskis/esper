@@ -10,12 +10,24 @@ object Types {
   type Manufacturer = NonEmptyString
   val Manufacturer = NonEmptyString
 
+  object ManufacturerExtractor {
+    def unapply(arg: String): Option[Manufacturer] = Manufacturer.from(arg).toOption
+  }
+
   type Model = NonEmptyString
   val Model = NonEmptyString
+
+  object ModelExtractor {
+    def unapply(arg: String): Option[Model] = Model.from(arg).toOption
+  }
 
   object NonEmptyStringImplicits {
     implicit val encoder: JsonEncoder[NonEmptyString] = JsonEncoder[String].contramap(_.toString)
     implicit val decoder: JsonDecoder[NonEmptyString] = JsonDecoder[String].mapOrFail(NonEmptyString.from)
+  }
+
+  object NonEmptyStringExtractor {
+    def unapply(arg: String): Option[NonEmptyString] = NonEmptyString.from(arg).toOption
   }
 
   type UrlString = String Refined Url

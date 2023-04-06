@@ -1,6 +1,8 @@
 package is.valsk.esper
 
-import is.valsk.esper.api.ApiServerApp
+import is.valsk.esper.api.devices.{GetDevice, GetDeviceVersion, GetDevices}
+import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware}
+import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
@@ -81,6 +83,14 @@ object Main extends ZIOAppDefault {
         Client.default,
         FirmwareDownloaderImpl.layer,
         LatestFirmwareMonitorApp.layer,
+        DeviceApi.layer,
+        FirmwareApi.layer,
+        GetFirmware.layer,
+        DeleteFirmware.layer,
+        DownloadFirmware.layer,
+        GetDevice.layer,
+        GetDevices.layer,
+        GetDeviceVersion.layer,
       )
       .logError("Failed to start the application")
       .exitCode
