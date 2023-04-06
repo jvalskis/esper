@@ -1,13 +1,14 @@
 package is.valsk.esper.domain
 
 import is.valsk.esper.domain.SemanticVersion.SemanticVersionSegment
-import zio.json.JsonDecoder
+import zio.json.{JsonDecoder, JsonEncoder}
 
 import scala.annotation.tailrec
 
 case class SemanticVersion(
     value: String,
-) extends Ordered[SemanticVersion] {
+) extends Version[SemanticVersion] {
+
   override def compare(that: SemanticVersion): Int = {
     compareSemantically(value.split("\\.").toList, that.value.split("\\.").toList)
   }
@@ -34,6 +35,7 @@ case class SemanticVersion(
 
 object SemanticVersion {
   implicit val decoder: JsonDecoder[SemanticVersion] = JsonDecoder[String].map(SemanticVersion(_))
+  implicit val encoder: JsonEncoder[SemanticVersion] = JsonEncoder[String].contramap(_.value)
 
   case class SemanticVersionSegment(
       number: Int,

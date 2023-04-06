@@ -12,7 +12,6 @@ case class Device(
     name: NonEmptyString,
     nameByUser: Option[String],
     model: Model,
-    hardware: Option[String],
     softwareVersion: Option[String],
     manufacturer: Manufacturer,
 )
