@@ -3,7 +3,7 @@ package is.valsk.esper.api
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.api.DeviceApi
-import is.valsk.esper.api.devices.{GetDevice, GetDeviceVersion, GetDevices}
+import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
 import is.valsk.esper.device.DeviceProxy
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyDevice
 import is.valsk.esper.domain.Device.encoder
@@ -22,22 +22,25 @@ class DeviceApi(
     getDevices: GetDevices,
     getDevice: GetDevice,
     getDeviceVersion: GetDeviceVersion,
+    flashDevice: FlashDevice,
 ) {
 
   val аpp: HttpApp[Any, HttpError] = Http.collectZIO[Request] {
     case Method.GET -> !! / "devices" => getDevices()
     case Method.GET -> !! / "devices" / NonEmptyStringExtractor(deviceId) => getDevice(deviceId)
     case Method.GET -> !! / "devices" / NonEmptyStringExtractor(deviceId) / "version" => getDeviceVersion(deviceId)
+    case Method.POST -> !! / "devices" / NonEmptyStringExtractor(deviceId) / version => flashDevice(deviceId, version)
   }
 }
 
 object DeviceApi {
 
-  val layer: URLayer[GetDevices & GetDevice & GetDeviceVersion, DeviceApi] = ZLayer {
+  val layer: URLayer[FlashDevice & GetDevices & GetDevice & GetDeviceVersion, DeviceApi] = ZLayer {
     for {
       getDevices <- ZIO.service[GetDevices]
       getDevice <- ZIO.service[GetDevice]
       getDeviceVersion <- ZIO.service[GetDeviceVersion]
-    } yield DeviceApi(getDevices, getDevice, getDeviceVersion)
+      flashDevice <- ZIO.service[FlashDevice]
+    } yield DeviceApi(getDevices, getDevice, getDeviceVersion, flashDevice)
   }
 }

@@ -1,6 +1,6 @@
 package is.valsk.esper
 
-import is.valsk.esper.api.devices.{GetDevice, GetDeviceVersion, GetDevices}
+import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
 import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware}
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
 import is.valsk.esper.device.DeviceManufacturerHandler
@@ -91,6 +91,7 @@ object Main extends ZIOAppDefault {
         GetDevice.layer,
         GetDevices.layer,
         GetDeviceVersion.layer,
+        FlashDevice.layer,
       )
       .logError("Failed to start the application")
       .exitCode

@@ -1,6 +1,7 @@
 package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
+import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyDevice, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
@@ -12,14 +13,16 @@ import is.valsk.esper.hass.HassToDomainMapper
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.services.HttpClient
-import zio.http.{Client, ClientConfig}
+import zio.http.model.Method
+import zio.http.{Client, ClientConfig, Path, QueryParams, Request, URL}
 import zio.json.*
-import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
+import zio.{Chunk, IO, ULayer, URLayer, ZIO, ZLayer}
 
 import scala.annotation.tailrec
 import scala.util.Try
 
 class ShellyDeviceHandler(
+    esperConfig: EsperConfig,
     shellyConfig: ShellyConfig,
     httpClient: HttpClient,
 ) extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy[ShellyDevice] {
@@ -98,16 +101,33 @@ class ShellyDeviceHandler(
       .flatMap(Model.from)
   }
 
-  override def flashFirmware(firmware: Firmware): IO[DeviceApiError, Unit] = ???
+  override def flashFirmware(device: Device, firmware: Firmware): IO[Throwable, Unit] = {
+    val endpoint = ApiEndpoints.ota(device.url)
+    for {
+      otaUrl <- ZIO
+        .fromEither(URL.fromString(endpoint))
+        .map(_.setQueryParams("url" -> Chunk.succeed(resolveGetFirmwareEndpoint(firmware))))
+      _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Url: $otaUrl")
+      response <- httpClient.getJson[Ota](Request.default(method = Method.GET, url = otaUrl))
+      _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Response: $response")
+    } yield ()
+  }
+
+  private def resolveGetFirmwareEndpoint(firmware: Firmware): String = {
+    val manufacturer = firmware.deviceModel.manufacturer.toString
+    val model = firmware.deviceModel.model.toString
+    (Path.decode(esperConfig.host) / manufacturer / model).toString
+  }
 }
 
 object ShellyDeviceHandler {
 
-  val layer: URLayer[HttpClient & ShellyConfig, ShellyDeviceHandler] = ZLayer {
+  val layer: URLayer[HttpClient & ShellyConfig & EsperConfig, ShellyDeviceHandler] = ZLayer {
     for {
       httpClient <- ZIO.service[HttpClient]
       shellyConfig <- ZIO.service[ShellyConfig]
-    } yield ShellyDeviceHandler(shellyConfig, httpClient)
+      esperConfig <- ZIO.service[EsperConfig]
+    } yield ShellyDeviceHandler(esperConfig, shellyConfig, httpClient)
   }
 
   case class ShellyFirmwareEntry(

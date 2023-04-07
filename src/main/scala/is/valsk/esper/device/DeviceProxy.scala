@@ -7,5 +7,5 @@ trait DeviceProxy[V <: Version[V]] {
 
   def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, V]
 
-  def flashFirmware(firmware: Firmware): IO[DeviceApiError, Unit]
+  def flashFirmware(device: Device, firmware: Firmware): IO[Throwable, Unit]
 }
