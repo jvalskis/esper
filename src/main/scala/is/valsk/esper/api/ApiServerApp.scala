@@ -15,36 +15,39 @@ import zio.http.netty.NettyServerConfig
 import zio.json.*
 import zio.{RLayer, Random, Task, URLayer, ZIO, ZLayer}
 
-class ApiServerApp(
-    firmwareApi: FirmwareApi,
-    deviceApi: DeviceApi,
-    esperConfig: EsperConfig,
-) {
-
-  def run: Task[Nothing] =
-    val serverConfigLayer = ServerConfig.live(
-      ServerConfig.default.port(esperConfig.port)
-    )
-    val app = (firmwareApi.app ++ deviceApi.аpp)
-      .mapError(e => Response(status = e.status, body = Body.fromCharSequence(e.message)))
-    val httpServer = Server.install(app)
-      .flatMap { port =>
-        ZIO.logInfo(s"Starting server on http://localhost:$port")
-      }
-    (httpServer *> ZIO.never).provide(
-      serverConfigLayer,
-      NettyServerConfig.live,
-      Server.customized,
-    )
+trait ApiServerApp {
+  def run: Task[Nothing]
 }
 
 object ApiServerApp {
+  private class ApiServerAppLive(
+      firmwareApi: FirmwareApi,
+      deviceApi: DeviceApi,
+      esperConfig: EsperConfig,
+  ) extends ApiServerApp {
+
+    def run: Task[Nothing] =
+      val serverConfigLayer = ServerConfig.live(
+        ServerConfig.default.port(esperConfig.port)
+      )
+      val app = (firmwareApi.app ++ deviceApi.аpp)
+        .mapError(e => Response(status = e.status, body = Body.fromCharSequence(e.message)))
+      val httpServer = Server.install(app)
+        .flatMap { port =>
+          ZIO.logInfo(s"Starting server on http://localhost:$port")
+        }
+      (httpServer *> ZIO.never).provide(
+        serverConfigLayer,
+        NettyServerConfig.live,
+        Server.customized,
+      )
+  }
 
   val layer: URLayer[DeviceApi & FirmwareApi & EsperConfig, ApiServerApp] = ZLayer {
     for {
       esperConfig <- ZIO.service[EsperConfig]
       deviceApi <- ZIO.service[DeviceApi]
       firmwareApi <- ZIO.service[FirmwareApi]
-    } yield ApiServerApp(firmwareApi, deviceApi, esperConfig)
+    } yield ApiServerAppLive(firmwareApi, deviceApi, esperConfig)
   }
 }
