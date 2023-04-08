@@ -5,14 +5,14 @@ import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmwar
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
+import is.valsk.esper.domain.Device
+import is.valsk.esper.domain.Types.Manufacturer
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
-import is.valsk.esper.domain.Device
 import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
-import is.valsk.esper.services.{FirmwareDownloaderImpl, HttpClient, LatestFirmwareMonitorApp}
-import is.valsk.esper.domain.Types.Manufacturer
+import is.valsk.esper.services.{FirmwareDownloader, HttpClient, LatestFirmwareMonitorApp}
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -81,7 +81,7 @@ object Main extends ZIOAppDefault {
         ShellyDeviceHandler.layer,
         HttpClient.layer,
         Client.default,
-        FirmwareDownloaderImpl.layer,
+        FirmwareDownloader.layer,
         LatestFirmwareMonitorApp.layer,
         DeviceApi.layer,
         FirmwareApi.layer,
