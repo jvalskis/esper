@@ -23,9 +23,6 @@ lazy val root = project
       "dev.zio" %% "zio-config" % zioConfigVersion,
       "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
       "dev.zio" %% "zio-config-magnolia" % zioConfigVersion,
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion,
       "eu.timepit" %% "refined" % "0.10.2",
       "org.scalameta" %% "munit" % "0.7.29" % Test
     )

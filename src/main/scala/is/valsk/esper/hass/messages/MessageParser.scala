@@ -1,7 +1,5 @@
 package is.valsk.esper.hass.messages
 
-import io.circe.*
-import io.circe.parser.*
 import io.netty.channel.{ChannelFactory, EventLoopGroup}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
