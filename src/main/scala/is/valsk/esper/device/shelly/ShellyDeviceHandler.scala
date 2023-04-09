@@ -76,11 +76,13 @@ class ShellyDeviceHandler(
           case e: ParseError => FailedToParseFirmwareResponse(e.message, deviceModel, Some(e))
           case e => FirmwareDownloadFailed(e.getMessage, deviceModel, Some(e))
         }
-      latestFirmware = firmwareList.maxBy(_.version)(SemanticVersion.Ordering)
+      latestFirmware = firmwareList.maxBy(_.version)(versionOrdering)
       latestFirmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(latestFirmware))
         .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceModel))
     } yield FirmwareDescriptor(deviceModel, latestFirmwareDownloadUrl, latestFirmware.version)
   }
+
+  override def versionOrdering: Ordering[Version] = SemanticVersion.Ordering
 
   private def getFirmwareListUrl(model: Model): Either[String, UrlString] = UrlString.from(
     shellyConfig.firmwareListUrlPattern.replace("{{model}}", model.toString)

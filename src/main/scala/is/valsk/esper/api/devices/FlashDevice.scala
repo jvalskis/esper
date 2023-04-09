@@ -2,8 +2,9 @@ package is.valsk.esper.api.devices
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry}
-import is.valsk.esper.domain.DeviceModel
+import is.valsk.esper.domain.{DeviceModel, Version}
 import is.valsk.esper.domain.Version.encoder
+import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository}
 import zio.http.Response
 import zio.http.model.{HttpError, Status}
@@ -16,7 +17,7 @@ class FlashDevice(
     firmwareRepository: FirmwareRepository
 ) {
 
-  def apply(deviceId: NonEmptyString, version: String): IO[HttpError, Response] = for {
+  def apply(deviceId: NonEmptyString, version: Version): IO[HttpError, Response] = for {
     device <- deviceRepository.get(deviceId)
       .flatMap {
         case Some(value) => ZIO.succeed(value)
@@ -24,7 +25,7 @@ class FlashDevice(
           ZIO.fail(HttpError.NotFound("1"))
       }
       .mapError(_ => HttpError.InternalServerError())
-    firmware <- firmwareRepository.get(DeviceModel(device.manufacturer, device.model))
+    firmware <- firmwareRepository.get(FirmwareKey(device.manufacturer, device.model, version))
       .mapError(_ => HttpError.InternalServerError())
       .flatMap {
         case Some(value) => ZIO.succeed(value)

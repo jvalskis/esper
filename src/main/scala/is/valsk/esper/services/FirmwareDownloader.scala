@@ -34,7 +34,7 @@ object FirmwareDownloader {
       _ <- ZIO.logInfo(s"Firmware downloaded: $deviceModel. Bytes read: ${bytes.size}")
       result <- firmwareRepository.add(Firmware(
         deviceModel = firmwareDetails.deviceModel,
-        version = firmwareDetails.version.value,
+        version = firmwareDetails.version,
         data = bytes,
         size = bytes.size
       ))

@@ -1,7 +1,7 @@
 package is.valsk.esper
 
 import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
-import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware}
+import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware, GetLatestFirmware}
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
@@ -86,6 +86,7 @@ object Main extends ZIOAppDefault {
         DeviceApi.layer,
         FirmwareApi.layer,
         GetFirmware.layer,
+        GetLatestFirmware.layer,
         DeleteFirmware.layer,
         DownloadFirmware.layer,
         GetDevice.layer,

@@ -4,7 +4,7 @@ import zio.Chunk
 
 case class Firmware(
     deviceModel: DeviceModel,
-    version: String,
+    version: Version,
     data: Chunk[Byte],
     size: Long,
 )

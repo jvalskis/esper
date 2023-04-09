@@ -10,6 +10,8 @@ import zio.IO
 trait DeviceManufacturerHandler {
 
   def getFirmwareDownloadDetails(deviceModel: DeviceModel): IO[FirmwareDownloadError, FirmwareDescriptor]
+
+  def versionOrdering: Ordering[Version]
 }
 
 object DeviceManufacturerHandler {

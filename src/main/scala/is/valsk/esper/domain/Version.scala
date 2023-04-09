@@ -12,6 +12,8 @@ case class Version(
 object Version {
   implicit val decoder: JsonDecoder[Version] = JsonDecoder[String].map(Version(_))
   implicit val encoder: JsonEncoder[Version] = JsonEncoder[String].contramap(_.value)
+
+  def unapply(string: String): Option[Version] = Some(Version(string))
 }
 
 object SemanticVersion {

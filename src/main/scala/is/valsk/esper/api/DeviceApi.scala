@@ -8,7 +8,7 @@ import is.valsk.esper.device.DeviceProxy
 import is.valsk.esper.domain.Device.encoder
 import is.valsk.esper.domain.Version.encoder
 import is.valsk.esper.domain.Types.NonEmptyStringExtractor
-import is.valsk.esper.domain.{DeviceModel, SemanticVersion}
+import is.valsk.esper.domain.{DeviceModel, SemanticVersion, Version}
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, Repository}
 import is.valsk.esper.services.FirmwareDownloader
 import zio.http.*
@@ -28,7 +28,7 @@ class DeviceApi(
     case Method.GET -> !! / "devices" => getDevices()
     case Method.GET -> !! / "devices" / NonEmptyStringExtractor(deviceId) => getDevice(deviceId)
     case Method.GET -> !! / "devices" / NonEmptyStringExtractor(deviceId) / "version" => getDeviceVersion(deviceId)
-    case Method.POST -> !! / "devices" / NonEmptyStringExtractor(deviceId) / version => flashDevice(deviceId, version)
+    case Method.POST -> !! / "devices" / NonEmptyStringExtractor(deviceId) / Version(version) => flashDevice(deviceId, version)
   }
 }
 

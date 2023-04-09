@@ -1,9 +1,10 @@
 package is.valsk.esper.api.firmware
 
 import is.valsk.esper.api.FirmwareApi
-import is.valsk.esper.domain.{DeviceModel, PersistenceException}
+import is.valsk.esper.domain.{DeviceModel, PersistenceException, Version}
 import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
 import is.valsk.esper.repositories.FirmwareRepository
+import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.services.FirmwareDownloader
 import zio.http.model.{Headers, HttpError, Status}
 import zio.http.*
@@ -15,8 +16,8 @@ class GetFirmware(
     firmwareRepository: FirmwareRepository,
 ) {
 
-  def apply(manufacturer: Manufacturer, model: Model): IO[HttpError, Response] = for {
-    firmware <- firmwareRepository.get(DeviceModel(manufacturer, model))
+  def apply(manufacturer: Manufacturer, model: Model, version: Version): IO[HttpError, Response] = for {
+    firmware <- firmwareRepository.get(FirmwareKey(DeviceModel(manufacturer, model), version))
       .mapError(_ => HttpError.InternalServerError())
       .flatMap {
         case Some(firmware) => ZIO.succeed(firmware)
