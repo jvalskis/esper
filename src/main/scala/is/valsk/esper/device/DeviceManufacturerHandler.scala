@@ -17,6 +17,6 @@ object DeviceManufacturerHandler {
   case class FirmwareDescriptor(
       deviceModel: DeviceModel,
       url: UrlString,
-      version: SemanticVersion
+      version: Version
   )
 }

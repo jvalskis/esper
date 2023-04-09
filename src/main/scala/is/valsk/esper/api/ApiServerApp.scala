@@ -3,9 +3,8 @@ package is.valsk.esper.api
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceProxy
-import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyDevice
 import is.valsk.esper.domain.Device.encoder
-import is.valsk.esper.domain.SemanticVersion.encoder
+import is.valsk.esper.domain.Version.encoder
 import is.valsk.esper.domain.{DeviceModel, SemanticVersion}
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, Repository}
 import is.valsk.esper.services.FirmwareDownloader

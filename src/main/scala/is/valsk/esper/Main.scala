@@ -3,7 +3,7 @@ package is.valsk.esper
 import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
 import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware}
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
-import is.valsk.esper.device.DeviceManufacturerHandler
+import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.Types.Manufacturer
@@ -49,11 +49,11 @@ object Main extends ZIOAppDefault {
     } yield List(protocolHandler, textHandler, unhandledMessageHandler)
   }
 
-  private val manufacturerRegistryLayer: URLayer[ShellyDeviceHandler, Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper]] = ZLayer {
+  private val manufacturerRegistryLayer: URLayer[ShellyDeviceHandler, Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy]] = ZLayer {
     for {
       shellyDeviceHandler <- ZIO.service[ShellyDeviceHandler]
     } yield Map(
-      Manufacturer.unsafeFrom("Shelly") -> shellyDeviceHandler
+      shellyDeviceHandler.supportedManufacturer -> shellyDeviceHandler
     )
   }
 
@@ -92,6 +92,7 @@ object Main extends ZIOAppDefault {
         GetDevices.layer,
         GetDeviceVersion.layer,
         FlashDevice.layer,
+        DeviceProxyRegistry.layer,
       )
       .logError("Failed to start the application")
       .exitCode

@@ -1,11 +1,12 @@
 package is.valsk.esper.device
 
-import is.valsk.esper.domain.{Device, DeviceApiError, Firmware, Version}
+import is.valsk.esper.domain.Types.Manufacturer
+import is.valsk.esper.domain.*
 import zio.IO
 
-trait DeviceProxy[V <: Version[V]] {
+trait DeviceProxy {
 
-  def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, V]
+  def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version]
 
   def flashFirmware(device: Device, firmware: Firmware): IO[Throwable, Unit]
 }

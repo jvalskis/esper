@@ -3,18 +3,18 @@ package is.valsk.esper.device.shelly
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
-import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyDevice, ShellyFirmwareEntry}
+import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy}
 import is.valsk.esper.domain.*
-import is.valsk.esper.domain.Types.{Model, UrlString}
+import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.hass.HassToDomainMapper
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.services.HttpClient
 import zio.http.model.Method
-import zio.http.{Client, ClientConfig, Path, QueryParams, Request, URL}
+import zio.http.*
 import zio.json.*
 import zio.{Chunk, IO, ULayer, URLayer, ZIO, ZLayer}
 
@@ -25,12 +25,14 @@ class ShellyDeviceHandler(
     esperConfig: EsperConfig,
     shellyConfig: ShellyConfig,
     httpClient: HttpClient,
-) extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy[ShellyDevice] {
+) extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r
 
-  override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, SemanticVersion] = {
+  val supportedManufacturer: Manufacturer = Manufacturer.unsafeFrom("Shelly")
+
+  override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = {
     val endpoint = ApiEndpoints.ota(device.url)
     for {
       _ <- ZIO.logInfo(s"Getting current firmware version from device: ${device.id} (${device.name}). Url: $endpoint")
@@ -40,7 +42,7 @@ class ShellyDeviceHandler(
           case e => ApiCallFailed(e.getMessage, device, Some(e))
         }
       version <- otaResponse.old_version match {
-        case shellyApiVersionPattern(version) => ZIO.succeed(SemanticVersion(version))
+        case shellyApiVersionPattern(version) => ZIO.succeed(Version(version))
         case version => ZIO.fail(MalformedVersion(version, device: Device))
       }
     } yield version
@@ -74,7 +76,7 @@ class ShellyDeviceHandler(
           case e: ParseError => FailedToParseFirmwareResponse(e.message, deviceModel, Some(e))
           case e => FirmwareDownloadFailed(e.getMessage, deviceModel, Some(e))
         }
-      latestFirmware = firmwareList.max
+      latestFirmware = firmwareList.maxBy(_.version)(SemanticVersion.Ordering)
       latestFirmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(latestFirmware))
         .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceModel))
     } yield FirmwareDescriptor(deviceModel, latestFirmwareDownloadUrl, latestFirmware.version)
@@ -131,16 +133,13 @@ object ShellyDeviceHandler {
   }
 
   case class ShellyFirmwareEntry(
-      version: SemanticVersion,
+      version: Version,
       file: String,
-  ) extends Ordered[ShellyFirmwareEntry] {
-
-    override def compare(that: ShellyFirmwareEntry): Int = version.compare(that.version)
-  }
+  )
 
   object ShellyFirmwareEntry {
 
-    import SemanticVersion.decoder
+    import is.valsk.esper.domain.Version.decoder
 
     implicit val decoder: JsonDecoder[ShellyFirmwareEntry] = DeriveJsonDecoder.gen[ShellyFirmwareEntry]
   }
@@ -148,6 +147,4 @@ object ShellyDeviceHandler {
   object ApiEndpoints {
     def ota(baseUrl: UrlString): String = s"$baseUrl/ota"
   }
-
-  type ShellyDevice = SemanticVersion
 }

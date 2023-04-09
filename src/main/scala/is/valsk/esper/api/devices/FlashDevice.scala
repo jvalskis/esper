@@ -1,10 +1,9 @@
 package is.valsk.esper.api.devices
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.device.DeviceProxy
-import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyDevice
+import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.DeviceModel
-import is.valsk.esper.domain.SemanticVersion.encoder
+import is.valsk.esper.domain.Version.encoder
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository}
 import zio.http.Response
 import zio.http.model.{HttpError, Status}
@@ -12,7 +11,7 @@ import zio.json.*
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 class FlashDevice(
-    deviceProxy: DeviceProxy[ShellyDevice],
+    deviceProxyRegistry: DeviceProxyRegistry,
     deviceRepository: DeviceRepository,
     firmwareRepository: FirmwareRepository
 ) {
@@ -32,6 +31,8 @@ class FlashDevice(
         case None =>
           ZIO.fail(HttpError.NotFound("2"))
       }
+    deviceProxy <- deviceProxyRegistry.selectProxy(device.manufacturer)
+      .mapError(e => HttpError.PreconditionFailed(e.getMessage))
     _ <- deviceProxy.flashFirmware(device, firmware)
       .mapError(e => HttpError.BadGateway(e.getMessage))
   } yield Response.ok
@@ -39,12 +40,12 @@ class FlashDevice(
 
 object FlashDevice {
 
-  val layer: URLayer[DeviceProxy[ShellyDevice] & DeviceRepository & FirmwareRepository, FlashDevice] = ZLayer {
+  val layer: URLayer[DeviceProxyRegistry & DeviceRepository & FirmwareRepository, FlashDevice] = ZLayer {
     for {
-      deviceProxy <- ZIO.service[DeviceProxy[ShellyDevice]]
+      deviceProxyRegistry <- ZIO.service[DeviceProxyRegistry]
       deviceRepository <- ZIO.service[DeviceRepository]
       firmwareRepository <- ZIO.service[FirmwareRepository]
-    } yield FlashDevice(deviceProxy, deviceRepository, firmwareRepository)
+    } yield FlashDevice(deviceProxyRegistry, deviceRepository, firmwareRepository)
   }
 
 }
