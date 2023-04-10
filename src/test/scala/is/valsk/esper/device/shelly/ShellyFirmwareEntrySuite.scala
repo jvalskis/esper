@@ -1,7 +1,7 @@
 package is.valsk.esper.device.shelly
 
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyFirmwareEntry
-import is.valsk.esper.domain.SemanticVersion
+import is.valsk.esper.domain.{SemanticVersion, Version}
 import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -17,6 +17,6 @@ object ShellyFirmwareEntrySuite extends ZIOSpecDefault {
       }
       """
 
-    assertTrue(json.fromJson[ShellyFirmwareEntry] == Right(ShellyFirmwareEntry(SemanticVersion("v1.10.2"), "SHDW-2.zip")))
+    assertTrue(json.fromJson[ShellyFirmwareEntry] == Right(ShellyFirmwareEntry(Version("v1.10.2"), "SHDW-2.zip")))
   }
 }

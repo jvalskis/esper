@@ -7,7 +7,7 @@ import zio.*
 trait Repository[K, R] {
   def get(id: K): IO[PersistenceException, Option[R]]
 
-  def list: IO[PersistenceException, List[R]]
+  def getAll: IO[PersistenceException, List[R]]
 
   def add(value: R): IO[PersistenceException, R]
 }

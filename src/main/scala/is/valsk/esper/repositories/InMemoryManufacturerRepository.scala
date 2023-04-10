@@ -9,7 +9,7 @@ class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceManufactur
 
   override def get(manufacturer: Manufacturer): UIO[Option[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.get(manufacturer))
 
-  override def list: UIO[List[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.values.toList)
+  override def getAll: UIO[List[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.values.toList)
 
   override def add(handler: DeviceManufacturerHandler with HassToDomainMapper): UIO[DeviceManufacturerHandler with HassToDomainMapper] = ???
 }

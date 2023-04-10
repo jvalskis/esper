@@ -25,7 +25,7 @@ class GetLatestFirmware(
         case Some(handler) => ZIO.succeed(handler)
         case None => ZIO.fail(NotFound(""))
       }
-    latestFirmware <- firmwareRepository.list
+    latestFirmware <- firmwareRepository.getAll
       .mapError(_ => HttpError.InternalServerError())
       .flatMap {
         case Nil => ZIO.fail(NotFound(""))

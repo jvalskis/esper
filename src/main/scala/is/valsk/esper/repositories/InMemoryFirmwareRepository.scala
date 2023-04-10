@@ -19,7 +19,7 @@ class InMemoryFirmwareRepository(
 
   override def get(id: FirmwareKey): UIO[Option[Firmware]] = map.get.map(_.get(id))
 
-  override def list: UIO[List[Firmware]] = map.get.map(_.values.toList)
+  override def getAll: UIO[List[Firmware]] = map.get.map(_.values.toList)
 
   override def add(firmware: Firmware): IO[FailedToStoreFirmware, Firmware] = for {
     _ <- ensureStorageFolderExists(firmware)

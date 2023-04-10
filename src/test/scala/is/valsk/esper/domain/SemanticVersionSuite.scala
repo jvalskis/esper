@@ -26,7 +26,7 @@ object SemanticVersionSuite extends ZIOSpecDefault {
 
   private def testCase(string1: String, string2: String, expected: Int): Spec[Any, Nothing] = {
     test(s"$string1 compareTo $string2 => $expected") {
-      assertTrue(SemanticVersion(string1).compareTo(SemanticVersion(string2)) == expected)
+      assertTrue(SemanticVersion.Ordering.compare(Version(string1), Version(string2)) == expected)
     }
   }
 }

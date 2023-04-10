@@ -40,7 +40,7 @@ object LatestFirmwareMonitorApp {
     } yield ()
 
     private def getDistinctDeviceModels: IO[PersistenceException, List[DeviceModel]] = for {
-      allDevices <- deviceRepository.list
+      allDevices <- deviceRepository.getAll
       deviceTypes = allDevices.map(device => DeviceModel(device.manufacturer, device.model)).distinct
     } yield deviceTypes
 

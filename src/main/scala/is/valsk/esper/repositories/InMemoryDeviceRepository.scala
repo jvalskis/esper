@@ -9,7 +9,7 @@ class InMemoryDeviceRepository(map: Ref[Map[NonEmptyString, Device]]) extends De
 
   override def get(id: NonEmptyString): UIO[Option[Device]] = map.get.map(_.get(id))
 
-  override def list: UIO[List[Device]] = map.get.map(_.values.toList)
+  override def getAll: UIO[List[Device]] = map.get.map(_.values.toList)
 
   override def add(device: Device): UIO[Device] = map.update(map => map + (device.id -> device)).as(device)
 }

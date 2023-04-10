@@ -4,7 +4,7 @@ import eu.timepit.refined.string.Url
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Types.NonEmptyStringImplicits.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
-import zio.json.{DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class Device(
     id: NonEmptyString,
@@ -20,6 +20,9 @@ object Device {
 
   import is.valsk.esper.domain.Types.UrlString.encoder
   import is.valsk.esper.domain.Types.NonEmptyStringImplicits.encoder
+  import is.valsk.esper.domain.Types.UrlString.decoder
+  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.decoder
 
   implicit val encoder: JsonEncoder[Device] = DeriveJsonEncoder.gen[Device]
+  implicit val decoder: JsonDecoder[Device] = DeriveJsonDecoder.gen[Device]
 }
