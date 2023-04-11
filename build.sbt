@@ -24,6 +24,7 @@ lazy val root = project
       "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
       "dev.zio" %% "zio-config-magnolia" % zioConfigVersion,
       "eu.timepit" %% "refined" % "0.10.2",
-      "org.scalameta" %% "munit" % "0.7.29" % Test
-    )
+    ),
+
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
