@@ -41,12 +41,6 @@ class FlashDevice(
 
 object FlashDevice {
 
-  val layer: URLayer[DeviceProxyRegistry & DeviceRepository & FirmwareRepository, FlashDevice] = ZLayer {
-    for {
-      deviceProxyRegistry <- ZIO.service[DeviceProxyRegistry]
-      deviceRepository <- ZIO.service[DeviceRepository]
-      firmwareRepository <- ZIO.service[FirmwareRepository]
-    } yield FlashDevice(deviceProxyRegistry, deviceRepository, firmwareRepository)
-  }
+  val layer: URLayer[DeviceProxyRegistry & DeviceRepository & FirmwareRepository, FlashDevice] = ZLayer.fromFunction(FlashDevice(_, _, _))
 
 }

@@ -18,9 +18,5 @@ class DeleteFirmware(
 
 object DeleteFirmware {
 
-  val layer: URLayer[FirmwareRepository, DeleteFirmware] = ZLayer {
-    for {
-      firmwareRepository <- ZIO.service[FirmwareRepository]
-    } yield DeleteFirmware(firmwareRepository)
-  }
+  val layer: URLayer[FirmwareRepository, DeleteFirmware] = ZLayer.fromFunction(DeleteFirmware(_))
 }

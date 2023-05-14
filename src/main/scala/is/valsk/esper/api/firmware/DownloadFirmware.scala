@@ -20,9 +20,5 @@ class DownloadFirmware(
 
 object DownloadFirmware {
 
-  val layer: URLayer[FirmwareDownloader, DownloadFirmware] = ZLayer {
-    for {
-      firmwareDownloader <- ZIO.service[FirmwareDownloader]
-    } yield DownloadFirmware(firmwareDownloader)
-  }
+  val layer: URLayer[FirmwareDownloader, DownloadFirmware] = ZLayer.fromFunction(DownloadFirmware(_))
 }

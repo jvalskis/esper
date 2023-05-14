@@ -32,9 +32,5 @@ class GetFirmware(
 
 object GetFirmware {
 
-  val layer: URLayer[FirmwareRepository, GetFirmware] = ZLayer {
-    for {
-      firmwareRepository <- ZIO.service[FirmwareRepository]
-    } yield GetFirmware(firmwareRepository)
-  }
+  val layer: URLayer[FirmwareRepository, GetFirmware] = ZLayer.fromFunction(GetFirmware(_))
 }

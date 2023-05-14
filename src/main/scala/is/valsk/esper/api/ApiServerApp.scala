@@ -42,11 +42,5 @@ object ApiServerApp {
       )
   }
 
-  val layer: URLayer[DeviceApi & FirmwareApi & EsperConfig, ApiServerApp] = ZLayer {
-    for {
-      esperConfig <- ZIO.service[EsperConfig]
-      deviceApi <- ZIO.service[DeviceApi]
-      firmwareApi <- ZIO.service[FirmwareApi]
-    } yield ApiServerAppLive(firmwareApi, deviceApi, esperConfig)
-  }
+  val layer: URLayer[DeviceApi & FirmwareApi & EsperConfig, ApiServerApp] = ZLayer.fromFunction(ApiServerAppLive(_, _, _))
 }

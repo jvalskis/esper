@@ -26,12 +26,5 @@ class FirmwareApi(
 
 object FirmwareApi {
 
-  val layer: URLayer[GetFirmware & DownloadFirmware & DeleteFirmware & GetLatestFirmware, FirmwareApi] = ZLayer {
-    for {
-      getFirmware <- ZIO.service[GetFirmware]
-      getLatestFirmware <- ZIO.service[GetLatestFirmware]
-      downloadFirmware <- ZIO.service[DownloadFirmware]
-      deleteFirmware <- ZIO.service[DeleteFirmware]
-    } yield FirmwareApi(getFirmware, getLatestFirmware, downloadFirmware, deleteFirmware)
-  }
+  val layer: URLayer[GetFirmware & DownloadFirmware & DeleteFirmware & GetLatestFirmware, FirmwareApi] = ZLayer .fromFunction(FirmwareApi(_, _, _, _))
 }

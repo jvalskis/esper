@@ -31,11 +31,6 @@ class GetDeviceVersion(
 
 object GetDeviceVersion {
 
-  val layer: URLayer[DeviceProxyRegistry & DeviceRepository, GetDeviceVersion] = ZLayer {
-    for {
-      deviceProxyRegistry <- ZIO.service[DeviceProxyRegistry]
-      deviceRepository <- ZIO.service[DeviceRepository]
-    } yield GetDeviceVersion(deviceProxyRegistry, deviceRepository)
-  }
+  val layer: URLayer[DeviceProxyRegistry & DeviceRepository, GetDeviceVersion] = ZLayer.fromFunction(GetDeviceVersion(_, _))
 
 }

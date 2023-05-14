@@ -20,11 +20,7 @@ class GetDevices(
 
 object GetDevices {
 
-  val layer: URLayer[DeviceRepository, GetDevices] = ZLayer {
-    for {
-      deviceRepository <- ZIO.service[DeviceRepository]
-    } yield GetDevices(deviceRepository)
-  }
+  val layer: URLayer[DeviceRepository, GetDevices] = ZLayer.fromFunction(GetDevices(_))
 
 }
 

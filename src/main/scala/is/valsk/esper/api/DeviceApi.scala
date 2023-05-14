@@ -34,12 +34,5 @@ class DeviceApi(
 
 object DeviceApi {
 
-  val layer: URLayer[FlashDevice & GetDevices & GetDevice & GetDeviceVersion, DeviceApi] = ZLayer {
-    for {
-      getDevices <- ZIO.service[GetDevices]
-      getDevice <- ZIO.service[GetDevice]
-      getDeviceVersion <- ZIO.service[GetDeviceVersion]
-      flashDevice <- ZIO.service[FlashDevice]
-    } yield DeviceApi(getDevices, getDevice, getDeviceVersion, flashDevice)
-  }
+  val layer: URLayer[FlashDevice & GetDevices & GetDevice & GetDeviceVersion, DeviceApi] = ZLayer.fromFunction(DeviceApi(_, _, _, _))
 }

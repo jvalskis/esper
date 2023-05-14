@@ -44,10 +44,5 @@ class GetLatestFirmware(
 
 object GetLatestFirmware {
 
-  val layer: URLayer[FirmwareRepository & ManufacturerRepository, GetLatestFirmware] = ZLayer {
-    for {
-      firmwareRepository <- ZIO.service[FirmwareRepository]
-      manufacturerRepository <- ZIO.service[ManufacturerRepository]
-    } yield GetLatestFirmware(firmwareRepository, manufacturerRepository)
-  }
+  val layer: URLayer[FirmwareRepository & ManufacturerRepository, GetLatestFirmware] = ZLayer.fromFunction(GetLatestFirmware(_, _))
 }
