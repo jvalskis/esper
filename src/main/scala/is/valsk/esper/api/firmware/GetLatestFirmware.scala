@@ -11,7 +11,7 @@ import zio.http.*
 import zio.http.model.HttpError.NotFound
 import zio.http.model.{Headers, HttpError, Status}
 import zio.stream.ZStream
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{Chunk, IO, URLayer, ZIO, ZLayer}
 
 class GetLatestFirmware(
     firmwareRepository: FirmwareRepository,
@@ -19,26 +19,28 @@ class GetLatestFirmware(
 ) {
 
   def apply(manufacturer: Manufacturer, model: Model): IO[HttpError, Response] = for {
+    _ <- ZIO.logInfo(s"Getting latest firmware for manufacturer: $manufacturer, model: $model")
     manufacturerHandler <- manufacturerRepository.get(manufacturer)
-      .mapError(_ => HttpError.InternalServerError())
+      .mapError(e => HttpError.InternalServerError(e.toString))
       .flatMap {
         case Some(handler) => ZIO.succeed(handler)
         case None => ZIO.fail(NotFound(""))
       }
+    _ <- ZIO.logInfo(s"Fetching latest firmware")
     latestFirmware <- firmwareRepository.getAll
-      .mapError(_ => HttpError.InternalServerError())
+      .mapError(e => HttpError.InternalServerError(e.toString))
       .flatMap {
         case Nil => ZIO.fail(NotFound(""))
         case list => ZIO.succeed(list)
       }
       .map(_
-        .filter(fw => fw.deviceModel.manufacturer == manufacturer && fw.deviceModel.model == model)
+        .filter(fw => fw.manufacturer == manufacturer && fw.model == model)
         .maxBy(_.version)(manufacturerHandler.versionOrdering)
       )
   } yield Response(
     status = Status.Ok,
-    headers = Headers.contentLength(latestFirmware.data.size),
-    body = Body.fromChunk(latestFirmware.data)
+    headers = Headers.contentLength(latestFirmware.data.length),
+    body = Body.fromChunk(Chunk.from(latestFirmware.data))
   )
 }
 

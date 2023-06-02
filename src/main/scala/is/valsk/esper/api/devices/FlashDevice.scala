@@ -2,8 +2,8 @@ package is.valsk.esper.api.devices
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry}
-import is.valsk.esper.domain.{DeviceModel, Version}
 import is.valsk.esper.domain.Version.encoder
+import is.valsk.esper.domain.{DeviceModel, Firmware, Version}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository}
 import zio.http.Response

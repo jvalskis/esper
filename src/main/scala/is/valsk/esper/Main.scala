@@ -1,17 +1,21 @@
 package is.valsk.esper
 
+import io.getquill.context.Context
+import io.getquill.idiom.Idiom
+import io.getquill.jdbczio.Quill
+import io.getquill.{MysqlJdbcContext, MysqlZioJdbcContext, NamingStrategy, PostgresDialect, PostgresJdbcContext, PostgresZioJdbcContext, Query, SnakeCase, SqliteJdbcContext, SqliteZioJdbcContext}
 import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
 import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware, GetLatestFirmware}
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
-import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
-import is.valsk.esper.domain.Device
+import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.Types.Manufacturer
+import is.valsk.esper.domain.{Device, Firmware, PersistenceException}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
-import is.valsk.esper.repositories.{InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, Repository}
+import is.valsk.esper.repositories.*
 import is.valsk.esper.services.{FirmwareDownloader, HttpClient, LatestFirmwareMonitorApp}
 import zio.*
 import zio.config.ReadError
@@ -19,6 +23,8 @@ import zio.http.*
 import zio.stream.ZStream
 
 object Main extends ZIOAppDefault {
+
+  override val bootstrap: ZLayer[Any, Any, Nothing] = Runtime.removeDefaultLoggers >>> SLF4J.slf4j
 
   private val scopedApp: ZIO[HassWebsocketApp & ApiServerApp & LatestFirmwareMonitorApp, Throwable, Unit] = for {
     hassWebsockerApp <- ZIO.service[HassWebsocketApp]
@@ -57,6 +63,8 @@ object Main extends ZIOAppDefault {
     )
   }
 
+  private val quillPostgresLayer = Quill.DataSource.fromPrefix("PostgresConfig") >>> Quill.Postgres.fromNamingStrategy(SnakeCase)
+
   override val run: URIO[Any, ExitCode] = for {
     x <- ZIO.scoped(scopedApp)
       .provide(
@@ -75,7 +83,6 @@ object Main extends ZIOAppDefault {
         ProtocolHandler.layer,
         UnhandledMessageHandler.layer,
         InMemoryManufacturerRepository.layer,
-        InMemoryFirmwareRepository.layer,
         manufacturerRegistryLayer,
         ShellyConfig.layer,
         ShellyDeviceHandler.layer,
@@ -94,6 +101,8 @@ object Main extends ZIOAppDefault {
         GetDeviceVersion.layer,
         FlashDevice.layer,
         DeviceProxyRegistry.layer,
+        quillPostgresLayer,
+        FirmwareRepository.live,
       )
       .logError("Failed to start the application")
       .exitCode

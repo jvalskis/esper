@@ -32,12 +32,15 @@ object FirmwareDownloader {
         .run(ZSink.collectAll[Byte])
         .mapError(e => FirmwareDownloadFailed(e.getMessage, deviceModel, Some(e)))
       _ <- ZIO.logInfo(s"Firmware downloaded: $deviceModel. Bytes read: ${bytes.size}")
-      result <- firmwareRepository.add(Firmware(
-        deviceModel = firmwareDetails.deviceModel,
-        version = firmwareDetails.version,
-        data = bytes,
-        size = bytes.size
-      ))
+      result <- firmwareRepository
+        .add(Firmware(
+          manufacturer = firmwareDetails.deviceModel.manufacturer,
+          model = firmwareDetails.deviceModel.model,
+          version = firmwareDetails.version,
+          data = bytes.toArray,
+          size = bytes.size
+        ))
+        .logError("Failed to persist firmware")
     } yield result
   }
 

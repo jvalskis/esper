@@ -5,8 +5,8 @@ import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmwar
 import is.valsk.esper.domain.Types.{ManufacturerExtractor, ModelExtractor}
 import is.valsk.esper.domain.Version
 import is.valsk.esper.services.FirmwareDownloader
-import zio.http.model.{HttpError, Method, Status}
 import zio.http.*
+import zio.http.model.{HttpError, Method, Status}
 import zio.{URLayer, ZIO, ZLayer}
 
 class FirmwareApi(
@@ -21,6 +21,7 @@ class FirmwareApi(
     case Method.GET -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) / Version(version) => getFirmware(manufacturer, model, version)
     case Method.POST -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) => downloadFirmware(manufacturer, model)
     case Method.DELETE -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) => deleteFirmware(manufacturer, model)
+    case _ => ZIO.logError("Invalid request").as(Response.status(Status.BadRequest))
   }
 }
 

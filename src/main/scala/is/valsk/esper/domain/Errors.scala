@@ -21,6 +21,8 @@ case class FirmwareDownloadLinkResolutionFailed(message: String, deviceModel: De
 
 case class FailedToStoreFirmware(message: String, deviceModel: DeviceModel, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with PersistenceException
 
+case class FailedToQueryFirmware(message: String , cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with PersistenceException
+
 case class MalformedVersion(version: String, device: Device) extends Exception(version) with DeviceApiError
 
 case class ApiCallFailed(message: String, device: Device, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with DeviceApiError

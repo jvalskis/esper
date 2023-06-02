@@ -17,11 +17,11 @@ case class HassResult(
     area_id: Option[String],
     configuration_url: Option[String],
     hw_version: Option[String],
-    model: String,
+    model: Option[String],
     name: String,
     name_by_user: Option[String],
     sw_version: Option[String],
-    manufacturer: String
+    manufacturer: Option[String]
 )
 
 case class HassError(

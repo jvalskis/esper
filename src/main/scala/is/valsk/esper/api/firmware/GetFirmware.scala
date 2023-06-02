@@ -1,23 +1,25 @@
 package is.valsk.esper.api.firmware
 
 import is.valsk.esper.api.FirmwareApi
-import is.valsk.esper.domain.{DeviceModel, PersistenceException, Version}
 import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
+import is.valsk.esper.domain.{DeviceModel, PersistenceException, Version}
 import is.valsk.esper.repositories.FirmwareRepository
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.services.FirmwareDownloader
-import zio.http.model.{Headers, HttpError, Status}
 import zio.http.*
 import zio.http.model.HttpError.NotFound
+import zio.http.model.*
 import zio.stream.ZStream
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{Chunk, IO, URLayer, ZIO, ZLayer}
 
 class GetFirmware(
     firmwareRepository: FirmwareRepository,
 ) {
 
   def apply(manufacturer: Manufacturer, model: Model, version: Version): IO[HttpError, Response] = for {
-    firmware <- firmwareRepository.get(FirmwareKey(DeviceModel(manufacturer, model), version))
+    _ <- ZIO.logInfo("GetFirmware")
+    firmware <- firmwareRepository.get(FirmwareKey(manufacturer, model, version))
+      .logError("Failed to get firmware")
       .mapError(_ => HttpError.InternalServerError())
       .flatMap {
         case Some(firmware) => ZIO.succeed(firmware)
@@ -25,8 +27,8 @@ class GetFirmware(
       }
   } yield Response(
     status = Status.Ok,
-    headers = Headers.contentLength(firmware.data.size),
-    body = Body.fromChunk(firmware.data)
+    headers = Headers.contentLength(firmware.data.length) ++ Headers.contentType(HeaderValues.applicationOctetStream),
+    body = Body.fromChunk(Chunk.from(firmware.data)),
   )
 }
 

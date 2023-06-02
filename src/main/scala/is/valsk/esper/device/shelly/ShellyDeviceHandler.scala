@@ -54,7 +54,7 @@ class ShellyDeviceHandler(
       refinedUrl <- hassDevice.configuration_url.map(UrlString.from).getOrElse(Left("Configuration URL is empty"))
       refinedId <- NonEmptyString.from(hassDevice.id)
       refinedName <- NonEmptyString.from(hassDevice.name)
-      refinedManufacturer <- NonEmptyString.from(hassDevice.manufacturer)
+      refinedManufacturer <- hassDevice.manufacturer.map(NonEmptyString.from).getOrElse(Left("Manufacturer is empty"))
     } yield Device(
       id = refinedId,
       url = refinedUrl,
@@ -118,8 +118,8 @@ class ShellyDeviceHandler(
   }
 
   private def resolveGetFirmwareEndpoint(firmware: Firmware): String = {
-    val manufacturer = firmware.deviceModel.manufacturer.toString
-    val model = firmware.deviceModel.model.toString
+    val manufacturer = firmware.manufacturer.toString
+    val model = firmware.model.toString
     (Path.decode(esperConfig.host) / manufacturer / model).toString
   }
 }
