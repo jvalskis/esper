@@ -9,4 +9,6 @@ case class Firmware(
     version: Version,
     data: Array[Byte],
     size: Long,
-)
+) {
+  override def toString: String = s"Firmware($manufacturer, $model, $version, $size)"
+}

@@ -5,7 +5,7 @@ import io.getquill.idiom.Idiom
 import io.getquill.jdbczio.Quill
 import io.getquill.{MysqlJdbcContext, MysqlZioJdbcContext, NamingStrategy, PostgresDialect, PostgresJdbcContext, PostgresZioJdbcContext, Query, SnakeCase, SqliteJdbcContext, SqliteZioJdbcContext}
 import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
-import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, GetFirmware, GetLatestFirmware}
+import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware}
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
@@ -20,11 +20,12 @@ import is.valsk.esper.services.{FirmwareDownloader, HttpClient, LatestFirmwareMo
 import zio.*
 import zio.config.ReadError
 import zio.http.*
+import zio.logging.backend.SLF4J
 import zio.stream.ZStream
 
 object Main extends ZIOAppDefault {
 
-  override val bootstrap: ZLayer[Any, Any, Nothing] = Runtime.removeDefaultLoggers >>> SLF4J.slf4j
+  override val bootstrap: URLayer[Any, Unit] = Runtime.removeDefaultLoggers >>> SLF4J.slf4j
 
   private val scopedApp: ZIO[HassWebsocketApp & ApiServerApp & LatestFirmwareMonitorApp, Throwable, Unit] = for {
     hassWebsockerApp <- ZIO.service[HassWebsocketApp]
@@ -96,6 +97,7 @@ object Main extends ZIOAppDefault {
         GetLatestFirmware.layer,
         DeleteFirmware.layer,
         DownloadFirmware.layer,
+        DownloadLatestFirmware.layer,
         GetDevice.layer,
         GetDevices.layer,
         GetDeviceVersion.layer,

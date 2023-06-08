@@ -1,5 +1,7 @@
 val scala3Version = "3.2.2"
-val zioVersion = "2.1.12"
+val zioVersion = "2.0.10"
+val zioLoggingVersion = "2.1.12"
+val zioTestVersion = "2.0.13"
 val zioConfigVersion = "3.0.7"
 val circeVersion = "0.14.5"
 val slf4jVersion = "2.0.5"
@@ -14,8 +16,8 @@ lazy val root = project
 
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-simple" % slf4jVersion,
-      "dev.zio" %% "zio-logging" % zioVersion,
-      "dev.zio" %% "zio-logging-slf4j" % zioVersion,
+      "dev.zio" %% "zio-logging" % zioLoggingVersion,
+      "dev.zio" %% "zio-logging-slf4j" % zioLoggingVersion,
       "dev.zio" %% "zio" % zioVersion,
       "dev.zio" %% "zio-streams" % zioVersion,
       "dev.zio" %% "zio-nio" % "2.0.1",
@@ -28,9 +30,9 @@ lazy val root = project
       "io.getquill" %% "quill-jdbc-zio" % "4.6.0.1",
       "org.postgresql" % "postgresql" % "42.5.4",
 
-      "dev.zio" %% "zio-test" % zioVersion % Test,
-      "dev.zio" %% "zio-test-sbt" % zioVersion % Test,
-      "dev.zio" %% "zio-test-magnolia" % zioVersion % Test,
+      "dev.zio" %% "zio-test" % zioTestVersion % Test,
+      "dev.zio" %% "zio-test-sbt" % zioTestVersion % Test,
+      "dev.zio" %% "zio-test-magnolia" % zioTestVersion % Test,
     ),
 
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")

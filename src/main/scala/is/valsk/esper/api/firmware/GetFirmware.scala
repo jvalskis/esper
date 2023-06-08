@@ -27,7 +27,7 @@ class GetFirmware(
       }
   } yield Response(
     status = Status.Ok,
-    headers = Headers.contentLength(firmware.data.length) ++ Headers.contentType(HeaderValues.applicationOctetStream),
+    headers = Headers.contentLength(firmware.size) ++ Headers.contentType(HeaderValues.applicationOctetStream),
     body = Body.fromChunk(Chunk.from(firmware.data)),
   )
 }

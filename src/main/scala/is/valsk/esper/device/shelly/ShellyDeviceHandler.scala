@@ -66,20 +66,29 @@ class ShellyDeviceHandler(
     )
   )
 
-  override def getFirmwareDownloadDetails(deviceModel: DeviceModel): IO[FirmwareDownloadError, FirmwareDescriptor] = {
+  override def getFirmwareDownloadDetails(
+      manufacturer: Manufacturer,
+      model: Model,
+      version: Option[Version]
+  ): IO[FirmwareDownloadError, FirmwareDescriptor] = {
     for {
-      firmwareListUrl <- ZIO.fromEither(getFirmwareListUrl(deviceModel.model))
-        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceModel))
+      firmwareListUrl <- ZIO.fromEither(getFirmwareListUrl(model))
+        .mapError(FirmwareDownloadLinkResolutionFailed(_, manufacturer, model))
       _ <- ZIO.logInfo(s"Getting firmware list from: $firmwareListUrl")
       firmwareList <- httpClient.getJson[Seq[ShellyFirmwareEntry]](firmwareListUrl.toString)
         .mapError {
-          case e: ParseError => FailedToParseFirmwareResponse(e.message, deviceModel, Some(e))
-          case e => FirmwareDownloadFailed(e.getMessage, deviceModel, Some(e))
+          case e: ParseError => FailedToParseFirmwareResponse(e.message, manufacturer, model, Some(e))
+          case e => FirmwareDownloadFailed(e.getMessage, manufacturer, model, Some(e))
         }
-      latestFirmware = firmwareList.maxBy(_.version)(versionOrdering)
-      latestFirmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(latestFirmware))
-        .mapError(FirmwareDownloadLinkResolutionFailed(_, deviceModel))
-    } yield FirmwareDescriptor(deviceModel, latestFirmwareDownloadUrl, latestFirmware.version)
+      maybeFirmwareEntry = version match {
+        case Some(version) => firmwareList.find(_.version == version)
+        case None => firmwareList.maxByOption(_.version)(versionOrdering)
+      }
+      firmware <- ZIO.fromOption(maybeFirmwareEntry)
+        .mapError(_ => FirmwareNotFound("Firmware not found", manufacturer, model, version))
+      firmwareDownloadUrl <- ZIO.fromEither(getFirmwareDownloadUrl(firmware))
+        .mapError(FirmwareDownloadLinkResolutionFailed(_, manufacturer, model))
+    } yield FirmwareDescriptor(manufacturer, model, firmwareDownloadUrl, firmware.version)
   }
 
   override def versionOrdering: Ordering[Version] = SemanticVersion.Ordering

@@ -175,7 +175,11 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
   }
 
   case class TestDeviceHandler() extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy {
-    override def getFirmwareDownloadDetails(deviceModel: DeviceModel): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ???
+    override def getFirmwareDownloadDetails(
+        manufacturer: Manufacturer,
+        model: Model,
+        version: Option[Version]
+    ): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ???
 
     override def versionOrdering: Ordering[Version] = Ordering.String.on(_.value)
 
@@ -189,7 +193,11 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
   }
 
   case class FailingTestDeviceHandler() extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy {
-    override def getFirmwareDownloadDetails(deviceModel: DeviceModel): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ???
+    override def getFirmwareDownloadDetails(
+        manufacturer: Manufacturer,
+        model: Model,
+        version: Option[Version]
+    ): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ???
 
     override def versionOrdering: Ordering[Version] = Ordering.String.on(_.value)
 

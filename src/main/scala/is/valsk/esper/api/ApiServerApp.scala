@@ -29,7 +29,7 @@ object ApiServerApp {
       val serverConfigLayer = ServerConfig.live(
         ServerConfig.default.port(esperConfig.port)
       )
-      val app = (firmwareApi.app ++ deviceApi.аpp)
+      val app = (firmwareApi.app ++ deviceApi.app)
         .mapError(e => Response(status = e.status, body = Body.fromCharSequence(e.message)))
       val httpServer = Server.install(app)
         .flatMap { port =>

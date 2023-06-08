@@ -20,7 +20,7 @@ object LatestFirmwareMonitorApp {
 
     private def downloadTask(deviceModel: DeviceModel): IO[EsperError, DeviceModel] = for {
       _ <- ZIO.logInfo(s"Checking if there are any new versions of firmware available for $deviceModel")
-      _ <- firmwareDownloader.downloadFirmware(deviceModel)
+      _ <- firmwareDownloader.downloadFirmware(deviceModel.manufacturer, deviceModel.model)
     } yield deviceModel
 
     def run: UIO[Unit] = for {

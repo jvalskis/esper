@@ -22,6 +22,8 @@ import javax.sql.DataSource
 type FirmwareRepository = FirmwareRepository2
 
 trait FirmwareRepository2 extends Repository[FirmwareKey, Firmware] {
+
+  def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]]
 }
 
 object FirmwareRepository {
@@ -72,6 +74,25 @@ object FirmwareRepository {
         .mapError(e => FailedToStoreFirmware(e.getMessage, DeviceModel(firmware), Some(e)))
         .map(_ => firmware)
     }
+
+    override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]] = for {
+      _ <- ZIO.logInfo(s"getting latest firmware for $manufacturer $model")
+      q = quote {
+        query[Firmware]
+          .filter(_.model == lift(model))
+          .filter(_.manufacturer == lift(manufacturer))
+          .map(_.version)
+      }
+      maybeLatestVersion <- run(q)
+        .logError("test")
+        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
+        .map(_.maxOption)
+      maybeLatestFirmware <- maybeLatestVersion match {
+        case Some(version) => get(FirmwareKey(manufacturer, model, version))
+        case None => ZIO.succeed(None)
+      }
+    } yield maybeLatestFirmware
+
   }
 
   val live: URLayer[Quill.Postgres[SnakeCase], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_))

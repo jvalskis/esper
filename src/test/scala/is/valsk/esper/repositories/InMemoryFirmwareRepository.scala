@@ -1,8 +1,8 @@
 package is.valsk.esper.repositories
 
 import is.valsk.esper.EsperConfig
-import is.valsk.esper.domain.{DeviceModel, FailedToStoreFirmware, Firmware, FirmwareDownloadError, FirmwareDownloadFailed}
-import is.valsk.esper.domain.Types.Manufacturer
+import is.valsk.esper.domain.*
+import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
 import zio.nio.file.{Files, Path}
@@ -23,6 +23,13 @@ class InMemoryFirmwareRepository(
   override def add(firmware: Firmware): IO[FailedToStoreFirmware, Firmware] = for {
     _ <- map.update(map => map + (FirmwareKey(firmware) -> firmware))
   } yield firmware
+
+  override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): UIO[Option[Firmware]] = for {
+    firmwares <- map.get.map(_.values)
+    maybeLatestFirmware = firmwares
+      .filter(f => f.manufacturer == manufacturer && f.model == model)
+      .maxByOption(_.version)
+  } yield maybeLatestFirmware
 }
 
 object InMemoryFirmwareRepository {
