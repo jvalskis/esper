@@ -24,6 +24,8 @@ type FirmwareRepository = FirmwareRepository2
 trait FirmwareRepository2 extends Repository[FirmwareKey, Firmware] {
 
   def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]]
+
+  def listVersions(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, List[Version]]
 }
 
 object FirmwareRepository {
@@ -41,20 +43,19 @@ object FirmwareRepository {
 
     given MappedEncoding[String, Version] = MappedEncoding[String, Version](Version(_))
 
-    override def get(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = for {
-      _ <- ZIO.logInfo(s"getting firmware for $key")
-      q = quote {
+    override def get(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = {
+      val q = quote {
         query[Firmware]
           .filter(_.model == lift(key.model))
           .filter(_.manufacturer == lift(key.manufacturer))
           .filter(_.version == lift(key.version))
           .take(1)
       }
-      result <- run(q)
+      run(q)
         .map(_.headOption)
         .logError("test")
         .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
-    } yield result
+    }
 
     override def getAll: IO[PersistenceException, List[Firmware]] = {
       val q = quote {
@@ -77,15 +78,7 @@ object FirmwareRepository {
 
     override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]] = for {
       _ <- ZIO.logInfo(s"getting latest firmware for $manufacturer $model")
-      q = quote {
-        query[Firmware]
-          .filter(_.model == lift(model))
-          .filter(_.manufacturer == lift(manufacturer))
-          .map(_.version)
-      }
-      maybeLatestVersion <- run(q)
-        .logError("test")
-        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
+      maybeLatestVersion <- listVersions(manufacturer, model)
         .map(_.maxOption)
       maybeLatestFirmware <- maybeLatestVersion match {
         case Some(version) => get(FirmwareKey(manufacturer, model, version))
@@ -93,6 +86,18 @@ object FirmwareRepository {
       }
     } yield maybeLatestFirmware
 
+    override def listVersions(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, List[Version]] = {
+      val q = quote {
+        query[Firmware]
+          .filter(_.model == lift(model))
+          .filter(_.manufacturer == lift(manufacturer))
+          .map(_.version)
+      }
+      run(q)
+        .logError("test")
+        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
+        .map(_.sorted)
+    }
   }
 
   val live: URLayer[Quill.Postgres[SnakeCase], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_))

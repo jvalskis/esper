@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS firmware (
-    "manufacturer" char(255) NOT NULL,
-    "model" char(255) NOT NULL,
-    "version" char(255) NOT NULL,
+    "manufacturer" varchar(255) NOT NULL,
+    "model" varchar(255) NOT NULL,
+    "version" varchar(255) NOT NULL,
     "data" bytea NOT NULL,
-    "size" INT NOT NULL
+    "size" INT NOT NULL,
+    UNIQUE ("manufacturer", "model", "version")
 );

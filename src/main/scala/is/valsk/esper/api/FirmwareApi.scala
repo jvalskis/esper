@@ -11,6 +11,7 @@ import zio.{URLayer, ZIO, ZLayer}
 
 class FirmwareApi(
     getFirmware: GetFirmware,
+    listFirmware: ListFirmwareVersions,
     getLatestFirmware: GetLatestFirmware,
     downloadFirmware: DownloadFirmware,
     downloadLatestFirmware: DownloadLatestFirmware,
@@ -18,6 +19,7 @@ class FirmwareApi(
 ) {
 
   val app: HttpApp[Any, HttpError] = Http.collectZIO[Request] {
+    case Method.GET -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) / "list" => listFirmware(manufacturer, model)
     case Method.GET -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) => getLatestFirmware(manufacturer, model)
     case Method.GET -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) / Version(version) => getFirmware(manufacturer, model, version)
     case Method.POST -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) => downloadLatestFirmware(manufacturer, model)
@@ -29,5 +31,5 @@ class FirmwareApi(
 
 object FirmwareApi {
 
-  val layer: URLayer[GetFirmware & DownloadLatestFirmware & DownloadFirmware & DeleteFirmware & GetLatestFirmware, FirmwareApi] = ZLayer.fromFunction(FirmwareApi(_, _, _, _, _))
+  val layer: URLayer[ListFirmwareVersions & GetFirmware & DownloadLatestFirmware & DownloadFirmware & DeleteFirmware & GetLatestFirmware, FirmwareApi] = ZLayer.fromFunction(FirmwareApi(_, _, _, _, _, _))
 }

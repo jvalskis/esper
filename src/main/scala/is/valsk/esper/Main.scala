@@ -5,7 +5,7 @@ import io.getquill.idiom.Idiom
 import io.getquill.jdbczio.Quill
 import io.getquill.{MysqlJdbcContext, MysqlZioJdbcContext, NamingStrategy, PostgresDialect, PostgresJdbcContext, PostgresZioJdbcContext, Query, SnakeCase, SqliteJdbcContext, SqliteZioJdbcContext}
 import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
-import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware}
+import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware, ListFirmwareVersions}
 import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
@@ -94,6 +94,7 @@ object Main extends ZIOAppDefault {
         DeviceApi.layer,
         FirmwareApi.layer,
         GetFirmware.layer,
+        ListFirmwareVersions.layer,
         GetLatestFirmware.layer,
         DeleteFirmware.layer,
         DownloadFirmware.layer,

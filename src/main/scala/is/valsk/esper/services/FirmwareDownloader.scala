@@ -34,10 +34,7 @@ object FirmwareDownloader {
         case Some(version) => downloadSpecificVersion(manufacturer, model, version)(using manufacturerHandler)
         case None => downloadLatestVersion(manufacturer, model, maybeVersion)(using manufacturerHandler)
       }
-      result <- firmwareRepository
-        .add(firmware)
-        .logError("Failed to persist firmware")
-    } yield result
+    } yield firmware
 
     private def downloadLatestVersion(manufacturer: Manufacturer, model: Model, maybeVersion: Option[Version])(using manufacturerHandler: DeviceManufacturerHandler) = for {
       _ <- ZIO.logInfo(s"Downloading latest version for $manufacturer $model")
@@ -47,7 +44,10 @@ object FirmwareDownloader {
         case Some(firmware) => ZIO
           .logInfo(s"Skipping download - firmware already exists: $firmware")
           .as(firmware)
-        case None => downloadFirmware(firmwareDetails)
+        case None => for {
+          firmware <- downloadFirmware(firmwareDetails)
+          persistedFirmware <- persistFirmware(firmware)
+        } yield persistedFirmware
       }
     } yield firmware
 
@@ -61,7 +61,8 @@ object FirmwareDownloader {
         case None => for {
           firmwareDetails <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, Some(version))
           firmware <- downloadFirmware(firmwareDetails)
-        } yield firmware
+          persistedFirmware <- persistFirmware(firmware)
+        } yield persistedFirmware
       }
     } yield firmware
 
@@ -78,6 +79,12 @@ object FirmwareDownloader {
       )
       _ <- ZIO.logInfo(s"Firmware downloaded: $firmware")
     } yield firmware
+
+    private def persistFirmware(firmware: Firmware) = {
+      firmwareRepository
+        .add(firmware)
+        .logError("Failed to persist firmware")
+    }
   }
 
   val layer: URLayer[HttpClient & FirmwareRepository & ManufacturerRepository, FirmwareDownloader] = ZLayer {
