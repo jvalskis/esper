@@ -25,7 +25,6 @@ class FirmwareApi(
     case Method.POST -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) => downloadLatestFirmware(manufacturer, model)
     case Method.POST -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) / Version(version) => downloadFirmware(manufacturer, model, version)
     case Method.DELETE -> !! / "firmware" / ManufacturerExtractor(manufacturer) / ModelExtractor(model) => deleteFirmware(manufacturer, model)
-    case _ => ZIO.logError("Invalid request").as(Response.status(Status.BadRequest))
   }
 }
 
