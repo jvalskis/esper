@@ -22,13 +22,14 @@ class ListFirmwareVersions(
     for {
       _ <- ZIO.logInfo("ListFirmwareVersions")
       manufacturerHandler <- manufacturerRepository.get(manufacturer)
+        .logError(s"Failed to get manufacturer: $manufacturer")
         .mapError(_ => NotFound(""))
         .flatMap {
           case Some(handler) => ZIO.succeed(handler)
           case None => ZIO.fail(NotFound(""))
         }
       versions <- firmwareRepository.listVersions(manufacturer, model)(using manufacturerHandler.versionOrdering)
-        .logError("Failed to get firmware versions")
+        .logError("Failed to list firmware versions")
         .mapError(_ => HttpError.InternalServerError())
     } yield Response.json(versions.toJson)
   }

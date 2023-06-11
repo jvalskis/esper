@@ -13,6 +13,7 @@ class GetDevices(
 
   def apply(): IO[HttpError, Response] = for {
     deviceList <- deviceRepository.getAll
+      .logError("Failed to get devices")
       .mapError(_ => HttpError.InternalServerError())
     response <- ZIO.succeed(Response.json(deviceList.toJson))
   } yield response
