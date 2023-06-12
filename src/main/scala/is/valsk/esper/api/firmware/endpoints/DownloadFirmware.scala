@@ -1,8 +1,7 @@
-package is.valsk.esper.api.firmware
+package is.valsk.esper.api.firmware.endpoints
 
-import is.valsk.esper.api.FirmwareApi
-import is.valsk.esper.domain.{DeviceModel, Version}
 import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
+import is.valsk.esper.domain.{DeviceModel, Version}
 import is.valsk.esper.services.FirmwareDownloader
 import zio.http.model.{HttpError, Status}
 import zio.http.{Http, HttpApp, Request, Response}

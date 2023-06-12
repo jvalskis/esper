@@ -1,6 +1,5 @@
-package is.valsk.esper.api.firmware
+package is.valsk.esper.api.firmware.endpoints
 
-import is.valsk.esper.api.FirmwareApi
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
 import is.valsk.esper.domain.{DeviceModel, PersistenceException, Version}
@@ -23,23 +22,21 @@ class GetLatestFirmware(
     for {
       _ <- ZIO.logInfo(s"Getting latest firmware for manufacturer: $manufacturer, model: $model")
       manufacturerHandler <- manufacturerRepository.get(manufacturer)
-        .mapError(_ => NotFound(""))
-        .flatMap {
-          case Some(handler) => ZIO.succeed(handler)
-          case None => ZIO.fail(NotFound(""))
-        }
       latestFirmware <- firmwareRepository.getLatestFirmware(manufacturer, model)(using manufacturerHandler.versionOrdering)
-        .mapError(_ => NotFound(""))
         .flatMap {
-        case None => ZIO.fail(NotFound(""))
-        case Some(result) => ZIO.succeed(result)
-      }
+          case None => ZIO.fail(NotFound(""))// TODO error handling
+          case Some(result) => ZIO.succeed(result)
+        }
     } yield Response(
       status = Status.Ok,
       headers = Headers.contentLength(latestFirmware.size) ++ Headers.contentType(HeaderValues.applicationOctetStream),
       body = Body.fromChunk(Chunk.from(latestFirmware.data)),
     )
   }
+    .mapError {
+      case _: PersistenceException => NotFound("")// TODO error handling
+      case e => HttpError.InternalServerError(e.getMessage)
+    }
 }
 
 object GetLatestFirmware {

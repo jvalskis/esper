@@ -1,6 +1,5 @@
-package is.valsk.esper.api.firmware
+package is.valsk.esper.api.firmware.endpoints
 
-import is.valsk.esper.api.FirmwareApi
 import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
 import is.valsk.esper.domain.{DeviceModel, PersistenceException, Version}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
@@ -23,16 +22,13 @@ class ListFirmwareVersions(
       _ <- ZIO.logInfo("ListFirmwareVersions")
       manufacturerHandler <- manufacturerRepository.get(manufacturer)
         .logError(s"Failed to get manufacturer: $manufacturer")
-        .mapError(_ => NotFound(""))
-        .flatMap {
-          case Some(handler) => ZIO.succeed(handler)
-          case None => ZIO.fail(NotFound(""))
-        }
       versions <- firmwareRepository.listVersions(manufacturer, model)(using manufacturerHandler.versionOrdering)
         .logError("Failed to list firmware versions")
-        .mapError(_ => HttpError.InternalServerError())
     } yield Response.json(versions.toJson)
   }
+    .mapError {
+      case _ => HttpError.InternalServerError()
+    }
 }
 
 object ListFirmwareVersions {

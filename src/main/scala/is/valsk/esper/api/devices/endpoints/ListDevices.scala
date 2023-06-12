@@ -1,13 +1,13 @@
-package is.valsk.esper.api.devices
+package is.valsk.esper.api.devices.endpoints
 
-import is.valsk.esper.api.FirmwareApi
+import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.repositories.DeviceRepository
 import zio.http.model.{HttpError, Status}
 import zio.http.{Request, Response}
 import zio.json.*
 import zio.{IO, Task, UIO, URLayer, ZIO, ZLayer}
 
-class GetDevices(
+class ListDevices(
     deviceRepository: DeviceRepository
 ) {
 
@@ -19,9 +19,9 @@ class GetDevices(
   } yield response
 }
 
-object GetDevices {
+object ListDevices {
 
-  val layer: URLayer[DeviceRepository, GetDevices] = ZLayer.fromFunction(GetDevices(_))
+  val layer: URLayer[DeviceRepository, ListDevices] = ZLayer.fromFunction(ListDevices(_))
 
 }
 

@@ -28,7 +28,7 @@ class ResultHandler(
       ZIO.foreachDiscard(result.result.toSeq.flatten)(hassDevice =>
         val result = for {
           manufacturer <- ZIO.fromEither(hassDevice.manufacturer.map(Manufacturer.from).getOrElse(Left("Manufacturer is empty"))).mapError(ParseError(_))
-          result <- manufacturerRegistry.get(manufacturer).flatMap {
+          result <- manufacturerRegistry.getOpt(manufacturer).flatMap {
             case Some(deviceManufacturerHandler) => deviceManufacturerHandler.toDomain(hassDevice).either.flatMap {
               case Right(domainDevice) =>
                 addDeviceToRegistry(domainDevice)

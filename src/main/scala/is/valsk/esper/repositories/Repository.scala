@@ -5,7 +5,9 @@ import is.valsk.esper.domain.{Device, PersistenceException}
 import zio.*
 
 trait Repository[K, R] {
-  def get(id: K): IO[PersistenceException, Option[R]]
+  def get(id: K): IO[PersistenceException, R]
+
+  def getOpt(id: K): IO[PersistenceException, Option[R]]
 
   def getAll: IO[PersistenceException, List[R]]
 

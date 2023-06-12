@@ -43,7 +43,7 @@ class ShellyDeviceHandler(
         }
       version <- otaResponse.old_version match {
         case shellyApiVersionPattern(version) => ZIO.succeed(Version(version))
-        case version => ZIO.fail(MalformedVersion(version, device: Device))
+        case version => ZIO.fail(MalformedVersion(version, device))
       }
     } yield version
   }
@@ -114,14 +114,16 @@ class ShellyDeviceHandler(
       .flatMap(Model.from)
   }
 
-  override def flashFirmware(device: Device, firmware: Firmware): IO[Throwable, Unit] = {
-    val endpoint = ApiEndpoints.ota(device.url)
+  override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, Unit] = {
     for {
       otaUrl <- ZIO
-        .fromEither(URL.fromString(endpoint))
+        .fromEither(URL.fromString(ApiEndpoints.ota(device.url)))
         .map(_.setQueryParams("url" -> Chunk.succeed(resolveGetFirmwareEndpoint(firmware))))
+        .mapError(e => ApiCallFailed("Failed to form the request URL", device, Some(e)))
       _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Url: $otaUrl")
       response <- httpClient.getJson[Ota](Request.default(method = Method.GET, url = otaUrl))
+        .logError("Failed to flash firmware")
+        .mapError(e => ApiCallFailed(e.getMessage, device, Some(e)))
       _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Response: $response")
     } yield ()
   }

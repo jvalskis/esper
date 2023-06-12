@@ -1,7 +1,6 @@
-package is.valsk.esper.api
+package is.valsk.esper.api.firmware
 
-import is.valsk.esper.api.FirmwareApi
-import is.valsk.esper.api.firmware.*
+import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware, ListFirmwareVersions}
 import is.valsk.esper.domain.Types.{ManufacturerExtractor, ModelExtractor}
 import is.valsk.esper.domain.Version
 import is.valsk.esper.services.FirmwareDownloader

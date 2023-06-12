@@ -1,6 +1,7 @@
 package is.valsk.esper.api
 
 import eu.timepit.refined.types.string.NonEmptyString
+import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.domain.{Device, Types}
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.repositories.DeviceRepository

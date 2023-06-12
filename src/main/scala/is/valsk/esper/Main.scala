@@ -4,9 +4,13 @@ import io.getquill.context.Context
 import io.getquill.idiom.Idiom
 import io.getquill.jdbczio.Quill
 import io.getquill.{MysqlJdbcContext, MysqlZioJdbcContext, NamingStrategy, PostgresDialect, PostgresJdbcContext, PostgresZioJdbcContext, Query, SnakeCase, SqliteJdbcContext, SqliteZioJdbcContext}
-import is.valsk.esper.api.devices.{FlashDevice, GetDevice, GetDeviceVersion, GetDevices}
-import is.valsk.esper.api.firmware.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware, ListFirmwareVersions}
-import is.valsk.esper.api.{ApiServerApp, DeviceApi, FirmwareApi}
+import is.valsk.esper.api.firmware.FirmwareApi
+import is.valsk.esper.api.ApiServerApp
+import is.valsk.esper.api.devices.DeviceApi
+import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
+import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware, ListFirmwareVersions}
+import is.valsk.esper.api.ota.OtaApi
+import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceVersion}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.Types.Manufacturer
@@ -100,12 +104,13 @@ object Main extends ZIOAppDefault {
         DownloadFirmware.layer,
         DownloadLatestFirmware.layer,
         GetDevice.layer,
-        GetDevices.layer,
+        ListDevices.layer,
         GetDeviceVersion.layer,
         FlashDevice.layer,
         DeviceProxyRegistry.layer,
         quillPostgresLayer,
         FirmwareRepository.live,
+        OtaApi.layer,
       )
       .logError("Failed to start the application")
       .exitCode

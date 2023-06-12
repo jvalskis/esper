@@ -7,7 +7,9 @@ import zio.*
 
 class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper]]) extends ManufacturerRepository {
 
-  override def get(manufacturer: Manufacturer): UIO[Option[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.get(manufacturer))
+  override def get(manufacturer: Manufacturer): UIO[DeviceManufacturerHandler with HassToDomainMapper] = map.get.map(_(manufacturer))
+
+  override def getOpt(manufacturer: Manufacturer): UIO[Option[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.get(manufacturer))
 
   override def getAll: UIO[List[DeviceManufacturerHandler with HassToDomainMapper]] = map.get.map(_.values.toList)
 

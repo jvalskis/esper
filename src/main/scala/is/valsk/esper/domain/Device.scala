@@ -3,11 +3,11 @@ package is.valsk.esper.domain
 import eu.timepit.refined.string.Url
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Types.NonEmptyStringImplicits.*
-import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
+import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class Device(
-    id: NonEmptyString,
+    id: DeviceId,
     url: UrlString,
     name: NonEmptyString,
     nameByUser: Option[String],

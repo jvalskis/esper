@@ -3,7 +3,10 @@ package is.valsk.esper.api.devices
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.api.devices.GetDeviceSpec.test
-import is.valsk.esper.api.{ApiSpec, DeviceApi, FirmwareApi}
+import is.valsk.esper.api.ApiSpec
+import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
+import is.valsk.esper.api.firmware.FirmwareApi
+import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceVersion}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.{Device, DeviceModel, FailedToStoreFirmware, PersistenceException}
@@ -34,7 +37,7 @@ object GetDevicesSpec extends ZIOSpecDefault with ApiSpec {
         InMemoryFirmwareRepository.layer,
         DeviceApi.layer,
         GetDevice.layer,
-        GetDevices.layer,
+        ListDevices.layer,
         GetDeviceVersion.layer,
         FlashDevice.layer,
         DeviceProxyRegistry.layer,
@@ -58,7 +61,7 @@ object GetDevicesSpec extends ZIOSpecDefault with ApiSpec {
         InMemoryFirmwareRepository.layer,
         DeviceApi.layer,
         GetDevice.layer,
-        GetDevices.layer,
+        ListDevices.layer,
         GetDeviceVersion.layer,
         FlashDevice.layer,
         DeviceProxyRegistry.layer,
@@ -80,7 +83,7 @@ object GetDevicesSpec extends ZIOSpecDefault with ApiSpec {
         InMemoryFirmwareRepository.layer,
         DeviceApi.layer,
         GetDevice.layer,
-        GetDevices.layer,
+        ListDevices.layer,
         GetDeviceVersion.layer,
         FlashDevice.layer,
         DeviceProxyRegistry.layer,

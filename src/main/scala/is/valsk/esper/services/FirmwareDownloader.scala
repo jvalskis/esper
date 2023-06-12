@@ -26,43 +26,46 @@ object FirmwareDownloader {
   ) extends FirmwareDownloader {
 
     def downloadFirmware(manufacturer: Manufacturer, model: Model, maybeVersion: Option[Version]): IO[EsperError, Firmware] = for {
-      manufacturerHandler <- manufacturerRegistry.get(manufacturer).flatMap {
-        case Some(value) => ZIO.succeed(value)
-        case None => ZIO.fail(ManufacturerNotSupported(manufacturer))
-      }
+      manufacturerHandler <- manufacturerRegistry.get(manufacturer)
       firmware <- maybeVersion match {
         case Some(version) => downloadSpecificVersion(manufacturer, model, version)(using manufacturerHandler)
         case None => downloadLatestVersion(manufacturer, model, maybeVersion)(using manufacturerHandler)
       }
     } yield firmware
 
-    private def downloadLatestVersion(manufacturer: Manufacturer, model: Model, maybeVersion: Option[Version])(using manufacturerHandler: DeviceManufacturerHandler) = for {
-      _ <- ZIO.logInfo(s"Downloading latest version for $manufacturer $model")
-      firmwareDetails <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, maybeVersion)
-      maybeFirmware <- firmwareRepository.get(FirmwareKey(firmwareDetails.manufacturer, firmwareDetails.model, firmwareDetails.version))
-      firmware <- maybeFirmware match {
-        case Some(firmware) => ZIO
-          .logInfo(s"Skipping download - firmware already exists: $firmware")
-          .as(firmware)
-        case None => for {
-          firmware <- downloadFirmware(firmwareDetails)
-          persistedFirmware <- persistFirmware(firmware)
-        } yield persistedFirmware
-      }
-    } yield firmware
+    private def downloadLatestVersion(manufacturer: Manufacturer, model: Model, maybeVersion: Option[Version])(using manufacturerHandler: DeviceManufacturerHandler) = {
+      for {
+        _ <- ZIO.logInfo(s"Downloading latest version for $manufacturer $model")
+        firmwareDetails <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, maybeVersion)
+        firmware <- downloadIfNecessary(FirmwareKey(firmwareDetails.manufacturer, firmwareDetails.model, firmwareDetails.version)) {
+          for {
+            firmware <- downloadFirmware(firmwareDetails)
+            persistedFirmware <- persistFirmware(firmware)
+          } yield persistedFirmware
+        }
+      } yield firmware
+    }
 
-    private def downloadSpecificVersion(manufacturer: Manufacturer, model: Model, version: Version)(using manufacturerHandler: DeviceManufacturerHandler) = for {
-      _ <- ZIO.logInfo(s"Downloading version $version for $manufacturer $model")
-      maybeFirmware <- firmwareRepository.get(FirmwareKey(manufacturer, model, version))
-      firmware <- maybeFirmware match {
-        case Some(firmware) => ZIO
-          .logInfo(s"Skipping download - firmware already exists: $firmware")
-          .as(firmware)
-        case None => for {
+    private def downloadSpecificVersion(manufacturer: Manufacturer, model: Model, version: Version)(using manufacturerHandler: DeviceManufacturerHandler) = {
+      downloadIfNecessary(FirmwareKey(manufacturer, model, version)) {
+        for {
           firmwareDetails <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, Some(version))
           firmware <- downloadFirmware(firmwareDetails)
           persistedFirmware <- persistFirmware(firmware)
         } yield persistedFirmware
+      }
+    }
+
+    private def downloadIfNecessary(firmwareKey: FirmwareKey)(download: => IO[EsperError, Firmware]) = for {
+      maybeFirmware <- firmwareRepository.getOpt(firmwareKey)
+      firmware <- maybeFirmware match {
+        case Some(firmware) => ZIO
+          .logInfo(s"Skipping download - firmware already exists: $firmware")
+          .as(firmware)
+        case None => for {
+          _ <- ZIO.logInfo (s"Downloading version ${firmwareKey.version} for ${firmwareKey.manufacturer} ${firmwareKey.model}")
+          firmware <- download
+        } yield firmware
       }
     } yield firmware
 

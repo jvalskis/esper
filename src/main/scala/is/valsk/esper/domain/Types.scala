@@ -17,6 +17,9 @@ object Types {
   type Model = NonEmptyString
   val Model = NonEmptyString
 
+  type DeviceId = NonEmptyString
+  val DeviceId = NonEmptyString
+
   object ModelExtractor {
     def unapply(arg: String): Option[Model] = Model.from(arg).toOption
   }
@@ -28,6 +31,10 @@ object Types {
 
   object NonEmptyStringExtractor {
     def unapply(arg: String): Option[NonEmptyString] = NonEmptyString.from(arg).toOption
+  }
+
+  object DeviceIdExtractor {
+    def unapply(arg: String): Option[DeviceId] = DeviceId.from(arg).toOption
   }
 
   type UrlString = String Refined Url

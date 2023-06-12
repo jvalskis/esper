@@ -1,6 +1,5 @@
-package is.valsk.esper.api.firmware
+package is.valsk.esper.api.firmware.endpoints
 
-import is.valsk.esper.api.FirmwareApi
 import is.valsk.esper.domain.DeviceModel
 import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
 import is.valsk.esper.services.FirmwareDownloader
