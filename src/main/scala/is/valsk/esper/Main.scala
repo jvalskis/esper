@@ -8,7 +8,7 @@ import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.ApiServerApp
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
-import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, GetLatestFirmware, ListFirmwareVersions}
+import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, ListFirmwareVersions}
 import is.valsk.esper.api.ota.OtaApi
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceVersion}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
@@ -20,7 +20,7 @@ import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, 
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.repositories.*
-import is.valsk.esper.services.{FirmwareDownloader, HttpClient, LatestFirmwareMonitorApp}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, HttpClient, LatestFirmwareMonitorApp}
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -99,7 +99,7 @@ object Main extends ZIOAppDefault {
         FirmwareApi.layer,
         GetFirmware.layer,
         ListFirmwareVersions.layer,
-        GetLatestFirmware.layer,
+        FirmwareService.layer,
         DeleteFirmware.layer,
         DownloadFirmware.layer,
         DownloadLatestFirmware.layer,
