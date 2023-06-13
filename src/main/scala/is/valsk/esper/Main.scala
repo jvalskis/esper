@@ -10,7 +10,7 @@ import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
 import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, ListFirmwareVersions}
 import is.valsk.esper.api.ota.OtaApi
-import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion}
+import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.Types.Manufacturer
@@ -20,7 +20,7 @@ import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, 
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.repositories.*
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, HttpClient, LatestFirmwareMonitorApp}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, HttpClient, LatestFirmwareMonitorApp, OtaService}
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -112,6 +112,8 @@ object Main extends ZIOAppDefault {
         FirmwareRepository.live,
         OtaApi.layer,
         GetDeviceStatus.layer,
+        OtaService.layer,
+        RestartDevice.layer,
       )
       .logError("Failed to start the application")
       .exitCode

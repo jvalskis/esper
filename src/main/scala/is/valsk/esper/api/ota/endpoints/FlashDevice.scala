@@ -7,7 +7,7 @@ import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository}
-import is.valsk.esper.services.FirmwareService
+import is.valsk.esper.services.{FirmwareService, OtaService}
 import zio.http.Response
 import zio.http.model.HttpError.NotFound
 import zio.http.model.{HttpError, Status}
@@ -15,7 +15,7 @@ import zio.json.*
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 class FlashDevice(
-    deviceProxyRegistry: DeviceProxyRegistry,
+    otaService: OtaService,
     deviceRepository: DeviceRepository,
     firmwareService: FirmwareService,
 ) {
@@ -28,8 +28,7 @@ class FlashDevice(
           firmwareService.getFirmware(device.manufacturer, device.model, version)
         case None =>
           firmwareService.getLatestFirmware(device.manufacturer, device.model)
-      deviceProxy <- deviceProxyRegistry.selectProxy(device.manufacturer)
-      _ <- deviceProxy.flashFirmware(device, firmware)
+      _ <- otaService.flashFirmware(device, firmware)
     } yield Response.ok
   }
     .mapError {
@@ -43,6 +42,6 @@ class FlashDevice(
 
 object FlashDevice {
 
-  val layer: URLayer[DeviceProxyRegistry & DeviceRepository & FirmwareService, FlashDevice] = ZLayer.fromFunction(FlashDevice(_, _, _))
+  val layer: URLayer[DeviceRepository & OtaService & FirmwareService, FlashDevice] = ZLayer.fromFunction(FlashDevice(_, _, _))
 
 }

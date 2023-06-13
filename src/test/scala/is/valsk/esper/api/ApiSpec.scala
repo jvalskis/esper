@@ -12,7 +12,7 @@ import zio.json.*
 
 trait ApiSpec {
 
-  protected val nonExistentDeviceId: NonEmptyString = NonEmptyString.unsafeFrom("non-existent-device-id")
+  protected val nonExistentdeviceId: DeviceId = NonEmptyString.unsafeFrom("non-existent-device-id")
 
   val manufacturer1: Manufacturer = Manufacturer.unsafeFrom("test-device-1")
   val manufacturerWithFailingHandler: Manufacturer = Manufacturer.unsafeFrom("failing-manufacturer")
@@ -27,12 +27,12 @@ trait ApiSpec {
     manufacturer = manufacturer1,
   )
 
-  def getDeviceVersion(deviceId: NonEmptyString): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  def getDeviceVersion(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
     deviceApi <- ZIO.service[DeviceApi]
     response <- deviceApi.аpp.runZIO(Request.default(method = Method.GET, url = getDeviceVersionEndpoint(deviceId))).exit
   } yield response
 
-  def getDevice(deviceId: NonEmptyString): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  def getDevice(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
     deviceApi <- ZIO.service[DeviceApi]
     response <- deviceApi.аpp.runZIO(Request.default(method = Method.GET, url = getDeviceEndpoint(deviceId))).exit
   } yield response
@@ -51,11 +51,11 @@ trait ApiSpec {
     URL.fromString("/devices").toOption.get
   }
 
-  def getDeviceEndpoint(deviceId: NonEmptyString): URL = {
+  def getDeviceEndpoint(deviceId: DeviceId): URL = {
     getDevicesEndpoint ++ URL.fromString(s"/${deviceId.value}").toOption.get
   }
 
-  def getDeviceVersionEndpoint(deviceId: NonEmptyString): URL = {
+  def getDeviceVersionEndpoint(deviceId: DeviceId): URL = {
     getDeviceEndpoint(deviceId) ++ URL.fromString(s"/version").toOption.get
   }
 

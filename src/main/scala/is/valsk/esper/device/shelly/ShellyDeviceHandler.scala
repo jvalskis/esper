@@ -141,6 +141,12 @@ class ShellyDeviceHandler(
   override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = for {
     otaResponse <- callOta(device)
   } yield DeviceStatus(otaResponse.status.mapToUpdateStatus)
+
+  def restartDevice(device: Device): IO[DeviceApiError, Unit] = {
+    httpClient.get(ApiEndpoints.reboot(device.url))
+      .mapError(e => ApiCallFailed(e.getMessage, device, Some(e)))
+      .map(_ => ())
+  }
 }
 
 object ShellyDeviceHandler {
@@ -167,5 +173,7 @@ object ShellyDeviceHandler {
 
   object ApiEndpoints {
     def ota(baseUrl: UrlString): String = s"$baseUrl/ota"
+
+    def reboot(baseUrl: UrlString): String = s"$baseUrl/reboot"
   }
 }
