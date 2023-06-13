@@ -10,7 +10,7 @@ import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
 import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, ListFirmwareVersions}
 import is.valsk.esper.api.ota.OtaApi
-import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceVersion}
+import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.Types.Manufacturer
@@ -111,6 +111,7 @@ object Main extends ZIOAppDefault {
         quillPostgresLayer,
         FirmwareRepository.live,
         OtaApi.layer,
+        GetDeviceStatus.layer,
       )
       .logError("Failed to start the application")
       .exitCode

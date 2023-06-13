@@ -6,15 +6,15 @@ import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
-import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy}
-import is.valsk.esper.domain.*
+import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceStatus}
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
+import is.valsk.esper.domain.*
 import is.valsk.esper.hass.HassToDomainMapper
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.services.HttpClient
-import zio.http.model.Method
 import zio.http.*
+import zio.http.model.Method
 import zio.json.*
 import zio.{Chunk, IO, ULayer, URLayer, ZIO, ZLayer}
 
@@ -31,22 +31,6 @@ class ShellyDeviceHandler(
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r
 
   val supportedManufacturer: Manufacturer = Manufacturer.unsafeFrom("Shelly")
-
-  override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = {
-    val endpoint = ApiEndpoints.ota(device.url)
-    for {
-      _ <- ZIO.logInfo(s"Getting current firmware version from device: ${device.id} (${device.name}). Url: $endpoint")
-      otaResponse <- httpClient.getJson[Ota](endpoint)
-        .mapError {
-          case e: ParseError => FailedToParseApiResponse(e.message, device, Some(e))
-          case e => ApiCallFailed(e.getMessage, device, Some(e))
-        }
-      version <- otaResponse.old_version match {
-        case shellyApiVersionPattern(version) => ZIO.succeed(Version(version))
-        case version => ZIO.fail(MalformedVersion(version, device))
-      }
-    } yield version
-  }
 
   override def toDomain(hassDevice: HassResult): IO[String, Device] = ZIO.fromEither(
     for {
@@ -114,6 +98,32 @@ class ShellyDeviceHandler(
       .flatMap(Model.from)
   }
 
+  private def callOta(device: Device): IO[DeviceApiError, Ota] = {
+    val endpoint = ApiEndpoints.ota(device.url)
+    for {
+      _ <- ZIO.logInfo(s"Getting current firmware version from device: ${device.id} (${device.name}). Url: $endpoint")
+      otaResponse <- httpClient.getJson[Ota](endpoint)
+        .mapError {
+          case e: ParseError => FailedToParseApiResponse(e.message, device, Some(e))
+          case e => ApiCallFailed(e.getMessage, device, Some(e))
+        }
+    } yield otaResponse
+  }
+
+  private def resolveGetFirmwareEndpoint(firmware: Firmware): String = {
+    val manufacturer = firmware.manufacturer.toString
+    val model = firmware.model.toString
+    (Path.decode(esperConfig.host) / manufacturer / model).toString
+  }
+
+  override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = for {
+    otaResponse <- callOta(device)
+    version <- otaResponse.old_version match {
+      case shellyApiVersionPattern(version) => ZIO.succeed(Version(version))
+      case version => ZIO.fail(MalformedVersion(version, device))
+    }
+  } yield version
+
   override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, Unit] = {
     for {
       otaUrl <- ZIO
@@ -128,11 +138,9 @@ class ShellyDeviceHandler(
     } yield ()
   }
 
-  private def resolveGetFirmwareEndpoint(firmware: Firmware): String = {
-    val manufacturer = firmware.manufacturer.toString
-    val model = firmware.model.toString
-    (Path.decode(esperConfig.host) / manufacturer / model).toString
-  }
+  override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = for {
+    otaResponse <- callOta(device)
+  } yield DeviceStatus(otaResponse.status.mapToUpdateStatus)
 }
 
 object ShellyDeviceHandler {

@@ -1,5 +1,7 @@
 package is.valsk.esper.device.shelly.api
 
+import is.valsk.esper.device.DeviceStatus
+import is.valsk.esper.device.DeviceStatus.UpdateStatus
 import is.valsk.esper.device.shelly.api.Ota.OtaStatus
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
@@ -19,7 +21,16 @@ object Ota {
 
   enum OtaStatus:
     case idle, pending, updating, unknown
+
   object OtaStatus:
     implicit val decoder: JsonDecoder[OtaStatus] = JsonDecoder[String].map(OtaStatus.valueOf)
   end OtaStatus
+
+  extension (otaStatus: OtaStatus)
+    def mapToUpdateStatus: UpdateStatus = otaStatus match {
+      case OtaStatus.idle => UpdateStatus.idle
+      case OtaStatus.pending => UpdateStatus.pending
+      case OtaStatus.updating => UpdateStatus.updating
+      case OtaStatus.unknown => UpdateStatus.unknown
+    }
 }
