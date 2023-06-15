@@ -35,5 +35,13 @@ lazy val root = project
       "dev.zio" %% "zio-test-magnolia" % zioTestVersion % Test,
     ),
 
+    assembly / mainClass := Some("is.valsk.esper.Main"),
+    assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", xs@_*) => MergeStrategy.deduplicate
+      case PathList("META-INF", xs@_*) => MergeStrategy.discard
+      case _ => MergeStrategy.first
+    },
+    assembly / assemblyJarName := s"${name.value}-${version.value}.jar",
+
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
