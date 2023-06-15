@@ -115,7 +115,7 @@ object Main extends ZIOAppDefault {
         OtaService.layer,
         RestartDevice.layer,
       )
-      .logError("Failed to start the application")
+      .onError(_ => ZIO.logError("onError").flatMap(_ => exit(ExitCode.failure)))
       .exitCode
   } yield x
 }
