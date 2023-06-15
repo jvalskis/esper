@@ -3,7 +3,7 @@ package is.valsk.esper.api
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.domain.{Device, Types}
-import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
+import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
 import is.valsk.esper.repositories.DeviceRepository
 import zio.{Exit, RIO, URIO, ZIO}
 import zio.http.model.{HttpError, Method}
@@ -12,7 +12,7 @@ import zio.json.*
 
 trait ApiSpec {
 
-  protected val nonExistentdeviceId: DeviceId = NonEmptyString.unsafeFrom("non-existent-device-id")
+  protected val nonExistentDeviceId: DeviceId = NonEmptyString.unsafeFrom("non-existent-device-id")
 
   val manufacturer1: Manufacturer = Manufacturer.unsafeFrom("test-device-1")
   val manufacturerWithFailingHandler: Manufacturer = Manufacturer.unsafeFrom("failing-manufacturer")
