@@ -5,8 +5,18 @@ FROM sbtscala/scala-sbt:${JDK_VERSION}_${SBT_VERSION}_${SCALA_VERSION} AS builde
 
 COPY src /build/src
 COPY build.sbt /build/build.sbt
-COPY project/build.properties /build/project/build.properties
+COPY project/*.properties /build/project/
+COPY project/*.sbt /build/project/
 
 WORKDIR /build
 
-RUN sbt compile
+RUN sbt assembly
+
+
+FROM sbtscala/scala-sbt:${JDK_VERSION}_${SBT_VERSION}_${SCALA_VERSION}
+RUN mkdir /app
+WORKDIR /app
+
+COPY --from=builder /build/target/scala-${SCALA_VERSION}/ESPer-*.jar esper.jar
+
+CMD ["java", "-jar", "esper.jar"]

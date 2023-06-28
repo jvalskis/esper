@@ -5,10 +5,22 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: database
-      POSTGRES_USER: esper
-      POSTGRES_PASSWORD: mysecretpassword
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
     ports:
       - 5432:5432
     volumes:
       - ./src/main/resources/sql:/docker-entrypoint-initdb.d/:ro
+  esper_app:
+    build: .
+    restart: always
+    ports:
+      - 9000:9000
+    environment:
+      - HASS_WEBSOCKET_URL
+      - HASS_ACCESS_TOKEN
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST
