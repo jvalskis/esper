@@ -5,22 +5,26 @@ services:
     image: postgres
     restart: always
     environment:
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
+      - POSTGRES_DB=${ESPER_DATABASE_NAME}
+      - POSTGRES_USER=${ESPER_DATABASE_USER}
+      - POSTGRES_PASSWORD=${ESPER_DATABASE_PASSWORD}
     ports:
       - 5432:5432
     volumes:
       - ./src/main/resources/sql:/docker-entrypoint-initdb.d/:ro
   esper_app:
-    build: .
+    build:
+      context: .
+      args:
+        - VERSION=${IMAGE_ESPER_VERSION}
+    image: jvalskis/esper-app:${IMAGE_ESPER_VERSION}
     restart: always
     ports:
       - 9000:9000
     environment:
       - HASS_WEBSOCKET_URL
       - HASS_ACCESS_TOKEN
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_HOST
+      - ESPER_DATABASE_USER
+      - ESPER_DATABASE_PASSWORD
+      - ESPER_DATABASE_NAME
+      - ESPER_DATABASE_SERVER

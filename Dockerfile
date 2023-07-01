@@ -20,3 +20,6 @@ WORKDIR /app
 COPY --from=builder /build/target/scala-${SCALA_VERSION}/ESPer-*.jar esper.jar
 
 CMD ["java", "-jar", "esper.jar"]
+
+ARG VERSION
+LABEL version=${VERSION}
