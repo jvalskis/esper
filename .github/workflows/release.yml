@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    paths:
+      - "charts/esper/**"
 
 jobs:
   release:
@@ -30,3 +32,4 @@ jobs:
         uses: helm/chart-releaser-action@v1.5.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_RELEASE_NAME_TEMPLATE: "esper-helm-chart-{{ .Version }}"
