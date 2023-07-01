@@ -29,17 +29,17 @@ trait ApiSpec {
 
   def getDeviceVersion(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.аpp.runZIO(Request.default(method = Method.GET, url = getDeviceVersionEndpoint(deviceId))).exit
+    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDeviceVersionEndpoint(deviceId))).exit
   } yield response
 
   def getDevice(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.аpp.runZIO(Request.default(method = Method.GET, url = getDeviceEndpoint(deviceId))).exit
+    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDeviceEndpoint(deviceId))).exit
   } yield response
 
   def getDevices: ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.аpp.runZIO(Request.default(method = Method.GET, url = getDevicesEndpoint)).exit
+    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDevicesEndpoint)).exit
   } yield response
 
   def givenDevices(devices: Device*): URIO[DeviceRepository, Unit] = for {
