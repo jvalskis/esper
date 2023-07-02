@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: 0.0.1
 description: Esper is an IOT device firmware manager
 name: esper
-version: 1.0.1
+version: 1.0.2
 kubeVersion: ">=1.16.0-0"
 keywords:
   - esper
