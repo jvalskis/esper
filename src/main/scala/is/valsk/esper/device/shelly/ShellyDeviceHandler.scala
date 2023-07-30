@@ -113,7 +113,8 @@ class ShellyDeviceHandler(
   private def resolveGetFirmwareEndpoint(firmware: Firmware): String = {
     val manufacturer = firmware.manufacturer.toString
     val model = firmware.model.toString
-    (Path.decode(esperConfig.host) / manufacturer / model).toString
+    val url = Path.decode(esperConfig.host) / "firmware" / manufacturer / model
+    s"http://${url.toString}"
   }
 
   override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = for {
