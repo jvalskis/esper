@@ -2,7 +2,7 @@ apiVersion: v2
 appVersion: 0.0.1
 description: Esper is an IOT device firmware manager
 name: esper
-version: 1.0.2
+version: 1.0.3
 kubeVersion: ">=1.16.0-0"
 keywords:
   - esper
@@ -14,7 +14,7 @@ maintainers:
     url: https://github.com/jvalskis
 dependencies:
   - name: common
-    version: 0.2.2
+    version: 1.5.1
     repository: https://bjw-s.github.io/helm-charts/
   - name: postgresql
     version: 12.6.0
