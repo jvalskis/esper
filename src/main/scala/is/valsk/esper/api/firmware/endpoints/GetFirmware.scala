@@ -24,7 +24,7 @@ class GetFirmware(
           firmwareService.getLatestFirmware(manufacturer, model)
     } yield Response(
       status = Status.Ok,
-      headers = Headers.contentLength(firmware.size) ++ Headers.contentType(HeaderValues.applicationOctetStream),
+      headers = Headers.contentLength(firmware.size) ++ Headers.contentType("application/zip"),
       body = Body.fromChunk(Chunk.from(firmware.data)),
     )
   }
