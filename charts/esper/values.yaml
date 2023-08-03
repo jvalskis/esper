@@ -37,6 +37,8 @@ env:
   ESPER_DATABASE_SERVER: "esper-postgresql"
   # -- Postgres port
   ESPER_DATABASE_PORT: 5432
+  # -- Value in seconds for how long to wait for a Shelly device to flash firmware
+  SHELLY_FIRMWARE_FLASH_TIMEOUT: 20
 
 # -- Configures service settings for the chart. Normally this does not need to be modified.
 # @default -- See values.yaml
