@@ -1,6 +1,6 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry, DeviceStatus}
+import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.domain.{Device, DeviceApiError, EsperError, Firmware, Version}
 import is.valsk.esper.repositories.DeviceRepository
@@ -14,7 +14,7 @@ trait OtaService {
 
   def flashFirmware(deviceId: DeviceId, firmware: Firmware): IO[EsperError, Unit]
 
-  def flashFirmware(device: Device, firmware: Firmware): IO[EsperError, Unit]
+  def flashFirmware(device: Device, firmware: Firmware): IO[EsperError, FlashResult]
 
   def getDeviceStatus(deviceId: DeviceId): IO[EsperError, DeviceStatus]
 
@@ -48,10 +48,10 @@ object OtaService {
       _ <- flashFirmware(device, firmware)
     } yield ()
 
-    override def flashFirmware(device: Device, firmware: Firmware): IO[EsperError, Unit] = for {
+    override def flashFirmware(device: Device, firmware: Firmware): IO[EsperError, FlashResult] = for {
       deviceProxy <- deviceProxyRegistry.selectProxy(device.manufacturer)
-      _ <- deviceProxy.flashFirmware(device, firmware)
-    } yield ()
+      result <- deviceProxy.flashFirmware(device, firmware)
+    } yield result
 
     def getDeviceStatus(deviceId: DeviceId): IO[EsperError, DeviceStatus] = for {
       device <- deviceRepository.get(deviceId)

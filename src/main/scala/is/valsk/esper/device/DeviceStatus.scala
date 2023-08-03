@@ -17,7 +17,7 @@ case object DeviceStatus {
   implicit val encoder: JsonEncoder[DeviceStatus] = DeriveJsonEncoder.gen[DeviceStatus]
 
   enum UpdateStatus:
-    case idle, pending, updating, unknown
+    case idle, pending, updating, unknown, done
 
   object UpdateStatus:
 

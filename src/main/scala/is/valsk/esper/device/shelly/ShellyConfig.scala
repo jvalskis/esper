@@ -9,6 +9,7 @@ import zio.config.typesafe.TypesafeConfigSource
 case class ShellyConfig(
     firmwareListUrlPattern: String,
     firmwareDownloadUrlPattern: String,
+    firmwareFlashTimeout: Int,
 )
 
 object ShellyConfig {

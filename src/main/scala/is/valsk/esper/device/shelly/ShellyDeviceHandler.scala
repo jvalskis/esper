@@ -3,10 +3,11 @@ package is.valsk.esper.device.shelly
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
+import is.valsk.esper.device.DeviceStatus.UpdateStatus
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
-import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceStatus}
+import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.domain.*
 import is.valsk.esper.hass.HassToDomainMapper
@@ -16,7 +17,7 @@ import is.valsk.esper.services.HttpClient
 import zio.http.*
 import zio.http.model.Method
 import zio.json.*
-import zio.{Chunk, IO, ULayer, URLayer, ZIO, ZLayer}
+import zio.{Chunk, IO, Schedule, UIO, ULayer, URLayer, ZIO, ZLayer, durationInt}
 
 import scala.annotation.tailrec
 import scala.util.Try
@@ -125,7 +126,7 @@ class ShellyDeviceHandler(
     }
   } yield version
 
-  override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, Unit] = {
+  override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, FlashResult] = {
     for {
       otaUrl <- ZIO
         .fromEither(URL.fromString(ApiEndpoints.ota(device.url)))
@@ -136,7 +137,22 @@ class ShellyDeviceHandler(
         .logError("Failed to flash firmware")
         .mapError(e => ApiCallFailed(e.getMessage, device, Some(e)))
       _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Response: $response")
-    } yield ()
+      result <- retry(checkFirmwareVersion(device, firmware.version))
+    } yield result
+  }
+
+  private def checkFirmwareVersion(device: Device, expectedVersion: Version): IO[DeviceApiError, FlashResult] = for {
+    currentVersion <- getCurrentFirmwareVersion(device)
+    _ <- ZIO.logInfo(s"Checking if firmware updated. Device: ${device.id} (${device.name}). Current version: $currentVersion. Expected version: $expectedVersion")
+  } yield FlashResult(
+    previousVersion = expectedVersion,
+    currentVersion = currentVersion,
+    updateStatus = if (expectedVersion == currentVersion) UpdateStatus.done else UpdateStatus.updating,
+  )
+
+  private def retry(action: IO[DeviceApiError, FlashResult]): IO[DeviceApiError, FlashResult] = {
+    val schedule = Schedule.recurUntil[FlashResult](_.updateStatus == UpdateStatus.done) <* Schedule.upTo(shellyConfig.firmwareFlashTimeout.seconds)
+    action.repeat(schedule)
   }
 
   override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = for {

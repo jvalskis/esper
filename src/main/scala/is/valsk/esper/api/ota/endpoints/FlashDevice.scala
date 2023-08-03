@@ -2,7 +2,7 @@ package is.valsk.esper.api.ota.endpoints
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry}
-import is.valsk.esper.domain.Version.encoder
+import is.valsk.esper.device.FlashResult.encoder
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
@@ -28,8 +28,8 @@ class FlashDevice(
           firmwareService.getFirmware(device.manufacturer, device.model, version)
         case None =>
           firmwareService.getLatestFirmware(device.manufacturer, device.model)
-      _ <- otaService.flashFirmware(device, firmware)
-    } yield Response.ok
+      result <- otaService.flashFirmware(device, firmware)
+    } yield Response.json(result.toJson)
   }
     .mapError {
       case _: FirmwareNotFound => NotFound("") // TODO error handling
