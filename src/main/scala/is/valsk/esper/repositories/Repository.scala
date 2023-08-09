@@ -12,4 +12,6 @@ trait Repository[K, R] {
   def getAll: IO[PersistenceException, List[R]]
 
   def add(value: R): IO[PersistenceException, R]
+
+  def update(value: R): IO[PersistenceException, R]
 }

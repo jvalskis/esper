@@ -36,9 +36,9 @@ object EsperConfig {
     }
   }
 
-  def port: RIO[EsperConfig, Int] = ZIO.serviceWith[EsperConfig](_.port)
-
-  def hassConfig: RIO[EsperConfig, HassConfig] = ZIO.serviceWith[EsperConfig](_.hassConfig)
-
-  def scheduleConfig: RIO[EsperConfig, ScheduleConfig] = ZIO.serviceWith[EsperConfig](_.scheduleConfig)
+  val scheduleConfigLayer: ZLayer[EsperConfig, Nothing, ScheduleConfig] = ZLayer {
+    for {
+      esperConfig <- ZIO.service[EsperConfig]
+    } yield esperConfig.scheduleConfig
+  }
 }

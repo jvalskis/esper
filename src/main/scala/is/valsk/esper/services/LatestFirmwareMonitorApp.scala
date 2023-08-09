@@ -56,11 +56,5 @@ object LatestFirmwareMonitorApp {
     }
   }
 
-  val layer: RLayer[EsperConfig & DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ZLayer {
-    for {
-      scheduleConfig <- EsperConfig.scheduleConfig
-      deviceRepository <- ZIO.service[DeviceRepository]
-      firmwareDownloader <- ZIO.service[FirmwareDownloader]
-    } yield LatestFirmwareMonitorAppLive(scheduleConfig, deviceRepository, firmwareDownloader)
-  }
+  val layer: RLayer[ScheduleConfig & DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
 }

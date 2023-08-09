@@ -27,7 +27,7 @@ case class FailedToQueryFirmware(message: String, cause: Option[Throwable] = Non
 
 case class EmptyResult() extends Exception("No results found") with PersistenceException
 
-case class MalformedVersion(version: String, device: Device) extends Exception(version) with DeviceApiError
+case class MalformedVersion(version: String) extends Exception(version) with DeviceApiError
 
 case class ApiCallFailed(message: String, device: Device, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with DeviceApiError
 

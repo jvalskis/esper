@@ -7,7 +7,7 @@ import io.getquill.{MysqlJdbcContext, MysqlZioJdbcContext, NamingStrategy, Postg
 import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.ApiServerApp
 import is.valsk.esper.api.devices.DeviceApi
-import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
+import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdates, ListDevices}
 import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, ListFirmwareVersions}
 import is.valsk.esper.api.ota.OtaApi
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
@@ -20,7 +20,7 @@ import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, 
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.repositories.*
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, HttpClient, LatestFirmwareMonitorApp, OtaService}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, HttpClient, LatestFirmwareMonitorApp, OtaService, PendingUpdateService}
 import zio.*
 import zio.config.ReadError
 import zio.http.*
@@ -74,6 +74,7 @@ object Main extends ZIOAppDefault {
     x <- ZIO.scoped(scopedApp)
       .provide(
         EsperConfig.layer,
+        EsperConfig.scheduleConfigLayer,
         InMemoryDeviceRepository.layer,
         ApiServerApp.layer,
         SequentialMessageIdGenerator.layer,
@@ -114,6 +115,9 @@ object Main extends ZIOAppDefault {
         GetDeviceStatus.layer,
         OtaService.layer,
         RestartDevice.layer,
+        GetPendingUpdates.layer,
+        PendingUpdateService.layer,
+        PendingUpdateRepository.live
       )
       .onError(_ => ZIO.logError("onError").flatMap(_ => exit(ExitCode.failure)))
       .exitCode

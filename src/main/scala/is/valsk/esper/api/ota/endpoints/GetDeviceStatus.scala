@@ -22,7 +22,7 @@ class GetDeviceStatus(
     } yield Response.json(status.toJson)
   }
     .mapError {
-      case e@MalformedVersion(version, device) => HttpError.BadRequest(e.getMessage)
+      case e@MalformedVersion(version) => HttpError.BadRequest(e.getMessage)
       case e@ApiCallFailed(message, device, cause) => HttpError.BadGateway(e.getMessage)
       case e@ManufacturerNotSupported(manufacturer) => HttpError.PreconditionFailed(e.getMessage)
       case e@FailedToParseApiResponse(message, device, cause) => HttpError.BadGateway(e.getMessage)

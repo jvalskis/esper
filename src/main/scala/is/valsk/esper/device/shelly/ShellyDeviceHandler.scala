@@ -8,8 +8,8 @@ import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFir
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceStatus, FlashResult}
-import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.domain.*
+import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.hass.HassToDomainMapper
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
@@ -32,6 +32,11 @@ class ShellyDeviceHandler(
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r
 
   val supportedManufacturer: Manufacturer = Manufacturer.unsafeFrom("Shelly")
+
+  override def parseVersion(version: String): Either[MalformedVersion, Version] = version match {
+    case shellyApiVersionPattern(version) => Right(Version(version))
+    case version => Left(MalformedVersion(version))
+  }
 
   override def toDomain(hassDevice: HassResult): IO[String, Device] = ZIO.fromEither(
     for {
@@ -56,6 +61,8 @@ class ShellyDeviceHandler(
       model: Model,
       version: Option[Version]
   ): IO[FirmwareDownloadError, FirmwareDescriptor] = {
+    given ordering: Ordering[Version] = versionOrdering
+
     for {
       firmwareListUrl <- ZIO.fromEither(getFirmwareListUrl(model))
         .mapError(FirmwareDownloadLinkResolutionFailed(_, manufacturer, model))
@@ -67,7 +74,7 @@ class ShellyDeviceHandler(
         }
       maybeFirmwareEntry = version match {
         case Some(version) => firmwareList.find(_.version == version)
-        case None => firmwareList.maxByOption(_.version)(versionOrdering)
+        case None => firmwareList.maxByOption(_.version)
       }
       firmware <- ZIO.fromOption(maybeFirmwareEntry)
         .mapError(_ => FirmwareNotFound("Firmware not found", manufacturer, model, version))
@@ -120,10 +127,7 @@ class ShellyDeviceHandler(
 
   override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = for {
     otaResponse <- callOta(device)
-    version <- otaResponse.old_version match {
-      case shellyApiVersionPattern(version) => ZIO.succeed(Version(version))
-      case version => ZIO.fail(MalformedVersion(version, device))
-    }
+    version <- ZIO.fromEither(parseVersion(otaResponse.old_version))
   } yield version
 
   override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, FlashResult] = {
@@ -141,14 +145,18 @@ class ShellyDeviceHandler(
     } yield result
   }
 
-  private def checkFirmwareVersion(device: Device, expectedVersion: Version): IO[DeviceApiError, FlashResult] = for {
-    currentVersion <- getCurrentFirmwareVersion(device)
-    _ <- ZIO.logInfo(s"Checking if firmware updated. Device: ${device.id} (${device.name}). Current version: $currentVersion. Expected version: $expectedVersion")
-  } yield FlashResult(
-    previousVersion = expectedVersion,
-    currentVersion = currentVersion,
-    updateStatus = if (expectedVersion == currentVersion) UpdateStatus.done else UpdateStatus.updating,
-  )
+  private def checkFirmwareVersion(device: Device, expectedVersion: Version): IO[DeviceApiError, FlashResult] = {
+    given ordering: Ordering[Version] = versionOrdering
+
+    for {
+      currentVersion <- getCurrentFirmwareVersion(device)
+      _ <- ZIO.logInfo(s"Checking if firmware updated. Device: ${device.id} (${device.name}). Current version: $currentVersion. Expected version: $expectedVersion")
+    } yield FlashResult(
+      previousVersion = expectedVersion,
+      currentVersion = currentVersion,
+      updateStatus = if (expectedVersion == currentVersion) UpdateStatus.done else UpdateStatus.updating,
+    )
+  }
 
   private def retry(action: IO[DeviceApiError, FlashResult]): IO[DeviceApiError, FlashResult] = {
     val schedule = Schedule.recurUntil[FlashResult](_.updateStatus == UpdateStatus.done) <* Schedule.upTo(shellyConfig.firmwareFlashTimeout.seconds)

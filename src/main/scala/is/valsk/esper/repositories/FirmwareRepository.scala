@@ -19,9 +19,7 @@ import java.sql.SQLException
 import java.util.Base64
 import javax.sql.DataSource
 
-type FirmwareRepository = FirmwareRepository2
-
-trait FirmwareRepository2 extends Repository[FirmwareKey, Firmware] {
+trait FirmwareRepository extends Repository[FirmwareKey, Firmware] {
 
   def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]]
 
@@ -108,6 +106,8 @@ object FirmwareRepository {
         .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
         .map(_.sorted)
     }
+
+    override def update(value: Firmware): IO[PersistenceException, Firmware] = ???
   }
 
   val live: URLayer[Quill.Postgres[SnakeCase], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_))

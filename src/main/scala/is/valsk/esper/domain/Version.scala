@@ -3,11 +3,21 @@ package is.valsk.esper.domain
 import is.valsk.esper.domain.SemanticVersion.SemanticVersionSegment
 import zio.json.{JsonDecoder, JsonEncoder}
 
-import scala.annotation.tailrec
+import scala.annotation.{tailrec, targetName}
 
 case class Version(
     value: String,
-)
+) {
+  def >(other: Version)(using ordering: Ordering[Version]): Boolean = ordering.gt(this, other)
+
+  def <(other: Version)(using ordering: Ordering[Version]): Boolean = ordering.lt(this, other)
+
+  def >=(other: Version)(using ordering: Ordering[Version]): Boolean = ordering.gteq(this, other)
+
+  def <=(other: Version)(using ordering: Ordering[Version]): Boolean = ordering.lteq(this, other)
+
+  def ===(other: Version)(using ordering: Ordering[Version]): Boolean = ordering.equiv(this, other)
+}
 
 object Version {
   implicit val decoder: JsonDecoder[Version] = JsonDecoder[String].map(Version(_))

@@ -3,7 +3,7 @@ package is.valsk.esper.hass.protocol.api
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.domain.Types.Manufacturer
-import is.valsk.esper.domain.{Device, ManufacturerNotSupported, PersistenceException}
+import is.valsk.esper.domain.{Device, EsperError, ManufacturerNotSupported, PersistenceException}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
 import is.valsk.esper.hass.messages.responses.*
@@ -11,6 +11,7 @@ import is.valsk.esper.hass.messages.{HassResponseMessage, MessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import is.valsk.esper.hass.protocol.api.{HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.repositories.{DeviceRepository, ManufacturerRepository}
+import is.valsk.esper.services.PendingUpdateService
 import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.*
@@ -20,7 +21,8 @@ import zio.json.*
 
 class ResultHandler(
     deviceRepository: DeviceRepository,
-    manufacturerRegistry: ManufacturerRepository
+    manufacturerRegistry: ManufacturerRepository,
+    pendingUpdateService: PendingUpdateService,
 ) extends HassResponseMessageHandler {
 
   override def get: PartialHassResponseMessageHandler = {
@@ -42,17 +44,13 @@ class ResultHandler(
       )
   }
 
-  private def addDeviceToRegistry(domainDevice: Device): IO[PersistenceException, Unit] = for {
+  private def addDeviceToRegistry(domainDevice: Device): IO[EsperError, Unit] = for {
     _ <- deviceRepository.add(domainDevice)
+    _ <- pendingUpdateService.deviceAdded(domainDevice)
     _ <- ZIO.logInfo(s"Updated device registry with device: $domainDevice")
   } yield ()
 }
 
 object ResultHandler {
-  val layer: URLayer[DeviceRepository & ManufacturerRepository, ResultHandler] = ZLayer {
-    for {
-      deviceRepository <- ZIO.service[DeviceRepository]
-      manufacturerRegistry <- ZIO.service[ManufacturerRepository]
-    } yield ResultHandler(deviceRepository, manufacturerRegistry)
-  }
+  val layer: URLayer[PendingUpdateService & DeviceRepository & ManufacturerRepository, ResultHandler] = ZLayer.fromFunction(ResultHandler(_, _, _))
 }

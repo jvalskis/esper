@@ -22,7 +22,8 @@ object FirmwareDownloader {
   private class FirmwareDownloaderLive(
       manufacturerRegistry: ManufacturerRepository,
       firmwareRepository: FirmwareRepository,
-      httpClient: HttpClient
+      httpClient: HttpClient,
+      pendingUpdateService: PendingUpdateService
   ) extends FirmwareDownloader {
 
     def downloadFirmware(manufacturer: Manufacturer, model: Model, maybeVersion: Option[Version]): IO[EsperError, Firmware] = for {
@@ -83,18 +84,14 @@ object FirmwareDownloader {
       _ <- ZIO.logInfo(s"Firmware downloaded: $firmware")
     } yield firmware
 
-    private def persistFirmware(firmware: Firmware) = {
-      firmwareRepository
+    private def persistFirmware(firmware: Firmware) = for {
+      firmware <- firmwareRepository
         .add(firmware)
         .logError("Failed to persist firmware")
-    }
+      _ <- pendingUpdateService.firmwareDownloaded(firmware)
+    } yield firmware
   }
 
-  val layer: URLayer[HttpClient & FirmwareRepository & ManufacturerRepository, FirmwareDownloader] = ZLayer {
-    for {
-      httpClient <- ZIO.service[HttpClient]
-      firmwareRepository <- ZIO.service[FirmwareRepository]
-      manufacturerRegistry <- ZIO.service[ManufacturerRepository]
-    } yield FirmwareDownloaderLive(manufacturerRegistry, firmwareRepository, httpClient)
-  }
+  val layer: URLayer[PendingUpdateService & HttpClient & FirmwareRepository & ManufacturerRepository, FirmwareDownloader] =
+    ZLayer.fromFunction(FirmwareDownloaderLive(_, _, _, _))
 }

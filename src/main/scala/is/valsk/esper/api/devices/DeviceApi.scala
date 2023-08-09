@@ -3,7 +3,7 @@ package is.valsk.esper.api.devices
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.EsperConfig
 import is.valsk.esper.api.devices.DeviceApi
-import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
+import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdates, ListDevices}
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceVersion}
 import is.valsk.esper.device.DeviceProxy
 import is.valsk.esper.domain.Device.encoder
@@ -21,15 +21,17 @@ import zio.{Random, Task, URLayer, ZIO, ZLayer}
 class DeviceApi(
     getDevices: ListDevices,
     getDevice: GetDevice,
+    getPendingUpdates: GetPendingUpdates,
 ) {
 
   val app: HttpApp[Any, HttpError] = Http.collectZIO[Request] {
     case Method.GET -> !! / "devices" => getDevices()
+    case Method.GET -> !! / "devices" / "updates" => getPendingUpdates()
     case Method.GET -> !! / "devices" / DeviceIdExtractor(deviceId) => getDevice(deviceId)
   }
 }
 
 object DeviceApi {
 
-  val layer: URLayer[ListDevices & GetDevice, DeviceApi] = ZLayer.fromFunction(DeviceApi(_, _))
+  val layer: URLayer[ListDevices & GetDevice & GetPendingUpdates, DeviceApi] = ZLayer.fromFunction(DeviceApi(_, _, _))
 }
