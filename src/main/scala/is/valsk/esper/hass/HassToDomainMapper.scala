@@ -2,7 +2,7 @@ package is.valsk.esper.hass
 
 import is.valsk.esper.domain.{Device, MalformedVersion, Version}
 import is.valsk.esper.hass.messages.responses.HassResult
-import zio.{IO, UIO}
+import zio.IO
 
 trait HassToDomainMapper {
 

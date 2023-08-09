@@ -1,26 +1,23 @@
 package is.valsk.esper
 
-import io.getquill.context.Context
-import io.getquill.idiom.Idiom
+import io.getquill.SnakeCase
 import io.getquill.jdbczio.Quill
-import io.getquill.{MysqlJdbcContext, MysqlZioJdbcContext, NamingStrategy, PostgresDialect, PostgresJdbcContext, PostgresZioJdbcContext, Query, SnakeCase, SqliteJdbcContext, SqliteZioJdbcContext}
-import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.ApiServerApp
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdates, ListDevices}
-import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, ListFirmwareVersions}
+import is.valsk.esper.api.firmware.FirmwareApi
+import is.valsk.esper.api.firmware.endpoints.*
 import is.valsk.esper.api.ota.OtaApi
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
 import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
 import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.domain.Types.Manufacturer
-import is.valsk.esper.domain.{Device, Firmware, PersistenceException}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.repositories.*
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, HttpClient, LatestFirmwareMonitorApp, OtaService, PendingUpdateService}
+import is.valsk.esper.services.*
 import zio.*
 import zio.config.ReadError
 import zio.http.*

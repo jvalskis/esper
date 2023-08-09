@@ -1,6 +1,5 @@
 package is.valsk.esper.domain
 
-import is.valsk.esper.domain.DeviceModel
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 
 sealed trait EsperError extends Exception

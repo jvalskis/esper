@@ -1,9 +1,8 @@
 package is.valsk.esper.domain
 
-import is.valsk.esper.domain.SemanticVersion.SemanticVersionSegment
 import zio.json.{JsonDecoder, JsonEncoder}
 
-import scala.annotation.{tailrec, targetName}
+import scala.annotation.tailrec
 
 case class Version(
     value: String,

@@ -2,13 +2,13 @@ package is.valsk.esper.api
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.api.devices.DeviceApi
-import is.valsk.esper.domain.{Device, Types}
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
+import is.valsk.esper.domain.{Device, Types}
 import is.valsk.esper.repositories.DeviceRepository
-import zio.{Exit, RIO, URIO, ZIO}
 import zio.http.model.{HttpError, Method}
 import zio.http.{Request, Response, URL}
 import zio.json.*
+import zio.{Exit, RIO, URIO, ZIO}
 
 trait ApiSpec {
 

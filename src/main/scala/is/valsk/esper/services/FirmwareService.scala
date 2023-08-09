@@ -18,6 +18,7 @@ class FirmwareService(
       .get(FirmwareKey(manufacturer, model, version))
       .mapError {
         case EmptyResult() => FirmwareNotFound("Firmware not found", manufacturer, model, Some(version))
+        case x => x
       }
   }
 

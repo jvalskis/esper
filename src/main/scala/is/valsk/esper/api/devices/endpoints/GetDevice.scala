@@ -1,12 +1,11 @@
 package is.valsk.esper.api.devices.endpoints
 
-import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.repositories.DeviceRepository
 import zio.http.Response
-import zio.http.model.{HttpError, Status}
+import zio.http.model.HttpError
 import zio.json.*
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZLayer}
 
 class GetDevice(
     deviceRepository: DeviceRepository

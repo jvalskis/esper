@@ -1,23 +1,15 @@
 package is.valsk.esper.repositories
 
 import eu.timepit.refined.types.string.NonEmptyString
-import io.getquill.context.sql.idiom.SqlIdiom
-import io.getquill.jdbczio.{Quill, QuillBaseContext}
+import io.getquill.jdbczio.Quill
 import io.getquill.{SnakeCase, *}
-import is.valsk.esper.EsperConfig
-import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.DeviceModel.*
 import is.valsk.esper.domain.Types.*
-import is.valsk.esper.domain.Types.NonEmptyStringImplicits.*
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
-import zio.json.*
-import zio.stream.Stream
 
 import java.sql.SQLException
-import java.util.Base64
-import javax.sql.DataSource
 
 trait FirmwareRepository extends Repository[FirmwareKey, Firmware] {
 

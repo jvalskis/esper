@@ -1,10 +1,9 @@
 package is.valsk.esper.device.shelly
 
-import is.valsk.esper.{EsperConfig, HassConfig}
+import zio.ZLayer
 import zio.config.magnolia.descriptor
-import zio.{RIO, ZIO, ZLayer}
-import zio.config.{PropertyTreePath, ReadError, read}
 import zio.config.typesafe.TypesafeConfigSource
+import zio.config.{PropertyTreePath, ReadError, read}
 
 case class ShellyConfig(
     firmwareListUrlPattern: String,

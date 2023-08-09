@@ -17,10 +17,7 @@ import is.valsk.esper.services.HttpClient
 import zio.http.*
 import zio.http.model.Method
 import zio.json.*
-import zio.{Chunk, IO, Schedule, UIO, ULayer, URLayer, ZIO, ZLayer, durationInt}
-
-import scala.annotation.tailrec
-import scala.util.Try
+import zio.{Chunk, IO, Schedule, URLayer, ZIO, ZLayer, durationInt}
 
 class ShellyDeviceHandler(
     esperConfig: EsperConfig,
@@ -145,18 +142,14 @@ class ShellyDeviceHandler(
     } yield result
   }
 
-  private def checkFirmwareVersion(device: Device, expectedVersion: Version): IO[DeviceApiError, FlashResult] = {
-    given ordering: Ordering[Version] = versionOrdering
-
-    for {
-      currentVersion <- getCurrentFirmwareVersion(device)
-      _ <- ZIO.logInfo(s"Checking if firmware updated. Device: ${device.id} (${device.name}). Current version: $currentVersion. Expected version: $expectedVersion")
-    } yield FlashResult(
-      previousVersion = expectedVersion,
-      currentVersion = currentVersion,
-      updateStatus = if (expectedVersion == currentVersion) UpdateStatus.done else UpdateStatus.updating,
-    )
-  }
+  private def checkFirmwareVersion(device: Device, expectedVersion: Version): IO[DeviceApiError, FlashResult] = for {
+    currentVersion <- getCurrentFirmwareVersion(device)
+    _ <- ZIO.logInfo(s"Checking if firmware updated. Device: ${device.id} (${device.name}). Current version: $currentVersion. Expected version: $expectedVersion")
+  } yield FlashResult(
+    previousVersion = expectedVersion,
+    currentVersion = currentVersion,
+    updateStatus = if (expectedVersion == currentVersion) UpdateStatus.done else UpdateStatus.updating,
+  )
 
   private def retry(action: IO[DeviceApiError, FlashResult]): IO[DeviceApiError, FlashResult] = {
     val schedule = Schedule.recurUntil[FlashResult](_.updateStatus == UpdateStatus.done) <* Schedule.upTo(shellyConfig.firmwareFlashTimeout.seconds)

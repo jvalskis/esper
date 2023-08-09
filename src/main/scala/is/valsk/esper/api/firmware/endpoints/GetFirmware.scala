@@ -1,15 +1,12 @@
 package is.valsk.esper.api.firmware.endpoints
 
-import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
-import is.valsk.esper.domain.{DeviceModel, FirmwareNotFound, PersistenceException, Version}
-import is.valsk.esper.repositories.{FirmwareRepository, ManufacturerRepository}
-import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService}
+import is.valsk.esper.domain.Types.{Manufacturer, Model}
+import is.valsk.esper.domain.{FirmwareNotFound, PersistenceException, Version}
+import is.valsk.esper.services.FirmwareService
 import zio.http.*
 import zio.http.model.*
 import zio.http.model.HttpError.NotFound
-import zio.stream.ZStream
-import zio.{Chunk, IO, URLayer, ZIO, ZLayer}
+import zio.{Chunk, IO, URLayer, ZLayer}
 
 class GetFirmware(
     firmwareService: FirmwareService,

@@ -1,23 +1,15 @@
 package is.valsk.esper.hass.protocol.api
 
-import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.domain.Types.Manufacturer
-import is.valsk.esper.domain.{Device, EsperError, ManufacturerNotSupported, PersistenceException}
+import is.valsk.esper.domain.{Device, EsperError, ManufacturerNotSupported}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
-import is.valsk.esper.hass.messages.commands.{Auth, DeviceRegistryList}
 import is.valsk.esper.hass.messages.responses.*
-import is.valsk.esper.hass.messages.{HassResponseMessage, MessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
-import is.valsk.esper.hass.protocol.api.{HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.repositories.{DeviceRepository, ManufacturerRepository}
 import is.valsk.esper.services.PendingUpdateService
 import zio.*
 import zio.http.*
-import zio.http.ChannelEvent.*
-import zio.http.ChannelEvent.UserEvent.{HandshakeComplete, HandshakeTimeout}
-import zio.http.socket.{WebSocketChannelEvent, WebSocketFrame}
-import zio.json.*
 
 class ResultHandler(
     deviceRepository: DeviceRepository,

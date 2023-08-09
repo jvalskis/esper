@@ -1,7 +1,7 @@
 package is.valsk.esper.hass.protocol.api
 
 import is.valsk.esper.hass.messages.HassResponseMessage
-import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
+import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.PartialHassResponseMessageHandler
 import zio.*
 import zio.http.Channel
 import zio.http.socket.WebSocketFrame

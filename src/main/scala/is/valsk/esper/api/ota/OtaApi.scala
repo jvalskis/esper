@@ -1,12 +1,10 @@
 package is.valsk.esper.api.ota
 
-import is.valsk.esper.api.devices.DeviceApi
-import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
 import is.valsk.esper.domain.Types.NonEmptyStringExtractor
 import is.valsk.esper.domain.Version
-import zio.http.model.{HttpError, Method, Status}
 import zio.http.*
+import zio.http.model.{HttpError, Method}
 import zio.{URLayer, ZIO, ZLayer}
 
 class OtaApi(

@@ -1,10 +1,10 @@
 package is.valsk.esper.services
 
+import is.valsk.esper.ScheduleConfig
 import is.valsk.esper.domain.{DeviceModel, EsperError, PersistenceException}
 import is.valsk.esper.repositories.DeviceRepository
-import is.valsk.esper.{EsperConfig, ScheduleConfig}
 import zio.Schedule.*
-import zio.{IO, RLayer, Random, Ref, Schedule, Task, UIO, ZIO, ZLayer, durationInt}
+import zio.{IO, RLayer, Random, Schedule, UIO, ZIO, ZLayer, durationInt}
 
 trait LatestFirmwareMonitorApp {
   def run: UIO[Unit]

@@ -3,9 +3,8 @@ package is.valsk.esper.api.firmware
 import is.valsk.esper.api.firmware.endpoints.*
 import is.valsk.esper.domain.Types.{ManufacturerExtractor, ModelExtractor}
 import is.valsk.esper.domain.Version
-import is.valsk.esper.services.FirmwareDownloader
 import zio.http.*
-import zio.http.model.{HttpError, Method, Status}
+import zio.http.model.{HttpError, Method}
 import zio.{URLayer, ZIO, ZLayer}
 
 class FirmwareApi(

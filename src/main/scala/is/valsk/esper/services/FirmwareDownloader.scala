@@ -1,16 +1,13 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.EsperConfig
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.*
-import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
-import is.valsk.esper.hass.HassToDomainMapper
+import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{FirmwareRepository, ManufacturerRepository}
-import zio.nio.file.{Files, Path}
-import zio.stream.{ZChannel, ZSink, ZStream}
-import zio.{IO, ULayer, URLayer, ZIO, ZLayer}
+import zio.stream.ZSink
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait FirmwareDownloader {
 

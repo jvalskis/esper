@@ -1,11 +1,10 @@
 package is.valsk.esper.api.devices.endpoints
 
-import is.valsk.esper.api.firmware.FirmwareApi
-import is.valsk.esper.repositories.{DeviceRepository, PendingUpdateRepository}
-import zio.http.model.{HttpError, Status}
-import zio.http.{Request, Response}
+import is.valsk.esper.repositories.PendingUpdateRepository
+import zio.http.Response
+import zio.http.model.HttpError
 import zio.json.*
-import zio.{IO, Task, UIO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 class GetPendingUpdates(
     pendingUpdateRepository: PendingUpdateRepository

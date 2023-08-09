@@ -1,6 +1,5 @@
 package is.valsk.esper.hass.protocol
 
-import is.valsk.esper.EsperConfig
 import is.valsk.esper.hass.messages.{HassResponseMessage, MessageParser}
 import is.valsk.esper.hass.protocol.ChannelHandler.PartialChannelHandler
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler
@@ -8,9 +7,7 @@ import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponse
 import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.*
-import zio.http.ChannelEvent.UserEvent.{HandshakeComplete, HandshakeTimeout}
 import zio.http.socket.{WebSocketChannelEvent, WebSocketFrame}
-import zio.json.*
 
 class TextHandler(
     handleHassMessages: PartialHassResponseMessageHandler,

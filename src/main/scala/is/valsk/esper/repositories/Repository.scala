@@ -1,7 +1,6 @@
 package is.valsk.esper.repositories
 
-import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.domain.{Device, PersistenceException}
+import is.valsk.esper.domain.PersistenceException
 import zio.*
 
 trait Repository[K, R] {

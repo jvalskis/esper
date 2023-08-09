@@ -4,7 +4,6 @@ import zio.*
 import zio.config.*
 import zio.config.magnolia.descriptor
 import zio.config.typesafe.TypesafeConfigSource
-import zio.http.Response
 
 case class EsperConfig(
     host: String,

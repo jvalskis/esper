@@ -1,12 +1,10 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.hass.messages.MessageParser.ParseError
-import zio.http.{Client, Request, Response, URL}
-import zio.{URLayer, ZIO, ZLayer}
+import zio.http.{Client, Request, Response}
 import zio.json.*
 import zio.stream.*
-
-import java.io.IOException
+import zio.{URLayer, ZIO, ZLayer}
 
 class HttpClient {
 

@@ -3,7 +3,6 @@ package is.valsk.esper.repositories
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.repositories.DeviceRepository
 import zio.*
 
 class InMemoryDeviceRepository(map: Ref[Map[DeviceId, Device]]) extends DeviceRepository {

@@ -1,11 +1,11 @@
 package is.valsk.esper.api.firmware.endpoints
 
-import is.valsk.esper.domain.Types.{Manufacturer, ManufacturerExtractor, Model, ModelExtractor}
-import is.valsk.esper.domain.{DeviceModel, Version}
+import is.valsk.esper.domain.Types.{Manufacturer, Model}
+import is.valsk.esper.domain.Version
 import is.valsk.esper.services.FirmwareDownloader
+import zio.http.Response
 import zio.http.model.{HttpError, Status}
-import zio.http.{Http, HttpApp, Request, Response}
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZLayer}
 
 class DownloadFirmware(
     firmwareDownloader: FirmwareDownloader,

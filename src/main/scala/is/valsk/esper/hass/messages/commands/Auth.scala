@@ -1,7 +1,7 @@
 package is.valsk.esper.hass.messages.commands
 
-import is.valsk.esper.hass.messages.{HassMessage, HassRequestMessage, Type}
-import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
+import is.valsk.esper.hass.messages.{HassRequestMessage, Type}
+import zio.json.{DeriveJsonEncoder, JsonEncoder}
 
 case class Auth(
     `type`: String,

@@ -1,8 +1,6 @@
 package is.valsk.esper.device
 
 import is.valsk.esper.device.DeviceStatus.UpdateStatus
-import is.valsk.esper.device.shelly.api.Ota
-import is.valsk.esper.device.shelly.api.Ota.OtaStatus
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class DeviceStatus(

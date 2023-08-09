@@ -1,7 +1,6 @@
 package is.valsk.esper.hass.messages.responses
 
-import is.valsk.esper.hass.messages.Type.typeDecoder
-import is.valsk.esper.hass.messages.{ HassMessage, HassResponseMessage}
+import is.valsk.esper.hass.messages.HassResponseMessage
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 
 case class AuthRequired(

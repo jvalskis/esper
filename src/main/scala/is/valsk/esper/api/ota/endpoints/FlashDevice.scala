@@ -1,18 +1,15 @@
 package is.valsk.esper.api.ota.endpoints
 
-import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.device.{DeviceProxy, DeviceProxyRegistry}
 import is.valsk.esper.device.FlashResult.encoder
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
-import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository}
+import is.valsk.esper.repositories.DeviceRepository
 import is.valsk.esper.services.{FirmwareService, OtaService}
 import zio.http.Response
+import zio.http.model.HttpError
 import zio.http.model.HttpError.NotFound
-import zio.http.model.{HttpError, Status}
 import zio.json.*
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZLayer}
 
 class FlashDevice(
     otaService: OtaService,
@@ -33,10 +30,11 @@ class FlashDevice(
   }
     .mapError {
       case _: FirmwareNotFound => NotFound("") // TODO error handling
-      case e@MalformedVersion(version) => HttpError.BadRequest(e.getMessage)
-      case e@ApiCallFailed(message, device, cause) => HttpError.BadGateway(e.getMessage)
-      case e@ManufacturerNotSupported(manufacturer) => HttpError.PreconditionFailed(e.getMessage)
-      case e@FailedToParseApiResponse(message, device, cause) => HttpError.BadGateway(e.getMessage)
+      case e: MalformedVersion => HttpError.BadRequest(e.getMessage)
+      case e: ApiCallFailed => HttpError.BadGateway(e.getMessage)
+      case e: ManufacturerNotSupported => HttpError.PreconditionFailed(e.getMessage)
+      case e: FailedToParseApiResponse => HttpError.BadGateway(e.getMessage)
+      case e => HttpError.InternalServerError(e.getMessage)
     }
 }
 

@@ -1,6 +1,5 @@
 package is.valsk.esper.device
 
-import is.valsk.esper.domain.Types.Manufacturer
 import is.valsk.esper.domain.*
 import zio.IO
 

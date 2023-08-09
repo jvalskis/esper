@@ -1,7 +1,6 @@
 package is.valsk.esper.domain
 
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
-import zio.Chunk
 
 case class Firmware(
     manufacturer: Manufacturer,

@@ -1,6 +1,5 @@
 package is.valsk.esper.domain
 
-import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
