@@ -12,6 +12,8 @@ sealed trait FirmwareDownloadError extends Exception with EsperError
 
 case class ManufacturerNotSupported(manufacturer: Manufacturer) extends Exception(s"Manufacturer not supported: $manufacturer") with EsperError with FirmwareDownloadError
 
+case class ManufacturerIsEmpty() extends Exception(s"Manufacturer is empty") with EsperError
+
 case class FirmwareDownloadFailed(message: String, manufacturer: Manufacturer, model: Model, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with FirmwareDownloadError
 
 case class FailedToParseFirmwareResponse(message: String, manufacturer: Manufacturer, model: Model, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with FirmwareDownloadError

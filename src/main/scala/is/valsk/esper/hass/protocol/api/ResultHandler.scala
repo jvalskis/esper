@@ -2,7 +2,7 @@ package is.valsk.esper.hass.protocol.api
 
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.domain.Types.Manufacturer
-import is.valsk.esper.domain.{Device, EsperError, ManufacturerNotSupported}
+import is.valsk.esper.domain.{Device, EsperError, ManufacturerIsEmpty, ManufacturerNotSupported}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.*
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
@@ -21,7 +21,7 @@ class ResultHandler(
     case HassResponseMessageContext(_, result: Result) =>
       ZIO.foreachDiscard(result.result.toSeq.flatten)(hassDevice =>
         val result = for {
-          manufacturer <- ZIO.fromEither(hassDevice.manufacturer.map(Manufacturer.from).getOrElse(Left("Manufacturer is empty"))).mapError(ParseError(_))
+          manufacturer <- ZIO.fromEither(hassDevice.manufacturer.map(Manufacturer.from).getOrElse(Left(()))).mapError(_ => ManufacturerIsEmpty())
           result <- manufacturerRegistry.getOpt(manufacturer).flatMap {
             case Some(deviceManufacturerHandler) => deviceManufacturerHandler.toDomain(hassDevice).either.flatMap {
               case Right(domainDevice) =>
@@ -32,7 +32,14 @@ class ResultHandler(
             case None => ZIO.fail(ManufacturerNotSupported(manufacturer))
           }
         } yield result
-        result.catchAll(error => ZIO.logError(s"Failed to handle device. Error: ${error.getMessage}. HASS Device: $hassDevice"))
+        result.catchAll {
+          case e: ManufacturerNotSupported =>
+            ZIO.logWarning(s"${e.getMessage}. HASS Device: $hassDevice")
+          case e: ManufacturerIsEmpty =>
+            ZIO.logWarning(s"${e.getMessage}. HASS Device: $hassDevice")
+          case error =>
+            ZIO.logError(s"Failed to handle device. Error: ${error.getMessage}. HASS Device: $hassDevice")
+        }
       )
   }
 
