@@ -1,6 +1,6 @@
-ARG JDK_VERSION=eclipse-temurin-jammy-19.0.1_10
-ARG SBT_VERSION=1.9.0
-ARG SCALA_VERSION=3.3.0
+ARG JDK_VERSION=eclipse-temurin-jammy-20.0.2_9
+ARG SBT_VERSION=1.9.6
+ARG SCALA_VERSION=3.3.1
 FROM sbtscala/scala-sbt:${JDK_VERSION}_${SBT_VERSION}_${SCALA_VERSION} AS builder
 
 COPY src /build/src
