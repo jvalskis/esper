@@ -33,7 +33,6 @@ object PendingUpdateRepository {
     override def get(key: DeviceId): IO[PersistenceException, PendingUpdate] = {
       getOpt(key)
         .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
-        .logError("test")
         .flatMap(maybeFirmware => ZIO
           .fromOption(maybeFirmware)
           .mapError(_ => EmptyResult())
@@ -50,7 +49,6 @@ object PendingUpdateRepository {
       for {
         result <- run(q)
           .map(_.headOption)
-          .logError("test")
           .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
         maybePendingUpdate <- result match {
           case Some(dto) => deviceRepository.get(dto.id).map(device => Some(PendingUpdate(
@@ -80,10 +78,7 @@ object PendingUpdateRepository {
     override def add(pendingUpdate: PendingUpdate): IO[PersistenceException, PendingUpdate] = {
       val q = quote {
         query[PendingUpdateDto]
-          .insertValue(lift(PendingUpdateDto(
-            id = pendingUpdate.device.id,
-            version = pendingUpdate.version
-          )))
+          .insertValue(lift(map(pendingUpdate)))
           .returning(dto => dto)
       }
       run(q)
@@ -91,7 +86,24 @@ object PendingUpdateRepository {
         .map(_ => pendingUpdate)
     }
 
-    override def update(value: PendingUpdate): IO[PersistenceException, PendingUpdate] = ???
+    override def update(value: PendingUpdate): IO[PersistenceException, PendingUpdate] = {
+      val q = quote {
+        query[PendingUpdateDto]
+          .updateValue(lift(map(value)))
+          .returning(dto => dto)
+      }
+      run(q)
+        .mapError(e => FailedToStoreFirmware(e.getMessage, DeviceModel(value.device.model, value.device.manufacturer), Some(e)))
+        .map(_ => value)
+    }
+
+    private def map(value: PendingUpdate): PendingUpdateDto = {
+      PendingUpdateDto(
+        id = value.device.id,
+        version = value.version
+      )
+    }
+
   }
 
   val live: URLayer[Quill.Postgres[SnakeCase] & DeviceRepository, PendingUpdateRepository] = ZLayer.fromFunction(PendingUpdateRepositoryLive(_, _))
