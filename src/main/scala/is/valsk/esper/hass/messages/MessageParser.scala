@@ -10,5 +10,5 @@ trait MessageParser[T] {
 
 object MessageParser {
 
-  case class ParseError(message: String, underlying: Option[Throwable] = None) extends Exception(message, underlying.orNull)
+  case class ParseError(message: String, underlying: Option[Throwable] = None) extends Exception(s"Parse error: $message", underlying.orNull)
 }
