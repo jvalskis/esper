@@ -5,7 +5,6 @@ import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
-import zio.nio.file.{Files, Path}
 import zio.stream.{Stream, ZSink, ZStream}
 
 import java.io.IOException
