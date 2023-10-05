@@ -34,12 +34,7 @@ class FirmwareService(
   def latestFirmwareStatus(device: Device): IO[EsperError, LatestFirmwareStatus] = for {
     manufacturerHandler <- manufacturerRepository.get(device.manufacturer)
     maybeLatestFirmware <- firmwareRepository.getLatestFirmware(device.manufacturer, device.model)(using manufacturerHandler.versionOrdering)
-    maybeCurrentVersion <- device.softwareVersion
-      .map(manufacturerHandler.parseVersion)
-      .fold(ZIO.succeed(Option.empty[Version])) {
-        case Left(error) => ZIO.fail(error)
-        case Right(version) => ZIO.succeed(Some(version))
-      }
+    maybeCurrentVersion <- ZIO.succeed(device.softwareVersion)
     status = (maybeCurrentVersion, maybeLatestFirmware.map(_.version)) match {
       case (None, _) => LatestFirmwareStatus.Undefined
       case (_, None) => LatestFirmwareStatus.Undefined

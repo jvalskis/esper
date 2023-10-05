@@ -27,7 +27,7 @@ class ResultHandler(
               case Right(domainDevice) =>
                 addDeviceToRegistry(domainDevice)
               case Left(error) =>
-                ZIO.fail(ParseError(error))
+                ZIO.fail(error)
             }
             case None => ZIO.fail(ManufacturerNotSupported(manufacturer))
           }

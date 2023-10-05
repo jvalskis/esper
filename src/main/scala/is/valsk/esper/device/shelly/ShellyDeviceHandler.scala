@@ -35,23 +35,28 @@ class ShellyDeviceHandler(
     case version => Left(MalformedVersion(version))
   }
 
-  override def toDomain(hassDevice: HassResult): IO[String, Device] = ZIO.fromEither(
-    for {
-      refinedModel <- resolveModel(hassDevice)
-      refinedUrl <- hassDevice.configuration_url.map(UrlString.from).getOrElse(Left("Configuration URL is empty"))
-      refinedId <- NonEmptyString.from(hassDevice.id)
-      refinedName <- NonEmptyString.from(hassDevice.name)
-      refinedManufacturer <- hassDevice.manufacturer.map(NonEmptyString.from).getOrElse(Left("Manufacturer is empty"))
+  override def toDomain(hassDevice: HassResult): IO[MalformedVersion | ParseError, Device] = {
+    val device: IO[MalformedVersion | String, Device] = for {
+      refinedModel <- ZIO.fromEither(resolveModel(hassDevice))
+      refinedUrl <- ZIO.fromEither(hassDevice.configuration_url.map(UrlString.from).getOrElse(Left("Configuration URL is empty")))
+      refinedId <- ZIO.fromEither(NonEmptyString.from(hassDevice.id))
+      refinedName <- ZIO.fromEither(NonEmptyString.from(hassDevice.name))
+      refinedManufacturer <- ZIO.fromEither(hassDevice.manufacturer.map(Manufacturer.from).getOrElse(Left("Manufacturer is empty")))
+      maybeRefinedSoftwareVersion <- ZIO.fromEither(hassDevice.sw_version.filterNot(_.isBlank).map(x => parseVersion(x).map(Some(_))).getOrElse(Right(None)))
     } yield Device(
       id = refinedId,
       url = refinedUrl,
       name = refinedName,
       nameByUser = hassDevice.name_by_user,
-      softwareVersion = hassDevice.sw_version,
+      softwareVersion = maybeRefinedSoftwareVersion,
       model = refinedModel,
       manufacturer = refinedManufacturer,
     )
-  )
+    device.mapError {
+      case x: MalformedVersion => x
+      case x: String => ParseError(x)
+    }
+  }
 
   override def getFirmwareDownloadDetails(
       manufacturer: Manufacturer,
