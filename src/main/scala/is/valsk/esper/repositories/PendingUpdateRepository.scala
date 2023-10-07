@@ -89,6 +89,7 @@ object PendingUpdateRepository {
     override def update(value: PendingUpdate): IO[PersistenceException, PendingUpdate] = {
       val q = quote {
         query[PendingUpdateDto]
+          .filter(p => p.id == lift(value.device.id))
           .updateValue(lift(map(value)))
           .returning(dto => dto)
       }

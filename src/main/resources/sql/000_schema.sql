@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS firmware (
 );
 
 CREATE TABLE IF NOT EXISTS pending_update_dto (
-    "id" varchar(255) NOT NULL,
+    "id" varchar(255) NOT NULL primary key,
     "version" varchar(255) NOT NULL
 );
