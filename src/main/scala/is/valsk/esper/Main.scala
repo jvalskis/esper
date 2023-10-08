@@ -4,7 +4,7 @@ import io.getquill.SnakeCase
 import io.getquill.jdbczio.Quill
 import is.valsk.esper.api.ApiServerApp
 import is.valsk.esper.api.devices.DeviceApi
-import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdates, ListDevices}
+import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.firmware.endpoints.*
 import is.valsk.esper.api.ota.OtaApi
@@ -114,7 +114,8 @@ object Main extends ZIOAppDefault {
         RestartDevice.layer,
         GetPendingUpdates.layer,
         PendingUpdateService.layer,
-        PendingUpdateRepository.live
+        PendingUpdateRepository.live,
+        GetPendingUpdate.layer,
       )
       .onError(_ => ZIO.logError("onError").flatMap(_ => exit(ExitCode.failure)))
       .exitCode
