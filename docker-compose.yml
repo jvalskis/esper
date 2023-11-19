@@ -12,12 +12,12 @@ services:
       - 5432:5432
     volumes:
       - ./src/main/resources/sql:/docker-entrypoint-initdb.d/:ro
-  esper_app:
+  esper_api:
     build:
-      context: .
+      context: esper-api
       args:
         - VERSION=${IMAGE_ESPER_VERSION}
-    image: jvalskis/esper-app:${IMAGE_ESPER_VERSION}
+    image: jvalskis/esper-api:${IMAGE_ESPER_VERSION}
     restart: always
     ports:
       - 9000:9000
@@ -28,3 +28,10 @@ services:
       - ESPER_DATABASE_PASSWORD
       - ESPER_DATABASE_NAME
       - ESPER_DATABASE_SERVER
+  esper_gui:
+    build:
+      context: esper-gui
+    image: jvalskis/esper-gui:${IMAGE_ESPER_VERSION}
+    restart: always
+    ports:
+      - 8080:8080
