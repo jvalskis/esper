@@ -19,7 +19,10 @@ WORKDIR /app
 # install simple http server for serving static content
 RUN npm install -g http-server
 
+COPY docker/entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
+
 COPY --from=builder /app/dist/ /app/
 
 EXPOSE 8080
-CMD ["http-server"]
+ENTRYPOINT ["./entrypoint.sh"]
