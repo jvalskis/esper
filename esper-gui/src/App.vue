@@ -1,38 +1,58 @@
 <script setup lang="ts">
 import DeviceList from "./components/DeviceList.vue"
 import type { DeviceProps } from "./components/DeviceList.vue";
-import { ref } from "vue"
+import { ref, onMounted } from "vue"
+import { config } from './config'
 
-let a = {
-	"device": {
-		"id": "abc1",
-		"url": "http://xxx.iot.lan",
-		"name": "xxx",
-		"model": "MODEL-XXX",
-		"manufacturer": "Shelly"
-	},
-	"version": "v1.14.0"
+import axios from 'axios'
+
+const data = ref(<DeviceProps[]>[])
+
+type Device = {
+    id: string,
+    manufacturer: string,
+    model: string,
+    name: string,
+    nameByUser?: string,
+    softwareVersion: string,
+    url: string,
 }
-let b = {
-	"device": {
-		"id": "abc2",
-		"url": "http://yyy.iot.lan",
-		"name": "yyy",
-		"nameByUser": "yyy-by-user",
-		"model": "MODEL-YYY",
-		"manufacturer": "Shelly"
-	},
-	"version": "v1.14.0"
+
+type DeviceUpdate = {
+    device: Device,
+    version: string,
 }
-const devices = ref({ devices: [ a, b ].map(x => Object.assign({}, x.device, {newVersion: x.version}) as DeviceProps) })
+
+type GetDeviceUpdatesResponse = DeviceUpdate[]
+
+onMounted(() => {
+    console.log("ENV", import.meta.env)
+	downloadDevices()
+        .then((devices) => {
+            data.value = devices.map(mapDeviceToProps)
+        })
+})
+
+async function downloadDevices(): Promise<DeviceUpdate[]> {
+	const result = await axios.get<GetDeviceUpdatesResponse>(config.ESPER_API_ADDRESS + "/devices/updates")
+    return result.data
+}
+
+function mapDeviceToProps(device: DeviceUpdate): DeviceProps {
+    return Object.assign({}, device.device, { 
+        newVersion: device.version,
+        version: device.device.softwareVersion
+     }) as DeviceProps
+}
 
 function testCallback(x: DeviceProps) {
 	console.log("Update firmware callback", x)
 }
+
 </script>
 
 <template>
-	<DeviceList v-bind="devices" @update-firmware="testCallback" />
+	<DeviceList :devices="data" @update-firmware="testCallback" />
 </template>
 
 <style scoped>
