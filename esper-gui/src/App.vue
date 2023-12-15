@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import DeviceList from "./components/DeviceList.vue"
-import type { DeviceProps } from "./components/DeviceList.vue";
+import type { DeviceProps } from "./components/Device.vue";
 import { ref, onMounted } from "vue"
 import { config } from './config'
 
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 const data = ref(<DeviceProps[]>[])
 
@@ -26,7 +26,6 @@ type DeviceUpdate = {
 type GetDeviceUpdatesResponse = DeviceUpdate[]
 
 onMounted(() => {
-    console.log("ENV", import.meta.env)
 	downloadDevices()
         .then((devices) => {
             data.value = devices.map(mapDeviceToProps)
@@ -41,18 +40,46 @@ async function downloadDevices(): Promise<DeviceUpdate[]> {
 function mapDeviceToProps(device: DeviceUpdate): DeviceProps {
     return Object.assign({}, device.device, { 
         newVersion: device.version,
-        version: device.device.softwareVersion
+        version: device.device.softwareVersion,
+        displayStatus: "none"
      }) as DeviceProps
 }
 
-function testCallback(x: DeviceProps) {
-	console.log("Update firmware callback", x)
+async function updateFirmware(device: DeviceProps) {
+    if (device.displayStatus !== "progress") {
+        device.displayStatus = "progress"
+        let deviceInfo = { 
+            deviceId: device.id,
+            currentVersion: device.version, 
+            newVersion: device.newVersion
+        }
+        console.log("Firmware update: start", deviceInfo)
+        try {
+			const result = await axios.get<GetDeviceUpdatesResponse>(config.ESPER_API_ADDRESS + "/devices/updates")
+            console.log("Firmware update: completed", deviceInfo, result)
+			setTimeout(() => {
+				device.version = device.newVersion
+				device.newVersion = undefined
+				device.displayStatus = "none"
+			}, 1000)
+        } catch (error) {
+            console.log("Firmware update: failed", deviceInfo, error)
+			setTimeout(() => {
+        		device.displayStatus = "error"
+				if (axios.isAxiosError(error))  {
+					const axiosError = error as AxiosError<Error>;
+					device.error = axiosError.message
+				}
+			}, 1000)
+        }
+    } else {
+        console.log("Firmware update: in progress")
+    }
 }
-
 </script>
 
 <template>
-	<DeviceList :devices="data" @update-firmware="testCallback" />
+	<DeviceList :devices="data" @action-button-clicked="updateFirmware" />
 </template>
 
 <style scoped>
