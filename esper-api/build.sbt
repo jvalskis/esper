@@ -1,12 +1,14 @@
-val scala3Version = "3.3.1"
-val zioVersion = "2.0.18"
-val zioJsonVersion = "0.6.2"
+val scala3Version = "3.3.3"
+val zioVersion = "2.1.2"
+val zioJsonVersion = "0.7.0"
 val zioHttpVersion = "0.0.5"
-val zioLoggingVersion = "2.1.14"
-val zioTestVersion = "2.0.13"
-val zioConfigVersion = "3.0.7"
+val zioLoggingVersion = "2.3.0"
+val zioTestVersion = "2.1.2"
+val zioConfigVersion = "4.0.2"
 val slf4jVersion = "2.0.5"
-val refinedVersion = "0.11.0"
+val refinedVersion = "0.11.2"
+
+enablePlugins(JavaAppPackaging)
 
 lazy val root = project
   .in(file("."))
@@ -19,6 +21,9 @@ lazy val root = project
       "-Wunused:all",
       "-Wvalue-discard"
     ),
+    Compile / run / mainClass := Some("is.valsk.esper.Main"),
+    Docker / packageName := "justasv/esper-api",
+    Docker / dockerExposedPorts := Seq(9000),
 
     libraryDependencies ++= Seq(
       "org.slf4j" % "slf4j-simple" % slf4jVersion,

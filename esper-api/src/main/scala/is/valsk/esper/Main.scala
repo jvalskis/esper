@@ -19,14 +19,14 @@ import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.repositories.*
 import is.valsk.esper.services.*
 import zio.*
-import zio.config.ReadError
 import zio.http.*
 import zio.logging.backend.SLF4J
 import zio.stream.ZStream
+import zio.config.typesafe.FromConfigSourceTypesafe
 
 object Main extends ZIOAppDefault {
 
-  override val bootstrap: URLayer[Any, Unit] = Runtime.removeDefaultLoggers >>> SLF4J.slf4j
+  override val bootstrap: URLayer[Any, Unit] = Runtime.removeDefaultLoggers >>> Runtime.setConfigProvider(ConfigProvider.fromResourcePath()) >>> SLF4J.slf4j
 
   private val scopedApp: ZIO[HassWebsocketApp & ApiServerApp & LatestFirmwareMonitorApp, Throwable, Unit] = for {
     hassWebsockerApp <- ZIO.service[HassWebsocketApp]

@@ -1,9 +1,8 @@
 package is.valsk.esper.device.shelly
 
-import zio.ZLayer
-import zio.config.magnolia.descriptor
-import zio.config.typesafe.TypesafeConfigSource
-import zio.config.{PropertyTreePath, ReadError, read}
+import zio.*
+import zio.config.*
+import zio.config.magnolia.deriveConfig
 
 case class ShellyConfig(
     firmwareListUrlPattern: String,
@@ -12,12 +11,13 @@ case class ShellyConfig(
 )
 
 object ShellyConfig {
-  val layer: ZLayer[Any, ReadError[String], ShellyConfig] = ZLayer {
-    read {
-      descriptor[ShellyConfig].from(
-        TypesafeConfigSource.fromResourcePath
-          .at(PropertyTreePath.$("ShellyConfig"))
-      )
-    }
+
+  implicit val config: Config[ShellyConfig] =
+    deriveConfig[ShellyConfig].nested("ShellyConfig")
+
+  val layer: ZLayer[Any, Config.Error, ShellyConfig] = ZLayer {
+    for {
+      shellyConfig <- ZIO.config[ShellyConfig]
+    } yield shellyConfig
   }
 }

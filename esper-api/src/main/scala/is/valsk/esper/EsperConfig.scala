@@ -2,8 +2,7 @@ package is.valsk.esper
 
 import zio.*
 import zio.config.*
-import zio.config.magnolia.descriptor
-import zio.config.typesafe.TypesafeConfigSource
+import zio.config.magnolia.deriveConfig
 
 case class EsperConfig(
     host: String,
@@ -26,13 +25,14 @@ case class ScheduleConfig(
 )
 
 object EsperConfig {
-  val layer: ZLayer[Any, ReadError[String], EsperConfig] = ZLayer {
-    read {
-      descriptor[EsperConfig].from(
-        TypesafeConfigSource.fromResourcePath
-          .at(PropertyTreePath.$("EsperConfig"))
-      )
-    }
+
+  implicit val config: Config[EsperConfig] =
+    deriveConfig[EsperConfig].nested("EsperConfig")
+
+  val layer: ZLayer[Any, Config.Error, EsperConfig] = ZLayer {
+    for {
+      esperConfig <- ZIO.config[EsperConfig]
+    } yield esperConfig
   }
 
   val scheduleConfigLayer: ZLayer[EsperConfig, Nothing, ScheduleConfig] = ZLayer {
