@@ -1,23 +1,19 @@
-package is.valsk.esper.api.devices
+package is.valsk.esper.api.ota
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.EsperConfig
 import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.api.devices.GetDeviceSpec.test
-import is.valsk.esper.api.devices.endpoints.{GetDevice, ListDevices}
-import is.valsk.esper.api.firmware.FirmwareApi
-import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceVersion}
-import is.valsk.esper.device.shelly.{ShellyConfig, ShellyDeviceHandler}
-import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceProxyRegistry}
+import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
+import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler, DeviceProxyRegistry, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.*
-import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
-import is.valsk.esper.hass.HassToDomainMapper
+import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
+import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
-import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, InMemoryFirmwareRepository}
-import is.valsk.esper.services.HttpClient
+import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
+import is.valsk.esper.services.{FirmwareService, OtaService}
 import zio.*
-import zio.http.model.{HttpError, Method, Status}
-import zio.http.{Client, Request, Response, URL}
+import zio.http.Response
+import zio.http.model.HttpError
 import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -37,43 +33,39 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        layerWithTestRepository,
+        deviceRepositoryLayerWithTestRepository,
+        InMemoryManufacturerRepository.layer,
         InMemoryFirmwareRepository.layer,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetDeviceVersion.layer,
+        FirmwareService.layer,
+        RestartDevice.layer,
+        GetDeviceStatus.layer,
         FlashDevice.layer,
+        GetDeviceVersion.layer,
+        OtaService.layer,
+        OtaApi.layer,
         DeviceProxyRegistry.layer,
         manufacturerRegistryLayer,
-        ShellyDeviceHandler.layer,
-        HttpClient.layer,
-        EsperConfig.layer,
-        ShellyConfig.layer,
-        Client.default,
       ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {
         _ <- givenDevices(device1)
         response <- getDeviceVersion(device1.id)
       } yield assert(response)(
-        fails(isSome(equalTo(HttpError.InternalServerError())))
+        fails(isSome(equalTo(HttpError.InternalServerError("message"))))
       )
     }
-      .provide(layerThatThrowsException,
+      .provide(deviceRepositoryLayerThatThrowsException,
+        InMemoryManufacturerRepository.layer,
         InMemoryFirmwareRepository.layer,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetDeviceVersion.layer,
+        FirmwareService.layer,
+        RestartDevice.layer,
+        GetDeviceStatus.layer,
         FlashDevice.layer,
+        GetDeviceVersion.layer,
+        OtaService.layer,
+        OtaApi.layer,
         DeviceProxyRegistry.layer,
         manufacturerRegistryLayer,
-        ShellyDeviceHandler.layer,
-        HttpClient.layer,
-        EsperConfig.layer,
-        ShellyConfig.layer,
-        Client.default,
       ),
     test("Fail with 412 (Precondition Failed) when device manufacturer is not supported") {
       for {
@@ -83,20 +75,18 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
         fails(isSome(equalTo(HttpError.PreconditionFailed(s"Manufacturer not supported: $unsupportedManufacturer"))))
       )
     }
-      .provide(layerWithTestRepository,
+      .provide(deviceRepositoryLayerWithTestRepository,
+        InMemoryManufacturerRepository.layer,
         InMemoryFirmwareRepository.layer,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetDeviceVersion.layer,
+        FirmwareService.layer,
+        RestartDevice.layer,
+        GetDeviceStatus.layer,
         FlashDevice.layer,
+        GetDeviceVersion.layer,
+        OtaService.layer,
+        OtaApi.layer,
         DeviceProxyRegistry.layer,
         manufacturerRegistryLayer,
-        ShellyDeviceHandler.layer,
-        HttpClient.layer,
-        EsperConfig.layer,
-        ShellyConfig.layer,
-        Client.default,
       ),
     test("Fail with 502 (Bad Gateway) when there is an exception while calling the device") {
       for {
@@ -106,20 +96,18 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
         fails(isSome(equalTo(HttpError.BadGateway("error"))))
       )
     }
-      .provide(layerWithTestRepository,
+      .provide(deviceRepositoryLayerWithTestRepository,
+        InMemoryManufacturerRepository.layer,
         InMemoryFirmwareRepository.layer,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetDeviceVersion.layer,
+        FirmwareService.layer,
+        RestartDevice.layer,
+        GetDeviceStatus.layer,
         FlashDevice.layer,
+        GetDeviceVersion.layer,
+        OtaService.layer,
+        OtaApi.layer,
         DeviceProxyRegistry.layer,
         manufacturerRegistryLayer,
-        ShellyDeviceHandler.layer,
-        HttpClient.layer,
-        EsperConfig.layer,
-        ShellyConfig.layer,
-        Client.default,
       ),
     test("Return the device version") {
       for {
@@ -130,46 +118,48 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
         assert(device)(equalTo("currentFirmwareVersion"))
       }
     }
-      .provide(layerWithTestRepository,
+      .provide(deviceRepositoryLayerWithTestRepository,
+        InMemoryManufacturerRepository.layer,
         InMemoryFirmwareRepository.layer,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetDeviceVersion.layer,
+        FirmwareService.layer,
+        RestartDevice.layer,
+        GetDeviceStatus.layer,
         FlashDevice.layer,
+        GetDeviceVersion.layer,
+        OtaService.layer,
+        OtaApi.layer,
         DeviceProxyRegistry.layer,
         manufacturerRegistryLayer,
-        ShellyDeviceHandler.layer,
-        HttpClient.layer,
-        EsperConfig.layer,
-        ShellyConfig.layer,
-        Client.default,
       ),
   )
 
-  val layerWithTestRepository: ULayer[DeviceRepository] = ZLayer {
+  val deviceRepositoryLayerWithTestRepository: ULayer[DeviceRepository] = ZLayer {
     for {
-      ref <- Ref.make(Map.empty[NonEmptyString, Device])
+      ref <- Ref.make(Map.empty[DeviceId, Device])
     } yield InMemoryDeviceRepository(ref)
   }
 
-  val layerThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(
+  val deviceRepositoryLayerThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(
     new DeviceRepository {
-      override def get(id: NonEmptyString): IO[PersistenceException, Option[Device]] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
+      override def get(id: DeviceId): IO[PersistenceException, Device] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
+
+      override def getOpt(id: DeviceId): IO[PersistenceException, Option[Device]] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
 
       override def getAll: IO[PersistenceException, List[Device]] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
 
       override def add(device: Device): IO[PersistenceException, Device] = ZIO.succeed(device)
+
+      override def update(device: Device): IO[PersistenceException, Device] = ZIO.succeed(device)
     }
   )
 
-  private val manufacturerRegistryLayer: URLayer[Any, Map[Manufacturer, DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy]] = ZLayer {
+  private val manufacturerRegistryLayer: URLayer[Any, Map[Manufacturer, DeviceHandler]] = ZLayer {
     val value = for {
       testDeviceHandler <- ZIO.service[TestDeviceHandler]
-      testfailingTestDeviceHandlerHandler <- ZIO.service[FailingTestDeviceHandler]
+      testFailingTestDeviceHandlerHandler <- ZIO.service[FailingTestDeviceHandler]
     } yield Map(
       testDeviceHandler.supportedManufacturer -> testDeviceHandler,
-      testfailingTestDeviceHandlerHandler.supportedManufacturer -> testfailingTestDeviceHandlerHandler
+      testFailingTestDeviceHandlerHandler.supportedManufacturer -> testFailingTestDeviceHandlerHandler
     )
     value.provide(
       ZLayer.succeed(TestDeviceHandler()),
@@ -177,7 +167,7 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
     )
   }
 
-  case class TestDeviceHandler() extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy {
+  case class TestDeviceHandler() extends DeviceHandler {
     override def getFirmwareDownloadDetails(
         manufacturer: Manufacturer,
         model: Model,
@@ -186,16 +176,22 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
 
     override def versionOrdering: Ordering[Version] = Ordering.String.on(_.value)
 
-    override def toDomain(hassDevice: HassResult): IO[String, Device] = ???
+    override def toDomain(hassDevice: HassResult): IO[MalformedVersion | ParseError, Device] = ???
 
     override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = ZIO.succeed(Version("currentFirmwareVersion"))
 
-    override def flashFirmware(device: Device, firmware: Firmware): IO[Throwable, Unit] = ???
+    override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, FlashResult] = ???
+
+    override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = ???
+
+    override def restartDevice(device: Device): IO[DeviceApiError, Unit] = ???
+
+    override def parseVersion(version: String): Either[MalformedVersion, Version] = ???
 
     def supportedManufacturer: Manufacturer = manufacturer1
   }
 
-  case class FailingTestDeviceHandler() extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy {
+  case class FailingTestDeviceHandler() extends DeviceHandler {
     override def getFirmwareDownloadDetails(
         manufacturer: Manufacturer,
         model: Model,
@@ -204,11 +200,17 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
 
     override def versionOrdering: Ordering[Version] = Ordering.String.on(_.value)
 
-    override def toDomain(hassDevice: HassResult): IO[String, Device] = ???
+    override def toDomain(hassDevice: HassResult): IO[MalformedVersion | ParseError, Device] = ???
 
     override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = ZIO.fail(ApiCallFailed("error", device))
 
-    override def flashFirmware(device: Device, firmware: Firmware): IO[Throwable, Unit] = ZIO.fail(ApiCallFailed("error", device))
+    override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, FlashResult] = ZIO.fail(ApiCallFailed("error", device))
+
+    override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = ???
+
+    override def restartDevice(device: Device): IO[DeviceApiError, Unit] = ???
+
+    override def parseVersion(version: String): Either[MalformedVersion, Version] = ???
 
     def supportedManufacturer: Manufacturer = manufacturerWithFailingHandler
   }

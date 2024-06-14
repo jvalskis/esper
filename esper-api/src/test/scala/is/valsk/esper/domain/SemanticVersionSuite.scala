@@ -1,6 +1,5 @@
 package is.valsk.esper.domain
 
-import is.valsk.esper.domain.SemanticVersion
 import zio.ZIO
 import zio.test.*
 import zio.test.Assertion.*

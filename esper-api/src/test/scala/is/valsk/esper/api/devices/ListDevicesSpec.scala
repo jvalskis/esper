@@ -10,22 +10,20 @@ import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, 
 import zio.*
 import zio.http.model.HttpError
 import zio.http.Response
+import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.io.IOException
 
+object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
 
-object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
-
-  def spec = suite("GetDeviceSpec")(
-    test("Return a 404 (Not Fount) if the device does not exist") {
+  def spec = suite("ListDevicesSpec")(
+    test("Return an empty list if there are no devices") {
       for {
-        _ <- givenDevices(device1)
-        response <- getDevice(nonExistentDeviceId)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.NotFound(""))))
-      )
+        result <- listDevices
+          .flatMap(parseResponse[List[Device]])
+      } yield assert(result)(isEmpty)
     }
       .provide(
         deviceRepositoryLayerWithTestRepository,
@@ -36,13 +34,13 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
         GetPendingUpdates.layer,
         InMemoryPendingUpdateRepository.layer,
       ),
-    test("Return the device") {
+    test("Return all devices when there are some") {
       for {
         _ <- givenDevices(device1)
-        response <- getDevice(device1.id)
-          .flatMap(parseResponse[Device])
+        result <- listDevices
+          .flatMap(parseResponse[List[Device]])
       } yield {
-        assert(response)(equalTo(device1))
+        assert(result)(contains(device1))
       }
     }
       .provide(deviceRepositoryLayerWithTestRepository,
@@ -53,10 +51,9 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
         GetPendingUpdates.layer,
         InMemoryPendingUpdateRepository.layer,
       ),
-    test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
+    test("Fail with 500 (Internal Server Error) when there is an exception while fetching devices") {
       for {
-        _ <- givenDevices(device1)
-        response <- getDevice(device1.id)
+        response <- listDevices
       } yield assert(response)(
         fails(isSome(equalTo(HttpError.InternalServerError())))
       )
@@ -68,8 +65,7 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
         InMemoryPendingUpdateRepository.layer,
-      )
-    ,
+      ),
   )
 
   val deviceRepositoryLayerWithTestRepository: ULayer[DeviceRepository] = ZLayer {
@@ -86,9 +82,9 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
 
       override def getAll: IO[PersistenceException, List[Device]] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
 
-      override def add(device: Device): IO[PersistenceException, Device] = ZIO.succeed(device)
+      override def add(device: Device): IO[PersistenceException, Device] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
 
-      override def update(device: Device): IO[PersistenceException, Device] = ZIO.succeed(device)
+      override def update(device: Device): IO[PersistenceException, Device] = ZIO.fail(FailedToStoreFirmware("message", DeviceModel(Model.unsafeFrom("model"), Manufacturer.unsafeFrom("manufacturer")), Some(IOException("test"))))
     }
   )
 }
