@@ -116,6 +116,13 @@ object Main extends ZIOAppDefault {
       PendingUpdateRepository.live,
       GetPendingUpdate.layer,
     )
-    .onError(cause => ZIO.logErrorCause("onError", cause).flatMap(_ => exit(ExitCode.failure)))
+    .onError {
+      case e: Cause[Config.Error] => ZIO
+        .logError(s"Config error: ${e.failures.headOption.fold("")(_.getMessage())}")
+        .flatMap(_ => exit(ExitCode.failure))
+      case cause => ZIO
+        .logErrorCause("onError", cause)
+        .flatMap(_ => exit(ExitCode.failure))
+    }
     .exitCode
 }
