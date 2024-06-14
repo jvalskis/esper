@@ -1,6 +1,6 @@
 package is.valsk.esper.domain
 
-import is.valsk.esper.domain.Types.{Manufacturer, Model}
+import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
 
 sealed trait EsperError extends Exception
 
@@ -9,6 +9,8 @@ sealed trait DeviceApiError extends EsperError
 sealed trait PersistenceException extends EsperError
 
 sealed trait FirmwareDownloadError extends Exception with EsperError
+
+case class DeviceNotFound(deviceId: DeviceId) extends EsperError
 
 case class ManufacturerNotSupported(manufacturer: Manufacturer) extends Exception(s"Manufacturer not supported: $manufacturer") with EsperError with FirmwareDownloadError
 

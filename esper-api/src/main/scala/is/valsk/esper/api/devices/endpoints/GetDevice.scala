@@ -5,17 +5,20 @@ import is.valsk.esper.repositories.DeviceRepository
 import zio.http.Response
 import zio.http.model.HttpError
 import zio.json.*
-import zio.{IO, URLayer, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 class GetDevice(
     deviceRepository: DeviceRepository
 ) {
 
   def apply(deviceId: DeviceId): IO[HttpError, Response] = for {
-    value <- deviceRepository.get(deviceId)
+    value <- deviceRepository.getOpt(deviceId)
       .logError(s"Failed to get device $deviceId")
-      .mapError(_ => HttpError.InternalServerError())// TODO error handling
-  } yield Response.json(value.toJson)
+      .mapError(_ => HttpError.InternalServerError()) // TODO error handling
+    result <- ZIO.fromOption(value)
+      .map(device => Response.json(device.toJson))
+      .mapError(_ => HttpError.NotFound(""))
+  } yield result
 }
 
 object GetDevice {

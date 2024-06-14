@@ -22,9 +22,9 @@ object DeviceProxyRegistry {
         .getOrElse(ZIO.fail(ManufacturerNotSupported(manufacturer)))
   }
 
-  val layer: URLayer[Map[Manufacturer, DeviceProxy], DeviceProxyRegistry] = ZLayer {
+  val layer: URLayer[Map[Manufacturer, DeviceHandler], DeviceProxyRegistry] = ZLayer {
     for {
-      deviceProxyMap <- ZIO.service[Map[Manufacturer, DeviceProxy]]
+      deviceProxyMap <- ZIO.service[Map[Manufacturer, DeviceHandler]]
     } yield new DeviceProxyRegistryLive(deviceProxyMap)
   }
 }

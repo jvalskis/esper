@@ -7,10 +7,9 @@ import is.valsk.esper.device.DeviceStatus.UpdateStatus
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
-import is.valsk.esper.device.{DeviceManufacturerHandler, DeviceProxy, DeviceStatus, FlashResult}
+import is.valsk.esper.device.{DeviceHandler, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
-import is.valsk.esper.hass.HassToDomainMapper
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.services.HttpClient
@@ -23,7 +22,7 @@ class ShellyDeviceHandler(
     esperConfig: EsperConfig,
     shellyConfig: ShellyConfig,
     httpClient: HttpClient,
-) extends DeviceManufacturerHandler with HassToDomainMapper with DeviceProxy {
+) extends DeviceHandler {
 
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r

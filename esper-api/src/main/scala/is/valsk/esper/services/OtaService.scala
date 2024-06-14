@@ -2,9 +2,9 @@ package is.valsk.esper.services
 
 import is.valsk.esper.device.{DeviceProxyRegistry, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.domain.{Device, EsperError, Firmware, Version}
+import is.valsk.esper.domain.{Device, DeviceNotFound, EsperError, Firmware, Version}
 import is.valsk.esper.repositories.DeviceRepository
-import zio.{IO, URLayer, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait OtaService {
   def getCurrentFirmwareVersion(deviceId: DeviceId): IO[EsperError, Version]
@@ -25,7 +25,7 @@ trait OtaService {
 }
 
 object OtaService {
-  val layer: URLayer[DeviceProxyRegistry with DeviceRepository, OtaService] = ZLayer.fromFunction(OtaServiceLive(_, _))
+  val layer: URLayer[DeviceProxyRegistry & DeviceRepository, OtaService] = ZLayer.fromFunction(OtaServiceLive(_, _))
 
   private class OtaServiceLive(
       deviceProxyRegistry: DeviceProxyRegistry,
@@ -33,7 +33,9 @@ object OtaService {
   ) extends OtaService {
 
     def getCurrentFirmwareVersion(deviceId: DeviceId): IO[EsperError, Version] = for {
-      device <- deviceRepository.get(deviceId)
+      maybeDevice <- deviceRepository.getOpt(deviceId)
+      device <- ZIO.fromOption(maybeDevice)
+        .mapError(_ => DeviceNotFound(deviceId))
       version <- getCurrentFirmwareVersion(device)
     } yield version
 

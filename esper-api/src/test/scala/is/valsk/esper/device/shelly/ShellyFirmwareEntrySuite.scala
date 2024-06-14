@@ -1,7 +1,7 @@
 package is.valsk.esper.device.shelly
 
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.ShellyFirmwareEntry
-import is.valsk.esper.domain.{SemanticVersion, Version}
+import is.valsk.esper.domain.Version
 import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
