@@ -19,6 +19,7 @@ import is.valsk.esper.hass.{HassToDomainMapper, HassWebsocketApp}
 import is.valsk.esper.repositories.*
 import is.valsk.esper.services.*
 import zio.*
+import zio.Cause.{Die, Fail}
 import zio.http.*
 import zio.logging.backend.SLF4J
 import zio.stream.ZStream
@@ -116,13 +117,20 @@ object Main extends ZIOAppDefault {
       PendingUpdateRepository.live,
       GetPendingUpdate.layer,
     )
-    .onError {
-      case e: Cause[Config.Error] => ZIO
-        .logError(s"Config error: ${e.failures.headOption.fold("")(_.getMessage())}")
-        .flatMap(_ => exit(ExitCode.failure))
-      case cause => ZIO
-        .logErrorCause("onError", cause)
-        .flatMap(_ => exit(ExitCode.failure))
-    }
+    .onError(cause =>
+      if (cause.failures.exists(_.isInstanceOf[Config.Error])) {
+        ZIO
+          .logError(
+            s"""Config error:
+               |${cause.failures.distinct.mkString("\n")}
+            """.stripMargin
+          )
+          .flatMap(_ => exit(ExitCode.failure))
+      } else {
+        ZIO
+          .logErrorCause("onError", cause)
+          .flatMap(_ => exit(ExitCode.failure))
+      }
+    )
     .exitCode
 }
