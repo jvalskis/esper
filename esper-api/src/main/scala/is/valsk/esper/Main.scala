@@ -35,7 +35,7 @@ object Main extends ZIOAppDefault {
     periodicLatestFirmwareDownloadApp <- ZIO.service[LatestFirmwareMonitorApp]
     _ <- ZStream
       .mergeAllUnbounded(16)(
-        ZStream.fromZIO(hassWebsocketApp.run),
+        ZStream.fromZIO(hassWebsocketApp.run).retry(Schedule.fixed(10.seconds)),
         ZStream.fromZIO(apiServerApp.run),
         ZStream.fromZIO(periodicLatestFirmwareDownloadApp.run),
       )
@@ -118,19 +118,16 @@ object Main extends ZIOAppDefault {
       GetPendingUpdate.layer,
     )
     .onError(cause =>
-      if (cause.failures.exists(_.isInstanceOf[Config.Error])) {
-        ZIO
-          .logError(
-            s"""Config error:
-               |${cause.failures.distinct.mkString("\n")}
-            """.stripMargin
-          )
-          .flatMap(_ => exit(ExitCode.failure))
+      val effect = if (cause.failures.exists(_.isInstanceOf[Config.Error])) {
+        ZIO.logError(
+          s"""Config error:
+             |${cause.failures.distinct.mkString("\n")}
+          """.stripMargin
+        )
       } else {
-        ZIO
-          .logErrorCause("onError", cause)
-          .flatMap(_ => exit(ExitCode.failure))
+        ZIO.logErrorCause("onError", cause)
       }
+      effect.flatMap(_ => exit(ExitCode.failure))
     )
     .exitCode
 }

@@ -21,10 +21,15 @@ object HassWebsocketApp {
       val client = Http.collectZIO[WebSocketChannelEvent](channelHandler)
         .toSocketApp
         .connect(esperConfig.hassConfig.webSocketUrl)
-      (client *> ZIO.never).provide(
-        Client.default,
-        Scope.default,
-      )
+      for {
+        _ <- ZIO.logInfo(s"Connecting to HASS @ ${esperConfig.hassConfig.webSocketUrl}")
+        result <- (client *> ZIO.never)
+          .provide(
+            Client.default,
+            Scope.default,
+          )
+          .logError("Error connecting to HASS")
+      } yield result
     }
   }
 
