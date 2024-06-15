@@ -14,13 +14,13 @@ class GetPendingUpdate(
 
   def apply(deviceId: DeviceId): IO[HttpError, Response] = {
     for {
-      deviceList <- pendingUpdateRepository.get(deviceId)
-      response <- ZIO.succeed(Response.json(deviceList.toJson))
+      maybePendingUpdate <- pendingUpdateRepository.getOpt(deviceId)
+        .mapError(_ => HttpError.InternalServerError())
+      response <- ZIO.fromOption(maybePendingUpdate)
+        .map(device => Response.json(device.toJson))
+        .mapError(_ => HttpError.NotFound(deviceId.toString))
     } yield response
   }
-    .mapError {
-      case _: PersistenceException => HttpError.NotFound("")
-    }
 }
 
 object GetPendingUpdate {

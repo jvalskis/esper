@@ -6,71 +6,72 @@ import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
 import is.valsk.esper.domain.{Device, DeviceModel, FailedToStoreFirmware, PersistenceException}
+import is.valsk.esper.model.api.PendingUpdate
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, InMemoryPendingUpdateRepository}
 import zio.*
-import zio.http.model.HttpError
 import zio.http.Response
+import zio.http.model.HttpError
 import zio.test.*
 import zio.test.Assertion.*
 
 import java.io.IOException
 
 
-object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
+object GetPendingUpdateSpec extends ZIOSpecDefault with ApiSpec {
 
-  def spec = suite("GetDeviceSpec")(
-    test("Return a 404 (Not Found) if the device does not exist") {
+  def spec = suite("GetPendingUpdateSpec")(
+    test("Return a 404 (Not Found) if the pending update does not exist") {
       for {
-        _ <- givenDevices(device1)
-        response <- getDevice(nonExistentDeviceId)
+        _ <- givenPendingUpdates(pendingUpdate1)
+        response <- getPendingUpdate(nonExistentDeviceId)
       } yield assert(response)(
         fails(isSome(equalTo(HttpError.NotFound(nonExistentDeviceId.toString))))
       )
     }
       .provide(
         deviceRepositoryLayerWithTestRepository,
+        pendingUpdateRepositoryLayerWithTestRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
-        InMemoryPendingUpdateRepository.layer,
       ),
 
-    test("Return the device") {
+    test("Return the pending update") {
       for {
-        _ <- givenDevices(device1)
-        response <- getDevice(device1.id)
-          .flatMap(parseResponse[Device])
+        _ <- givenPendingUpdates(pendingUpdate1)
+        response <- getPendingUpdate(device1.id)
+          .flatMap(parseResponse[PendingUpdate])
       } yield {
-        assert(response)(equalTo(device1))
+        assert(response)(equalTo(pendingUpdate1))
       }
     }
       .provide(
         deviceRepositoryLayerWithTestRepository,
+        pendingUpdateRepositoryLayerWithTestRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
-        InMemoryPendingUpdateRepository.layer,
       ),
 
-    test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
+    test("Fail with 500 (Internal Server Error) when there is an exception while fetching the pending update") {
       for {
-        response <- getDevice(device1.id)
+        response <- getPendingUpdate(device1.id)
       } yield assert(response)(
         fails(isSome(equalTo(HttpError.InternalServerError())))
       )
     }
       .provide(
-        deviceRepositoryLayerThatThrowsException,
+        deviceRepositoryLayerWithTestRepository,
+        pendingUpdateRepositoryLayerThatThrowsException,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
-        InMemoryPendingUpdateRepository.layer,
       ),
   )
 }

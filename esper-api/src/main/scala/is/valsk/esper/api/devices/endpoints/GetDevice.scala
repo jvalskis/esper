@@ -1,5 +1,6 @@
 package is.valsk.esper.api.devices.endpoints
 
+import is.valsk.esper.domain.PersistenceException
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.repositories.DeviceRepository
 import zio.http.Response
@@ -12,12 +13,11 @@ class GetDevice(
 ) {
 
   def apply(deviceId: DeviceId): IO[HttpError, Response] = for {
-    value <- deviceRepository.getOpt(deviceId)
-      .logError(s"Failed to get device $deviceId")
-      .mapError(_ => HttpError.InternalServerError()) // TODO error handling
-    result <- ZIO.fromOption(value)
+    maybeDevice <- deviceRepository.getOpt(deviceId)
+      .mapError(_ => HttpError.InternalServerError())
+    result <- ZIO.fromOption(maybeDevice)
+      .mapError(_ => HttpError.NotFound(deviceId.toString))
       .map(device => Response.json(device.toJson))
-      .mapError(_ => HttpError.NotFound(""))
   } yield result
 }
 
