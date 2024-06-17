@@ -1,6 +1,6 @@
 package is.valsk.esper.hass.protocol.api
 
-import is.valsk.esper.EsperConfig
+import is.valsk.esper.config.EsperConfig
 import is.valsk.esper.hass.messages.commands.Auth
 import is.valsk.esper.hass.messages.responses.{AuthInvalid, AuthRequired}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
@@ -24,7 +24,7 @@ class AuthenticationHandler(esperConfig: EsperConfig) extends HassResponseMessag
   private def handleAuthRequired(channel: Channel[WebSocketFrame]) = {
     for {
       _ <- ZIO.logInfo(s"AuthRequired: sending auth message")
-      authMessage = Auth(esperConfig.hassConfig.accessToken)
+      authMessage = Auth(esperConfig.hass.accessToken)
       _ <- channel.writeAndFlush(WebSocketFrame.text(authMessage.toJson))
     } yield ()
   }

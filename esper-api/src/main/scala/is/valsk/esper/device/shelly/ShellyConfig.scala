@@ -13,7 +13,7 @@ case class ShellyConfig(
 object ShellyConfig {
 
   implicit val config: Config[ShellyConfig] =
-    deriveConfig[ShellyConfig].nested("ShellyConfig")
+    deriveConfig[ShellyConfig].nested("shelly")
 
   val layer: ZLayer[Any, Config.Error, ShellyConfig] = ZLayer {
     for {

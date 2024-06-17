@@ -3,7 +3,6 @@ package is.valsk.esper.repositories
 import is.valsk.esper.device.DeviceHandler
 import is.valsk.esper.domain.PersistenceException
 import is.valsk.esper.domain.Types.Manufacturer
-import is.valsk.esper.hass.HassToDomainMapper
 import zio.*
 
 class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceHandler]]) extends ManufacturerRepository {
@@ -21,10 +20,10 @@ class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceHandler]])
 
 object InMemoryManufacturerRepository {
 
-  val layer: URLayer[Map[Manufacturer, DeviceHandler], ManufacturerRepository] = ZLayer {
+  val layer: URLayer[Map[String, DeviceHandler], ManufacturerRepository] = ZLayer {
     for {
-      manufacturerHandlerMap <- ZIO.service[Map[Manufacturer, DeviceHandler]]
-      ref <- Ref.make(manufacturerHandlerMap)
+      manufacturerHandlerMap <- ZIO.service[Map[String, DeviceHandler]]
+      ref <- Ref.make(manufacturerHandlerMap.map { case (k, v) => Manufacturer.unsafeFrom(k) -> v })
     } yield InMemoryManufacturerRepository(ref)
   }
 }

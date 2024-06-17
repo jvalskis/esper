@@ -1,6 +1,5 @@
 package is.valsk.esper.api.devices.endpoints
 
-import is.valsk.esper.domain.PersistenceException
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.repositories.DeviceRepository
 import zio.http.Response

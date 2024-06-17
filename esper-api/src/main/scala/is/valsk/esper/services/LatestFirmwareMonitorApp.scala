@@ -1,6 +1,6 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.ScheduleConfig
+import is.valsk.esper.config.ScheduleConfig
 import is.valsk.esper.domain.{DeviceModel, EsperError, PersistenceException}
 import is.valsk.esper.repositories.DeviceRepository
 import zio.Schedule.*
@@ -57,4 +57,6 @@ object LatestFirmwareMonitorApp {
   }
 
   val layer: RLayer[ScheduleConfig & DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
+
+  val configuredLayer: RLayer[DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ScheduleConfig.layer >>> ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
 }

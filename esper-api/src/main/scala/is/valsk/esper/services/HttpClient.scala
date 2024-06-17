@@ -4,7 +4,7 @@ import is.valsk.esper.hass.messages.MessageParser.ParseError
 import zio.http.{Client, Request, Response}
 import zio.json.*
 import zio.stream.*
-import zio.{URLayer, ZIO, ZLayer}
+import zio.{TaskLayer, URLayer, ZIO, ZLayer}
 
 class HttpClient {
 
@@ -44,4 +44,6 @@ object HttpClient {
       client <- ZIO.service[Client]
     } yield HttpClient()
   }
+
+  val configuredLayer: TaskLayer[HttpClient] = Client.default >>> layer
 }

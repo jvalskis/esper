@@ -1,20 +1,15 @@
 package is.valsk.esper.api.devices
 
-import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
-import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
-import is.valsk.esper.domain.{Device, DeviceModel, FailedToStoreFirmware, PersistenceException}
-import is.valsk.esper.repositories.{DeviceRepository, InMemoryDeviceRepository, InMemoryPendingUpdateRepository}
+import is.valsk.esper.domain.Device
+import is.valsk.esper.repositories.InMemoryPendingUpdateRepository
 import zio.*
 import zio.http.model.HttpError
 import zio.http.Response
 import zio.test.*
 import zio.test.Assertion.*
-
-import java.io.IOException
-
 
 object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
 

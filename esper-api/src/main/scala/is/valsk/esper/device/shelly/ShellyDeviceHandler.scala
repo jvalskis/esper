@@ -1,7 +1,7 @@
 package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.EsperConfig
+import is.valsk.esper.config.RestServerConfig
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.device.DeviceStatus.UpdateStatus
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFirmwareEntry}
@@ -16,10 +16,10 @@ import is.valsk.esper.services.HttpClient
 import zio.http.*
 import zio.http.model.Method
 import zio.json.*
-import zio.{Chunk, IO, Schedule, URLayer, ZIO, ZLayer, durationInt}
+import zio.{Chunk, IO, RLayer, Schedule, URLayer, ZIO, ZLayer, durationInt}
 
 class ShellyDeviceHandler(
-    esperConfig: EsperConfig,
+    serverConfig: RestServerConfig,
     shellyConfig: ShellyConfig,
     httpClient: HttpClient,
 ) extends DeviceHandler {
@@ -122,7 +122,7 @@ class ShellyDeviceHandler(
   private def resolveGetFirmwareEndpoint(firmware: Firmware): String = {
     val manufacturer = firmware.manufacturer.toString
     val model = firmware.model.toString
-    val url = Path.decode(esperConfig.host) / "firmware" / manufacturer / model
+    val url = Path.decode(serverConfig.host) / "firmware" / manufacturer / model
     s"http://${url.toString}"
   }
 
@@ -173,13 +173,15 @@ class ShellyDeviceHandler(
 
 object ShellyDeviceHandler {
 
-  val layer: URLayer[HttpClient & ShellyConfig & EsperConfig, ShellyDeviceHandler] = ZLayer {
+  val layer: URLayer[HttpClient & ShellyConfig & RestServerConfig, ShellyDeviceHandler] = ZLayer {
     for {
       httpClient <- ZIO.service[HttpClient]
       shellyConfig <- ZIO.service[ShellyConfig]
-      esperConfig <- ZIO.service[EsperConfig]
-    } yield ShellyDeviceHandler(esperConfig, shellyConfig, httpClient)
+      serverConfig <- ZIO.service[RestServerConfig]
+    } yield ShellyDeviceHandler(serverConfig, shellyConfig, httpClient)
   }
+
+  val configuredLayer: RLayer[HttpClient, ShellyDeviceHandler] = (ShellyConfig.layer ++ RestServerConfig.layer) >>> layer
 
   case class ShellyFirmwareEntry(
       version: Version,

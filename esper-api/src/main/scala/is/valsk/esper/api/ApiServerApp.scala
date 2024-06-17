@@ -1,9 +1,9 @@
 package is.valsk.esper.api
 
-import is.valsk.esper.EsperConfig
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.ota.OtaApi
+import is.valsk.esper.config.EsperConfig
 import zio.http.*
 import zio.http.middleware.RequestHandlerMiddlewares
 import zio.http.netty.NettyServerConfig
@@ -23,7 +23,7 @@ object ApiServerApp {
 
     def run: Task[Nothing] =
       val serverConfigLayer = ServerConfig.live(
-        ServerConfig.default.port(esperConfig.port)
+        ServerConfig.default.port(esperConfig.server.port)
       )
       val app = (firmwareApi.app ++ deviceApi.app ++ otaApi.app)
         .mapError(e => Response(status = e.status, body = Body.fromCharSequence(e.message))) @@ RequestHandlerMiddlewares.debug

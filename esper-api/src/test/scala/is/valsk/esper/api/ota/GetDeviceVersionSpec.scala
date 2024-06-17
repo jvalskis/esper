@@ -132,13 +132,13 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with ApiSpec {
       ),
   )
 
-  private val manufacturerRegistryLayer: URLayer[Any, Map[Manufacturer, DeviceHandler]] = ZLayer {
+  private val manufacturerRegistryLayer: ULayer[Map[String, DeviceHandler]] = ZLayer {
     val value = for {
       testDeviceHandler <- ZIO.service[TestDeviceHandler]
       testFailingTestDeviceHandlerHandler <- ZIO.service[FailingTestDeviceHandler]
     } yield Map(
-      testDeviceHandler.supportedManufacturer -> testDeviceHandler,
-      testFailingTestDeviceHandlerHandler.supportedManufacturer -> testFailingTestDeviceHandlerHandler
+      testDeviceHandler.supportedManufacturer.toString -> testDeviceHandler,
+      testFailingTestDeviceHandlerHandler.supportedManufacturer.toString -> testFailingTestDeviceHandlerHandler
     )
     value.provide(
       ZLayer.succeed(TestDeviceHandler()),
