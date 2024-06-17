@@ -2,7 +2,7 @@ package is.valsk.esper.api.ota.endpoints
 
 import is.valsk.esper.device.DeviceStatus.encoder
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.domain.{ApiCallFailed, FailedToParseApiResponse, MalformedVersion, ManufacturerNotSupported}
+import is.valsk.esper.domain.{ApiCallFailed, EntityNotFound, FailedToParseApiResponse, MalformedVersion, ManufacturerNotSupported}
 import is.valsk.esper.services.OtaService
 import zio.http.Response
 import zio.http.model.HttpError
@@ -19,6 +19,7 @@ class GetDeviceStatus(
     } yield Response.json(status.toJson)
   }
     .mapError {
+      case e: EntityNotFound => HttpError.NotFound("")
       case e: MalformedVersion => HttpError.BadRequest(e.getMessage)
       case e: ApiCallFailed => HttpError.BadGateway(e.getMessage)
       case e: ManufacturerNotSupported => HttpError.PreconditionFailed(e.getMessage)
