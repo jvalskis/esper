@@ -17,7 +17,7 @@ class FirmwareService(
     firmwareRepository
       .get(FirmwareKey(manufacturer, model, version))
       .mapError {
-        case EmptyResult() => FirmwareNotFound("Firmware not found", manufacturer, model, Some(version))
+        case EntityNotFound(_) => FirmwareNotFound("Firmware not found", manufacturer, model, Some(version))
         case x => x
       }
   }

@@ -9,7 +9,7 @@ import zio.http.Response
 import zio.http.model.HttpError
 import zio.http.model.HttpError.NotFound
 import zio.json.*
-import zio.{IO, URLayer, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 class FlashDevice(
     otaService: OtaService,
@@ -19,7 +19,7 @@ class FlashDevice(
 
   def apply(deviceId: DeviceId, maybeVersion: Option[Version]): IO[HttpError, Response] = {
     for {
-      device <- deviceRepository.get(deviceId)
+      device <- getDevice(deviceId)
       firmware <- maybeVersion match
         case Some(version) =>
           firmwareService.getFirmware(device.manufacturer, device.model, version)
@@ -29,13 +29,20 @@ class FlashDevice(
     } yield Response.json(result.toJson)
   }
     .mapError {
-      case _: FirmwareNotFound => NotFound("") // TODO error handling
+      case e: DeviceNotFound => HttpError.NotFound("")
+      case _: FirmwareNotFound => HttpError.NotFound("") // TODO error handling
       case e: MalformedVersion => HttpError.BadRequest(e.getMessage)
       case e: ApiCallFailed => HttpError.BadGateway(e.getMessage)
       case e: ManufacturerNotSupported => HttpError.PreconditionFailed(e.getMessage)
       case e: FailedToParseApiResponse => HttpError.BadGateway(e.getMessage)
       case e => HttpError.InternalServerError(e.getMessage)
     }
+
+  private def getDevice(deviceId: DeviceId): IO[PersistenceException | DeviceNotFound, Device] = for {
+    maybeDevice <- deviceRepository.getOpt(deviceId)
+    device <- ZIO.fromOption(maybeDevice)
+      .mapError(_ => DeviceNotFound(deviceId))
+  } yield device
 }
 
 object FlashDevice {

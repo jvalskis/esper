@@ -7,8 +7,6 @@ import zio.*
 
 class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceHandler]]) extends ManufacturerRepository {
 
-  override def get(manufacturer: Manufacturer): UIO[DeviceHandler] = map.get.map(_(manufacturer))
-
   override def getOpt(manufacturer: Manufacturer): UIO[Option[DeviceHandler]] = map.get.map(_.get(manufacturer))
 
   override def getAll: UIO[List[DeviceHandler]] = map.get.map(_.values.toList)

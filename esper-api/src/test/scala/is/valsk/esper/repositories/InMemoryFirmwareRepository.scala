@@ -9,17 +9,15 @@ class InMemoryFirmwareRepository(
     map: Ref[Map[FirmwareKey, Firmware]]
 ) extends FirmwareRepository {
 
-  override def get(id: FirmwareKey): UIO[Firmware] = map.get.map(_(id))
-
   override def getOpt(id: FirmwareKey): UIO[Option[Firmware]] = map.get.map(_.get(id))
 
   override def getAll: UIO[List[Firmware]] = map.get.map(_.values.toList)
 
-  override def add(firmware: Firmware): IO[FailedToStoreFirmware, Firmware] = for {
+  override def add(firmware: Firmware): IO[PersistenceException, Firmware] = for {
     _ <- map.update(map => map + (FirmwareKey(firmware) -> firmware))
   } yield firmware
 
-  override def update(firmware: Firmware): IO[FailedToStoreFirmware, Firmware] = for {
+  override def update(firmware: Firmware): IO[PersistenceException, Firmware] = for {
     _ <- map.update(map => map + (FirmwareKey(firmware) -> firmware))
   } yield firmware
 

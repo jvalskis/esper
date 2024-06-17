@@ -33,16 +33,6 @@ object FirmwareRepository {
 
     given MappedEncoding[String, Version] = MappedEncoding[String, Version](Version(_))
 
-    override def get(key: FirmwareKey): IO[PersistenceException, Firmware] = {
-      getOpt(key)
-        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
-        .logError("test")
-        .flatMap(maybeFirmware => ZIO
-          .fromOption(maybeFirmware)
-          .mapError(_ => EmptyResult())
-        )
-    }
-
     override def getOpt(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = {
       val q = quote {
         query[Firmware]
@@ -53,8 +43,7 @@ object FirmwareRepository {
       }
       run(q)
         .map(_.headOption)
-        .logError("test")
-        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
+        .mapError(e => PersistenceException(e.getMessage, Some(e)))
     }
 
     override def getAll: IO[PersistenceException, List[Firmware]] = {
@@ -62,7 +51,7 @@ object FirmwareRepository {
         query[Firmware]
       }
       run(q)
-        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
+        .mapError(e => PersistenceException(e.getMessage, Some(e)))
     }
 
     override def add(firmware: Firmware): IO[PersistenceException, Firmware] = {
@@ -72,7 +61,7 @@ object FirmwareRepository {
           .returning(fw => fw)
       }
       run(q)
-        .mapError(e => FailedToStoreFirmware(e.getMessage, DeviceModel(firmware), Some(e)))
+        .mapError(e => PersistenceException(e.getMessage, Some(e)))
         .map(_ => firmware)
     }
 
@@ -94,8 +83,7 @@ object FirmwareRepository {
           .map(_.version)
       }
       run(q)
-        .logError("test")
-        .mapError(e => FailedToQueryFirmware(e.getMessage, Some(e)))
+        .mapError(e => PersistenceException(e.getMessage, Some(e)))
         .map(_.sorted)
     }
 

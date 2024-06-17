@@ -6,8 +6,6 @@ sealed trait EsperError extends Exception
 
 sealed trait DeviceApiError extends EsperError
 
-sealed trait PersistenceException extends EsperError
-
 sealed trait FirmwareDownloadError extends Exception with EsperError
 
 case class DeviceNotFound(deviceId: DeviceId) extends EsperError
@@ -24,11 +22,9 @@ case class FirmwareDownloadLinkResolutionFailed(message: String, manufacturer: M
 
 case class FirmwareNotFound(message: String, manufacturer: Manufacturer, model: Model, version: Option[Version], cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with FirmwareDownloadError
 
-case class FailedToStoreFirmware(message: String, deviceModel: DeviceModel, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with PersistenceException
+case class PersistenceException(message: String, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with EsperError
 
-case class FailedToQueryFirmware(message: String, cause: Option[Throwable] = None) extends Exception(message, cause.orNull) with PersistenceException
-
-case class EmptyResult() extends Exception("No results found") with PersistenceException
+case class EntityNotFound(entityId: String) extends Exception("Not found") with EsperError
 
 case class MalformedVersion(version: String) extends Exception(s"Malformed version: $version") with DeviceApiError
 
