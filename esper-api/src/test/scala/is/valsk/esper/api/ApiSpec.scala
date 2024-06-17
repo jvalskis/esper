@@ -93,7 +93,7 @@ trait ApiSpec {
     response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = flashDeviceStatusEndpoint(deviceId))).exit
   } yield response
 
-  def flashDevice(deviceId: DeviceId, version: String): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  def flashDevice(deviceId: DeviceId, version: Version): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
     deviceApi <- ZIO.service[OtaApi]
     response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = flashDeviceStatusEndpoint(deviceId, version))).exit
   } yield response
@@ -123,9 +123,9 @@ trait ApiSpec {
     response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDevicesEndpoint)).exit
   } yield response
 
-  def givenFirmware(firmware: Firmware): URIO[FirmwareRepository, Unit] = for {
+  def givenFirmwares(firmwares: Firmware*): URIO[FirmwareRepository, Unit] = for {
     firmwareRepository <- ZIO.service[FirmwareRepository]
-    _ <- firmwareRepository.add(firmware).orDie
+    _ <- ZIO.foreach(firmwares)(firmwareRepository.add).orDie
   } yield ()
 
   def givenDevices(devices: Device*): URIO[DeviceRepository, Unit] = for {
@@ -174,8 +174,8 @@ trait ApiSpec {
     otaEndpoint(deviceId) ++ URL.fromString(s"/flash").toOption.get
   }
 
-  def flashDeviceStatusEndpoint(deviceId: DeviceId, version: String): URL = {
-    flashDeviceStatusEndpoint(deviceId) ++ URL.fromString(s"/$version").toOption.get
+  def flashDeviceStatusEndpoint(deviceId: DeviceId, version: Version): URL = {
+    flashDeviceStatusEndpoint(deviceId) ++ URL.fromString(s"/${version.value}").toOption.get
   }
 
   def restartDeviceStatusEndpoint(deviceId: DeviceId): URL = {
