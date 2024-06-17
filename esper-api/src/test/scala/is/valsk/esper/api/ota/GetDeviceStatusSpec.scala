@@ -14,7 +14,6 @@ import is.valsk.esper.services.{FirmwareService, OtaService}
 import zio.*
 import zio.http.Response
 import zio.http.model.HttpError
-import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 

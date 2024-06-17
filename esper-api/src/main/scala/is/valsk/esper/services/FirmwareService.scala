@@ -23,7 +23,9 @@ class FirmwareService(
   }
 
   def getLatestFirmware(manufacturer: Manufacturer, model: Model): IO[EsperError, Firmware] = for {
-    manufacturerHandler <- manufacturerRepository.get(manufacturer)
+    manufacturerHandler <- manufacturerRepository.get(manufacturer).catchSome {
+      case EntityNotFound(_) => ZIO.fail(ManufacturerNotSupported(manufacturer))
+    }
     latestFirmware <- firmwareRepository.getLatestFirmware(manufacturer, model)(using manufacturerHandler.versionOrdering)
       .flatMap {
         case None => ZIO.fail(FirmwareNotFound("Latest firmware not found", manufacturer, model, None))
