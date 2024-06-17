@@ -1,7 +1,7 @@
 package is.valsk.esper.config
 
-import zio.{Config, Layer, ZIO, ZLayer}
-import zio.config.magnolia.deriveConfig
+import is.valsk.esper.config.Configs.makeLayer
+import zio.{Config, Layer}
 
 case class FlywayConfig(
     url: String,
@@ -11,10 +11,5 @@ case class FlywayConfig(
 
 object FlywayConfig {
 
-  implicit val config: Config[FlywayConfig] =
-    deriveConfig[FlywayConfig].nested("esper", "db", "dataSource")
-
-  val layer: Layer[Config.Error, FlywayConfig] = ZLayer {
-    ZIO.config[FlywayConfig]
-  }
+  val layer: Layer[Config.Error, FlywayConfig] = makeLayer("esper", "db", "dataSource")
 }

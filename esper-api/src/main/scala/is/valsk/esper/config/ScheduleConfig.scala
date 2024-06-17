@@ -1,7 +1,7 @@
 package is.valsk.esper.config
 
-import zio.{Config, Layer, ZIO, ZLayer}
-import zio.config.magnolia.deriveConfig
+import is.valsk.esper.config.Configs.makeLayer
+import zio.{Config, Layer}
 
 case class ScheduleConfig(
     initialDelay: Int,
@@ -13,10 +13,5 @@ case class ScheduleConfig(
 
 object ScheduleConfig {
 
-  implicit val config: Config[ScheduleConfig] =
-    deriveConfig[ScheduleConfig].nested("esper", "schedule")
-
-  val layer: Layer[Config.Error, ScheduleConfig] = ZLayer {
-    ZIO.config[ScheduleConfig]
-  }
+  val layer: Layer[Config.Error, ScheduleConfig] = makeLayer("esper", "schedule")
 }

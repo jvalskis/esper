@@ -3,11 +3,11 @@ package is.valsk.esper.api
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.ota.OtaApi
-import is.valsk.esper.config.EsperConfig
+import is.valsk.esper.config.RestServerConfig
 import zio.http.*
 import zio.http.middleware.RequestHandlerMiddlewares
 import zio.http.netty.NettyServerConfig
-import zio.{Task, URLayer, ZIO, ZLayer}
+import zio.{RLayer, Task, URLayer, ZIO, ZLayer}
 
 trait ApiServerApp {
   def run: Task[Nothing]
@@ -18,12 +18,12 @@ object ApiServerApp {
       firmwareApi: FirmwareApi,
       otaApi: OtaApi,
       deviceApi: DeviceApi,
-      esperConfig: EsperConfig,
+      restServerConfig: RestServerConfig,
   ) extends ApiServerApp {
 
     def run: Task[Nothing] =
       val serverConfigLayer = ServerConfig.live(
-        ServerConfig.default.port(esperConfig.server.port)
+        ServerConfig.default.port(restServerConfig.port)
       )
       val app = (firmwareApi.app ++ deviceApi.app ++ otaApi.app)
         .mapError(e => Response(status = e.status, body = Body.fromCharSequence(e.message))) @@ RequestHandlerMiddlewares.debug
@@ -38,5 +38,7 @@ object ApiServerApp {
       )
   }
 
-  val layer: URLayer[OtaApi & DeviceApi & FirmwareApi & EsperConfig, ApiServerApp] = ZLayer.fromFunction(ApiServerAppLive(_, _, _, _))
+  val layer: URLayer[OtaApi & DeviceApi & FirmwareApi & RestServerConfig, ApiServerApp] = ZLayer.fromFunction(ApiServerAppLive(_, _, _, _))
+
+  val configuredLayer: RLayer[OtaApi & DeviceApi & FirmwareApi, ApiServerApp] = RestServerConfig.layer >>> layer
 }

@@ -1,6 +1,6 @@
 package is.valsk.esper.hass.protocol.api
 
-import is.valsk.esper.config.EsperConfig
+import is.valsk.esper.config.HassConfig
 import is.valsk.esper.hass.messages.commands.Auth
 import is.valsk.esper.hass.messages.responses.{AuthInvalid, AuthRequired}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
@@ -9,7 +9,7 @@ import zio.http.*
 import zio.http.socket.WebSocketFrame
 import zio.json.*
 
-class AuthenticationHandler(esperConfig: EsperConfig) extends HassResponseMessageHandler {
+class AuthenticationHandler(config: HassConfig) extends HassResponseMessageHandler {
 
   override def get: PartialHassResponseMessageHandler = {
     case HassResponseMessageContext(channel, message: AuthInvalid) => handleAuthInvalid(channel, message)
@@ -24,16 +24,18 @@ class AuthenticationHandler(esperConfig: EsperConfig) extends HassResponseMessag
   private def handleAuthRequired(channel: Channel[WebSocketFrame]) = {
     for {
       _ <- ZIO.logInfo(s"AuthRequired: sending auth message")
-      authMessage = Auth(esperConfig.hass.accessToken)
+      authMessage = Auth(config.accessToken)
       _ <- channel.writeAndFlush(WebSocketFrame.text(authMessage.toJson))
     } yield ()
   }
 }
 
 object AuthenticationHandler {
-  val layer: URLayer[EsperConfig, AuthenticationHandler] = ZLayer {
+  val layer: URLayer[HassConfig, AuthenticationHandler] = ZLayer {
     for {
-      esperConfig <- ZIO.service[EsperConfig]
-    } yield AuthenticationHandler(esperConfig)
+      config <- ZIO.service[HassConfig]
+    } yield AuthenticationHandler(config)
   }
+
+  val configuredLayer: TaskLayer[AuthenticationHandler] = HassConfig.layer >>> layer
 }

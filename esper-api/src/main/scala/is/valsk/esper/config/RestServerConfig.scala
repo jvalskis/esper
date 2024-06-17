@@ -1,7 +1,7 @@
 package is.valsk.esper.config
 
-import zio.{Config, Layer, ZIO, ZLayer}
-import zio.config.magnolia.deriveConfig
+import is.valsk.esper.config.Configs.makeLayer
+import zio.{Config, Layer}
 
 case class RestServerConfig(
     host: String,
@@ -10,10 +10,5 @@ case class RestServerConfig(
 
 object RestServerConfig {
 
-  implicit val config: Config[RestServerConfig] =
-    deriveConfig[RestServerConfig].nested("esper", "server")
-
-  val layer: Layer[Config.Error, RestServerConfig] = ZLayer {
-    ZIO.config[RestServerConfig]
-  }
+  val layer: Layer[Config.Error, RestServerConfig] = makeLayer("esper", "server")
 }

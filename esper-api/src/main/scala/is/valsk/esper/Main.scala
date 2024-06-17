@@ -9,7 +9,6 @@ import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.firmware.endpoints.*
 import is.valsk.esper.api.ota.OtaApi
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
-import is.valsk.esper.config.EsperConfig
 import is.valsk.esper.device.shelly.ShellyDeviceHandler
 import is.valsk.esper.device.{DeviceHandler, DeviceProxyRegistry}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, SequentialMessageIdGenerator}
@@ -94,11 +93,8 @@ object Main extends ZIOAppDefault {
       FirmwareRepository.live,
       PendingUpdateRepository.live,
 
-      // Config
-      EsperConfig.layer,
-
       // API
-      ApiServerApp.layer,
+      ApiServerApp.configuredLayer,
       // API - Firmware
       FirmwareApi.layer,
       GetFirmware.layer,
@@ -120,14 +116,14 @@ object Main extends ZIOAppDefault {
       GetPendingUpdate.layer,
 
       // HASS
-      HassWebsocketApp.layer,
+      HassWebsocketApp.configuredLayer,
       hassResponseMessageHandlerLayer,
       HassResponseMessageParser.layer,
       TextHandler.layer,
       ProtocolHandler.layer,
       UnhandledMessageHandler.layer,
       SequentialMessageIdGenerator.layer,
-      AuthenticationHandler.layer,
+      AuthenticationHandler.configuredLayer,
       ConnectHandler.layer,
       ResultHandler.layer,
       channelHandlerLayer,
