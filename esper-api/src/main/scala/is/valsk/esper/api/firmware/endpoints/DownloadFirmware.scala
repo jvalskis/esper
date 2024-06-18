@@ -2,18 +2,18 @@ package is.valsk.esper.api.firmware.endpoints
 
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.domain.Version
-import is.valsk.esper.services.FirmwareDownloader
+import is.valsk.esper.services.FirmwareService
 import zio.http.Response
 import zio.http.model.{HttpError, Status}
 import zio.{IO, URLayer, ZLayer}
 
 class DownloadFirmware(
-    firmwareDownloader: FirmwareDownloader,
+    firmwareService: FirmwareService,
 ) {
 
   def apply(manufacturer: Manufacturer, model: Model, version: Version): IO[HttpError, Response] = {
     for {
-      _ <- firmwareDownloader.downloadFirmware(manufacturer, model, Some(version))
+      _ <- firmwareService.getOrDownloadFirmware(manufacturer, model, version)
     } yield Response.status(Status.Ok)
   }
     .mapError(_ => HttpError.BadRequest())
@@ -21,5 +21,5 @@ class DownloadFirmware(
 
 object DownloadFirmware {
 
-  val layer: URLayer[FirmwareDownloader, DownloadFirmware] = ZLayer.fromFunction(DownloadFirmware(_))
+  val layer: URLayer[FirmwareService, DownloadFirmware] = ZLayer.fromFunction(DownloadFirmware(_))
 }

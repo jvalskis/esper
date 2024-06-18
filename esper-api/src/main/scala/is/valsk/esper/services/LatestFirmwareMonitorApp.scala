@@ -15,12 +15,12 @@ object LatestFirmwareMonitorApp {
   private class LatestFirmwareMonitorAppLive(
       scheduleConfig: ScheduleConfig,
       deviceRepository: DeviceRepository,
-      firmwareDownloader: FirmwareDownloader,
+      firmwareService: FirmwareService,
   ) extends LatestFirmwareMonitorApp {
 
     private def downloadTask(deviceModel: DeviceModel): IO[EsperError, DeviceModel] = for {
       _ <- ZIO.logInfo(s"Checking if there are any new versions of firmware available for $deviceModel")
-      _ <- firmwareDownloader.downloadFirmware(deviceModel.manufacturer, deviceModel.model)
+      _ <- firmwareService.getOrDownloadLatestFirmware(deviceModel.manufacturer, deviceModel.model)
     } yield deviceModel
 
     def run: UIO[Unit] = for {
@@ -56,7 +56,7 @@ object LatestFirmwareMonitorApp {
     }
   }
 
-  val layer: RLayer[ScheduleConfig & DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
+  val layer: RLayer[ScheduleConfig & DeviceRepository & FirmwareService, LatestFirmwareMonitorApp] = ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
 
-  val configuredLayer: RLayer[DeviceRepository & FirmwareDownloader, LatestFirmwareMonitorApp] = ScheduleConfig.layer >>> ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
+  val configuredLayer: RLayer[DeviceRepository & FirmwareService, LatestFirmwareMonitorApp] = ScheduleConfig.layer >>> ZLayer.fromFunction(LatestFirmwareMonitorAppLive(_, _, _))
 }
