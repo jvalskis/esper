@@ -20,94 +20,137 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
 
   def spec = suite("RestartDeviceSpec")(
     test("Return a 404 (Not Found) if the device does not exist") {
-      for {
-        _ <- givenDevices(device1)
-        response <- restartDevice(nonExistentDeviceId)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.NotFound(""))))
-      )
-    }
-      .provide(
-        deviceRepositoryLayerWithTestRepository,
-        InMemoryManufacturerRepository.layer,
-        InMemoryFirmwareRepository.layer,
-        FirmwareService.layer,
-        RestartDevice.layer,
-        GetDeviceStatus.layer,
-        FlashDevice.layer,
-        GetDeviceVersion.layer,
-        OtaService.layer,
-        OtaApi.layer,
-        DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
-      ),
+      val mockDeviceHandler = MockDeviceHandler.empty
+      {
+        for {
+          _ <- givenDevices(device1)
+          response <- restartDevice(nonExistentDeviceId)
+        } yield assert(response)(
+          fails(isSome(equalTo(HttpError.NotFound(""))))
+        )
+      }
+        .provide(
+          deviceRepositoryLayerWithTestRepository,
+          InMemoryManufacturerRepository.layer,
+          InMemoryFirmwareRepository.layer,
+          FirmwareService.layer,
+          RestartDevice.layer,
+          GetDeviceStatus.layer,
+          FlashDevice.layer,
+          GetDeviceVersion.layer,
+          OtaService.layer,
+          OtaApi.layer,
+          DeviceProxyRegistry.layer,
+          mockDeviceHandler,
+          ZLayer {
+            for {
+              mockDeviceHandler <- ZIO.service[DeviceHandler]
+            } yield Map(
+              manufacturer1.toString -> mockDeviceHandler,
+            )
+          }
+        )
+    },
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
-      for {
-        response <- restartDevice(device1.id)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.InternalServerError("message"))))
-      )
-    }
-      .provide(
-        deviceRepositoryLayerThatThrowsException,
-        InMemoryManufacturerRepository.layer,
-        InMemoryFirmwareRepository.layer,
-        FirmwareService.layer,
-        RestartDevice.layer,
-        GetDeviceStatus.layer,
-        FlashDevice.layer,
-        GetDeviceVersion.layer,
-        OtaService.layer,
-        OtaApi.layer,
-        DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
-      ),
+      val mockDeviceHandler = MockDeviceHandler.empty
+      {
+        for {
+          response <- restartDevice(device1.id)
+        } yield assert(response)(
+          fails(isSome(equalTo(HttpError.InternalServerError("message"))))
+        )
+      }
+        .provide(
+          deviceRepositoryLayerThatThrowsException,
+          InMemoryManufacturerRepository.layer,
+          InMemoryFirmwareRepository.layer,
+          FirmwareService.layer,
+          RestartDevice.layer,
+          GetDeviceStatus.layer,
+          FlashDevice.layer,
+          GetDeviceVersion.layer,
+          OtaService.layer,
+          OtaApi.layer,
+          DeviceProxyRegistry.layer,
+          mockDeviceHandler,
+          ZLayer {
+            for {
+              mockDeviceHandler <- ZIO.service[DeviceHandler]
+            } yield Map(
+              manufacturer1.toString -> mockDeviceHandler,
+            )
+          }
+        )
+    },
     test("Fail with 412 (Precondition Failed) when device manufacturer is not supported") {
-      for {
-        _ <- givenDevices(device1.copy(manufacturer = unsupportedManufacturer))
-        response <- restartDevice(device1.id)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.PreconditionFailed(s"Manufacturer not supported: $unsupportedManufacturer"))))
-      )
-    }
-      .provide(
-        deviceRepositoryLayerWithTestRepository,
-        InMemoryManufacturerRepository.layer,
-        InMemoryFirmwareRepository.layer,
-        FirmwareService.layer,
-        RestartDevice.layer,
-        GetDeviceStatus.layer,
-        FlashDevice.layer,
-        GetDeviceVersion.layer,
-        OtaService.layer,
-        OtaApi.layer,
-        DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
-      ),
+      val mockDeviceHandler = MockDeviceHandler.empty
+      {
+        for {
+          _ <- givenDevices(device1.copy(manufacturer = unsupportedManufacturer))
+          response <- restartDevice(device1.id)
+        } yield assert(response)(
+          fails(isSome(equalTo(HttpError.PreconditionFailed(s"Manufacturer not supported: $unsupportedManufacturer"))))
+        )
+      }
+        .provide(
+          deviceRepositoryLayerWithTestRepository,
+          InMemoryManufacturerRepository.layer,
+          InMemoryFirmwareRepository.layer,
+          FirmwareService.layer,
+          RestartDevice.layer,
+          GetDeviceStatus.layer,
+          FlashDevice.layer,
+          GetDeviceVersion.layer,
+          OtaService.layer,
+          OtaApi.layer,
+          DeviceProxyRegistry.layer,
+          mockDeviceHandler,
+          ZLayer {
+            for {
+              mockDeviceHandler <- ZIO.service[DeviceHandler]
+            } yield Map(
+              manufacturer1.toString -> mockDeviceHandler,
+            )
+          }
+        )
+    },
     test("Fail with 502 (Bad Gateway) when there is an exception while calling the device") {
-      for {
-        _ <- givenDevices(device1.copy(manufacturer = manufacturerWithFailingHandler))
-        response <- restartDevice(device1.id)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.BadGateway("error"))))
+      val mockDeviceHandler = MockDeviceHandler.Restart(
+        assertion = Assertion.equalTo(device1),
+        result = Expectation.failure(ApiCallFailed("error", device1))
       )
-    }
-      .provide(
-        deviceRepositoryLayerWithTestRepository,
-        InMemoryManufacturerRepository.layer,
-        InMemoryFirmwareRepository.layer,
-        FirmwareService.layer,
-        RestartDevice.layer,
-        GetDeviceStatus.layer,
-        FlashDevice.layer,
-        GetDeviceVersion.layer,
-        OtaService.layer,
-        OtaApi.layer,
-        DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
-      ),
+      {
+        for {
+          _ <- givenDevices(device1)
+          response <- restartDevice(device1.id)
+        } yield assert(response)(
+          fails(isSome(equalTo(HttpError.BadGateway("error"))))
+        )
+      }
+        .provide(
+          deviceRepositoryLayerWithTestRepository,
+          InMemoryManufacturerRepository.layer,
+          InMemoryFirmwareRepository.layer,
+          FirmwareService.layer,
+          RestartDevice.layer,
+          GetDeviceStatus.layer,
+          FlashDevice.layer,
+          GetDeviceVersion.layer,
+          OtaService.layer,
+          OtaApi.layer,
+          DeviceProxyRegistry.layer,
+          mockDeviceHandler,
+          ZLayer {
+            for {
+              mockDeviceHandler <- ZIO.service[DeviceHandler]
+            } yield Map(
+              manufacturer1.toString -> mockDeviceHandler,
+            )
+          }
+        )
+    },
     test("Restart the device") {
-      val mockDeviceHandler: Expectation[DeviceHandler] = MockDeviceHandler.Restart(
+      val mockDeviceHandler = MockDeviceHandler.Restart(
         assertion = Assertion.equalTo(device1),
         result = Expectation.unit
       )
