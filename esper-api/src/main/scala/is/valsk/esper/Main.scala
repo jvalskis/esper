@@ -68,11 +68,11 @@ object Main extends ZIOAppDefault {
     } yield List(protocolHandler, textHandler, unhandledMessageHandler)
   }
 
-  private val manufacturerRegistryLayer: URLayer[ShellyDeviceHandler, Map[String, DeviceHandler]] = ZLayer {
+  private val manufacturerRegistryLayer: URLayer[ShellyDeviceHandler, Seq[DeviceHandler]] = ZLayer {
     for {
       shellyDeviceHandler <- ZIO.service[ShellyDeviceHandler]
-    } yield Map(
-      shellyDeviceHandler.supportedManufacturer.toString -> shellyDeviceHandler
+    } yield Seq(
+      shellyDeviceHandler
     )
   }
 

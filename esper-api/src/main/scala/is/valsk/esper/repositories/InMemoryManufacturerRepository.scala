@@ -18,10 +18,10 @@ class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceHandler]])
 
 object InMemoryManufacturerRepository {
 
-  val layer: URLayer[Map[String, DeviceHandler], ManufacturerRepository] = ZLayer {
+  val layer: URLayer[Seq[DeviceHandler], ManufacturerRepository] = ZLayer {
     for {
-      manufacturerHandlerMap <- ZIO.service[Map[String, DeviceHandler]]
-      ref <- Ref.make(manufacturerHandlerMap.map { case (k, v) => Manufacturer.unsafeFrom(k) -> v })
+      deviceHandlers <- ZIO.service[Seq[DeviceHandler]]
+      ref <- Ref.make(deviceHandlers.map(handler => handler.supportedManufacturer -> handler).toMap)
     } yield InMemoryManufacturerRepository(ref)
   }
 }

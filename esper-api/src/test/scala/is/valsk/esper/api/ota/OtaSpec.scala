@@ -11,13 +11,13 @@ import zio.{IO, ULayer, ZIO, ZLayer}
 
 trait OtaSpec extends ApiSpec {
 
-  val manufacturerRegistryLayer: ULayer[Map[String, DeviceHandler]] = ZLayer {
+  val manufacturerRegistryLayer: ULayer[Seq[DeviceHandler]] = ZLayer {
     val value = for {
       testDeviceHandler <- ZIO.service[TestDeviceHandler]
       testFailingTestDeviceHandlerHandler <- ZIO.service[FailingTestDeviceHandler]
-    } yield Map(
-      testDeviceHandler.supportedManufacturer.toString -> testDeviceHandler,
-      testFailingTestDeviceHandlerHandler.supportedManufacturer.toString -> testFailingTestDeviceHandlerHandler
+    } yield Seq(
+      testDeviceHandler,
+      testFailingTestDeviceHandlerHandler
     )
     value.provide(
       ZLayer.succeed(TestDeviceHandler()),

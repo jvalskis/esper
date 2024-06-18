@@ -45,8 +45,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
           ZLayer {
             for {
               mockDeviceHandler <- ZIO.service[DeviceHandler]
-            } yield Map(
-              manufacturer1.toString -> mockDeviceHandler,
+            } yield Seq(
+              mockDeviceHandler,
             )
           }
         )
@@ -76,8 +76,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
           ZLayer {
             for {
               mockDeviceHandler <- ZIO.service[DeviceHandler]
-            } yield Map(
-              manufacturer1.toString -> mockDeviceHandler,
+            } yield Seq(
+              mockDeviceHandler,
             )
           }
         )
@@ -108,8 +108,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
           ZLayer {
             for {
               mockDeviceHandler <- ZIO.service[DeviceHandler]
-            } yield Map(
-              manufacturer1.toString -> mockDeviceHandler,
+            } yield Seq(
+              mockDeviceHandler,
             )
           }
         )
@@ -143,8 +143,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
           ZLayer {
             for {
               mockDeviceHandler <- ZIO.service[DeviceHandler]
-            } yield Map(
-              manufacturer1.toString -> mockDeviceHandler,
+            } yield Seq(
+              mockDeviceHandler,
             )
           }
         )
@@ -176,8 +176,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
           ZLayer {
             for {
               mockDeviceHandler <- ZIO.service[DeviceHandler]
-            } yield Map(
-              manufacturer1.toString -> mockDeviceHandler,
+            } yield Seq(
+              mockDeviceHandler,
             )
           }
         )
@@ -211,6 +211,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
           override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = ???
 
           override def parseVersion(version: String): Either[MalformedVersion, Version] = ???
+
+          override def supportedManufacturer: Manufacturer = manufacturer1
         }
       }
   }
