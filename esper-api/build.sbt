@@ -50,6 +50,7 @@ val dependencies = Seq(
     "dev.zio" %% "zio-test" % zioTestVersion % Test,
     "dev.zio" %% "zio-test-sbt" % zioTestVersion % Test,
     "dev.zio" %% "zio-test-magnolia" % zioTestVersion % Test,
+    "dev.zio" %% "zio-mock" % "1.0.0-RC12",
 )
 
 enablePlugins(JavaAppPackaging)
