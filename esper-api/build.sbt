@@ -46,6 +46,7 @@ val dependencies = Seq(
     "org.postgresql" % "postgresql" % "42.5.4",
     "org.flywaydb" % "flyway-core" % flywayVersion,
     "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
+    "org.eclipse.angus" % "angus-mail" % "2.0.3",
 
     "dev.zio" %% "zio-test" % zioTestVersion % Test,
     "dev.zio" %% "zio-test-sbt" % zioTestVersion % Test,
