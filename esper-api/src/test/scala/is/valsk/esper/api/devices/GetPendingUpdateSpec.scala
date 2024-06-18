@@ -23,8 +23,8 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
-        pendingUpdateRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
+        stubPendingUpdateRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -42,8 +42,8 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with ApiSpec {
       }
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
-        pendingUpdateRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
+        stubPendingUpdateRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -59,8 +59,8 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
-        pendingUpdateRepositoryLayerThatThrowsException,
+        stubDeviceRepository,
+        stubPendingUpdateRepositoryThatThrowsException,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,

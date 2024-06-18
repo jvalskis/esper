@@ -23,7 +23,7 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -42,7 +42,7 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
       }
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -59,7 +59,7 @@ object GetDeviceSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        deviceRepositoryLayerThatThrowsException,
+        stubDeviceRepositoryThatThrowsException,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,

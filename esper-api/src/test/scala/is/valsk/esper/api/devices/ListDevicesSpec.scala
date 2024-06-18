@@ -22,7 +22,7 @@ object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
       } yield assert(result)(isEmpty)
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -40,7 +40,7 @@ object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
       }
     }
       .provide(
-        deviceRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -56,7 +56,7 @@ object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        deviceRepositoryLayerThatThrowsException,
+        stubDeviceRepositoryThatThrowsException,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,

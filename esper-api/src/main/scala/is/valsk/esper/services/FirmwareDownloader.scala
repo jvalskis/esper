@@ -4,7 +4,6 @@ import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
-import is.valsk.esper.repositories.FirmwareRepository
 import zio.stream.ZSink
 import zio.{IO, URLayer, ZIO, ZLayer}
 

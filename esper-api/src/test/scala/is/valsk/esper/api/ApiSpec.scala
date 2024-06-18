@@ -3,14 +3,18 @@ package is.valsk.esper.api
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.ota.OtaApi
+import is.valsk.esper.device.DeviceManufacturerHandler
+import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
-import is.valsk.esper.domain.{Device, Firmware, PersistenceException, Types, Version}
+import is.valsk.esper.domain.{Device, EsperError, Firmware, PersistenceException, Types, Version}
 import is.valsk.esper.model.api.PendingUpdate
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, InMemoryDeviceRepository, InMemoryPendingUpdateRepository, PendingUpdateRepository}
+import is.valsk.esper.services.{EmailService, FirmwareDownloader}
 import zio.http.model.{HttpError, Method}
 import zio.http.{Request, Response, URL}
 import zio.json.*
-import zio.{Exit, IO, Ref, ULayer, URIO, ZIO, ZLayer}
+import zio.mock.Mock
+import zio.{Exit, IO, Ref, Task, ULayer, URIO, URLayer, ZIO, ZLayer, mock}
 
 import java.io.IOException
 
@@ -38,19 +42,27 @@ trait ApiSpec {
     version = Version("version"),
   )
 
-  val deviceRepositoryLayerWithTestRepository: ULayer[DeviceRepository] = ZLayer {
+  val stubDeviceRepository: ULayer[DeviceRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, Device])
     } yield InMemoryDeviceRepository(ref)
   }
 
-  val pendingUpdateRepositoryLayerWithTestRepository: ULayer[PendingUpdateRepository] = ZLayer {
+  val stubFirmwareDownloader: ULayer[FirmwareDownloader] = ZLayer.succeed(
+    new FirmwareDownloader {
+      override def downloadFirmware(manufacturer: Manufacturer, model: Model, version: Version)(using manufacturerHandler: DeviceManufacturerHandler): IO[EsperError, Firmware] = ???
+
+      override def downloadFirmware(firmwareDescriptor: FirmwareDescriptor): IO[EsperError, Firmware] = ???
+    }
+  )
+
+  val stubPendingUpdateRepository: ULayer[PendingUpdateRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, PendingUpdate])
     } yield InMemoryPendingUpdateRepository(ref)
   }
 
-  val deviceRepositoryLayerThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(
+  val stubDeviceRepositoryThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(
     new DeviceRepository {
       override def get(id: DeviceId): IO[PersistenceException, Device] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
@@ -64,7 +76,7 @@ trait ApiSpec {
     }
   )
 
-  val pendingUpdateRepositoryLayerThatThrowsException: ULayer[PendingUpdateRepository] = ZLayer.succeed(
+  val stubPendingUpdateRepositoryThatThrowsException: ULayer[PendingUpdateRepository] = ZLayer.succeed(
     new PendingUpdateRepository {
       override def get(id: DeviceId): IO[PersistenceException, PendingUpdate] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
@@ -184,5 +196,18 @@ trait ApiSpec {
 
   def parseResponse[T](response: Exit[Option[HttpError], Response])(using JsonDecoder[T]): ZIO[Any, Any, T] = {
     response.map(_.body.asString.flatMap(x => ZIO.fromEither(x.fromJson[T]))).flatten
+  }
+
+  object MockEmailService extends Mock[EmailService] {
+    object SendEmail extends Effect[(String, String), Throwable, Unit]
+
+    val compose: URLayer[mock.Proxy, EmailService] =
+      ZLayer {
+        for {
+          proxy <- ZIO.service[mock.Proxy]
+        } yield new EmailService {
+          override def sendEmail(subject: String, content: String): Task[Unit] = proxy(SendEmail, subject, content)
+        }
+      }
   }
 }

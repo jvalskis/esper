@@ -86,6 +86,7 @@ object Main extends ZIOAppDefault {
       PendingUpdateService.layer,
       FirmwareDownloader.layer,
       FlywayServiceLive.configuredLayer,
+      EmailServiceLive.configuredLayer,
 
       // Repositories
       InMemoryDeviceRepository.layer,

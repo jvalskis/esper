@@ -1,7 +1,7 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.config.EmailConfig
-import jakarta.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
+import jakarta.mail.internet.MimeMessage
 import jakarta.mail.{Authenticator, Message, PasswordAuthentication, Session, Transport}
 import zio.{Task, TaskLayer, UIO, URLayer, ZIO, ZLayer}
 
