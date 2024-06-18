@@ -14,31 +14,23 @@ import zio.test.Assertion.*
 object GetPendingUpdatesSpec extends ZIOSpecDefault with ApiSpec {
 
   def spec = suite("GetPendingUpdatesSpec")(
-    test("Return an empty list if there are no pending updates") {
-      for {
-        response <- getPendingUpdates
-          .flatMap(parseResponse[List[PendingUpdate]])
-      } yield assert(response)(isEmpty)
-    }
-      .provide(
-        stubDeviceRepository,
-        stubPendingUpdateRepository,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetPendingUpdate.layer,
-        GetPendingUpdates.layer,
-      ),
-
-    test("Return the pending update") {
-      for {
-        _ <- givenPendingUpdates(pendingUpdate1)
-        response <- getPendingUpdates
-          .flatMap(parseResponse[List[PendingUpdate]])
-      } yield {
-        assert(response)(contains(pendingUpdate1))
+    suite("Normal flow")(
+      test("Return an empty list if there are no pending updates") {
+        for {
+          response <- getPendingUpdates
+            .flatMap(parseResponse[List[PendingUpdate]])
+        } yield assert(response)(isEmpty)
+      },
+      test("Return the pending update") {
+        for {
+          _ <- givenPendingUpdates(pendingUpdate1)
+          response <- getPendingUpdates
+            .flatMap(parseResponse[List[PendingUpdate]])
+        } yield {
+          assert(response)(contains(pendingUpdate1))
+        }
       }
-    }
+    )
       .provide(
         stubDeviceRepository,
         stubPendingUpdateRepository,

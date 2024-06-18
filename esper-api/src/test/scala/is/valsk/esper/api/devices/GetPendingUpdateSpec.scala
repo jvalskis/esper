@@ -14,14 +14,25 @@ import zio.test.Assertion.*
 object GetPendingUpdateSpec extends ZIOSpecDefault with ApiSpec {
 
   def spec = suite("GetPendingUpdateSpec")(
-    test("Return a 404 (Not Found) if the pending update does not exist") {
-      for {
-        _ <- givenPendingUpdates(pendingUpdate1)
-        response <- getPendingUpdate(nonExistentDeviceId)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.NotFound(nonExistentDeviceId.toString))))
-      )
-    }
+    suite("Normal flow")(
+      test("Return a 404 (Not Found) if the pending update does not exist") {
+        for {
+          _ <- givenPendingUpdates(pendingUpdate1)
+          response <- getPendingUpdate(nonExistentDeviceId)
+        } yield assert(response)(
+          fails(isSome(equalTo(HttpError.NotFound(nonExistentDeviceId.toString))))
+        )
+      },
+      test("Return the pending update") {
+        for {
+          _ <- givenPendingUpdates(pendingUpdate1)
+          response <- getPendingUpdate(device1.id)
+            .flatMap(parseResponse[PendingUpdate])
+        } yield {
+          assert(response)(equalTo(pendingUpdate1))
+        }
+      },
+    )
       .provide(
         stubDeviceRepository,
         stubPendingUpdateRepository,
@@ -31,26 +42,6 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with ApiSpec {
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
       ),
-
-    test("Return the pending update") {
-      for {
-        _ <- givenPendingUpdates(pendingUpdate1)
-        response <- getPendingUpdate(device1.id)
-          .flatMap(parseResponse[PendingUpdate])
-      } yield {
-        assert(response)(equalTo(pendingUpdate1))
-      }
-    }
-      .provide(
-        stubDeviceRepository,
-        stubPendingUpdateRepository,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetPendingUpdate.layer,
-        GetPendingUpdates.layer,
-      ),
-
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the pending update") {
       for {
         response <- getPendingUpdate(device1.id)

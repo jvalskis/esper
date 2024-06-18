@@ -15,30 +15,23 @@ import zio.test.Assertion.*
 object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
 
   def spec = suite("ListDevicesSpec")(
-    test("Return an empty list if there are no devices") {
-      for {
-        result <- listDevices
-          .flatMap(parseResponse[List[Device]])
-      } yield assert(result)(isEmpty)
-    }
-      .provide(
-        stubDeviceRepository,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetPendingUpdate.layer,
-        GetPendingUpdates.layer,
-        InMemoryPendingUpdateRepository.layer,
-      ),
-    test("Return all devices when there are some") {
-      for {
-        _ <- givenDevices(device1)
-        result <- listDevices
-          .flatMap(parseResponse[List[Device]])
-      } yield {
-        assert(result)(contains(device1))
+    suite("Normal flow")(
+      test("Return an empty list if there are no devices") {
+        for {
+          result <- listDevices
+            .flatMap(parseResponse[List[Device]])
+        } yield assert(result)(isEmpty)
+      },
+      test("Return all devices when there are some") {
+        for {
+          _ <- givenDevices(device1)
+          result <- listDevices
+            .flatMap(parseResponse[List[Device]])
+        } yield {
+          assert(result)(contains(device1))
+        }
       }
-    }
+    )
       .provide(
         stubDeviceRepository,
         DeviceApi.layer,

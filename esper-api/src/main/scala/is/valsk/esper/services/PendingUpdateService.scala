@@ -46,16 +46,16 @@ object PendingUpdateService {
       devices <- deviceRepository.getAll
         .map(_.filter(device => device.manufacturer == firmware.manufacturer && device.model == firmware.model))
       result <- ZIO.foreach(devices)(checkDeviceVersion)
-//      _ <- sendNotificationIfNeeded(result.flatten)
+      _ <- sendNotificationIfNeeded(result.flatten)
     } yield ()
 
-//    private def sendNotificationIfNeeded(pendingUpdates: List[PendingUpdate]): IO[FailedToSendEmail, Unit] = pendingUpdates match {
-//      case Nil => ZIO.unit
-//      case updates => for {
-//        _ <- ZIO.logInfo(s"Sending firmware update notifications for ${updates.size} devices...")
-//        _ <- sendEmail(updates)
-//      } yield ()
-//    }
+    private def sendNotificationIfNeeded(pendingUpdates: List[PendingUpdate]): IO[FailedToSendEmail, Unit] = pendingUpdates match {
+      case Nil => ZIO.unit
+      case updates => for {
+        _ <- ZIO.logInfo(s"Sending firmware update notifications for ${updates.size} devices...")
+        _ <- sendEmail(updates)
+      } yield ()
+    }
 
     private def checkDeviceVersion(device: Device): IO[EsperError, Option[PendingUpdate]] = for {
       status <- latestFirmwareStatus(device)
@@ -91,19 +91,21 @@ object PendingUpdateService {
       }
     } yield status
 
-//    private def sendEmail(updates: List[PendingUpdate]): IO[FailedToSendEmail, Unit] = emailService
-//      .sendEmail(
-//        subject = s"Esper: there are ${updates.size} pending updates",
-//        content =
-//          s"""
-//             |<p>The following devices have pending firmware updates:</p>
-//             |<ul>
-//             |${updates.map(update => s"<li>${update.device.manufacturer} ${update.device.model} (${update.device.id}): ${update.version}</li>").mkString("\n")}
-//             |</ul>
-//             |""".stripMargin
-//      )
-//      .mapError(e => FailedToSendEmail(Some(e)))
-//      .logError
+    private def sendEmail(updates: List[PendingUpdate]): IO[FailedToSendEmail, Unit] = {
+      emailService
+        .sendEmail(
+          subject = s"Esper: there are ${updates.size} pending updates",
+          content =
+            s"""
+               |<p>The following devices have pending firmware updates:</p>
+               |<ul>
+               |${updates.map(update => s"<li>${update.device.manufacturer} ${update.device.model} (${update.device.id}): ${update.version}</li>").mkString("\n")}
+               |</ul>
+               |""".stripMargin
+        )
+        .mapError(e => FailedToSendEmail(Some(e)))
+        .logError
+    }
   }
 
   val layer: URLayer[EmailService & DeviceRepository & FirmwareRepository & PendingUpdateRepository & ManufacturerRepository, PendingUpdateService] =
