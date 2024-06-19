@@ -1,7 +1,7 @@
 package is.valsk.esper.api.firmware.endpoints
 
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
-import is.valsk.esper.domain.{FirmwareNotFound, PersistenceException, Version}
+import is.valsk.esper.domain.{FirmwareNotFound, ManufacturerNotSupported, PersistenceException, Version}
 import is.valsk.esper.services.FirmwareService
 import zio.http.*
 import zio.http.model.*
@@ -27,7 +27,7 @@ class GetFirmware(
   }
     .mapError {
       case _: FirmwareNotFound => NotFound("") // TODO error handling
-      case _: PersistenceException => NotFound("") // TODO error handling
+      case e: ManufacturerNotSupported => HttpError.PreconditionFailed(e.getMessage)
       case e => HttpError.InternalServerError(e.getMessage)
     }
 }

@@ -1,6 +1,5 @@
 package is.valsk.esper.api.devices
 
-import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.model.api.PendingUpdate
@@ -11,7 +10,7 @@ import zio.http.model.HttpError
 import zio.test.*
 import zio.test.Assertion.*
 
-object GetPendingUpdatesSpec extends ZIOSpecDefault with ApiSpec {
+object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
 
   def spec = suite("GetPendingUpdatesSpec")(
     suite("Normal flow")(

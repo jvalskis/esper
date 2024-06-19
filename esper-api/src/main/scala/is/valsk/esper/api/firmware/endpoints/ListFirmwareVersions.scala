@@ -22,9 +22,7 @@ class ListFirmwareVersions(
         .logError("Failed to list firmware versions")
     } yield Response.json(versions.toJson)
   }
-    .mapError {
-      case _ => HttpError.InternalServerError()
-    }
+    .mapError(_ => HttpError.InternalServerError())
 }
 
 object ListFirmwareVersions {

@@ -66,7 +66,7 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
       OtaService.layer,
       OtaApi.layer,
       DeviceProxyRegistry.layer,
-      manufacturerRegistryLayer,
+      stubManufacturerRegistryLayer,
     ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {
@@ -91,7 +91,7 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
         OtaService.layer,
         OtaApi.layer,
         DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
+        stubManufacturerRegistryLayer,
       ),
   )
 }

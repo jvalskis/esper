@@ -135,7 +135,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaService.layer,
         OtaApi.layer,
         DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
+        stubManufacturerRegistryLayer,
         MockEmailService.empty,
       ),
       test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
@@ -159,7 +159,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaService.layer,
         OtaApi.layer,
         DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
+        stubManufacturerRegistryLayer,
         MockEmailService.empty,
       ),
     ),
@@ -292,7 +292,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaService.layer,
         OtaApi.layer,
         DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
+        stubManufacturerRegistryLayer,
         MockEmailService.empty,
       ),
 
@@ -317,7 +317,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaService.layer,
         OtaApi.layer,
         DeviceProxyRegistry.layer,
-        manufacturerRegistryLayer,
+        stubManufacturerRegistryLayer,
         MockEmailService.empty
       )
     )
