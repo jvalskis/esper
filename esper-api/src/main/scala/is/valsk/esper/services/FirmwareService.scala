@@ -59,7 +59,9 @@ object FirmwareService {
     } yield firmware
 
     override def getOrDownloadLatestFirmware(manufacturer: Manufacturer, model: Model): IO[EsperError, Firmware] = for {
-      manufacturerHandler <- manufacturerRepository.get(manufacturer)
+      manufacturerHandler <- manufacturerRepository.get(manufacturer).catchSome {
+        case EntityNotFound(_) => ZIO.fail(ManufacturerNotSupported(manufacturer))
+      }
       firmwareDetails <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, None)
       firmware <- downloadIfNecessary(firmwareDetails.toFirmwareKey) {
         for {

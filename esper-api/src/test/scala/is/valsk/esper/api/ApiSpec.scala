@@ -47,18 +47,48 @@ trait ApiSpec {
     } yield InMemoryDeviceRepository(ref)
   }
 
-  val stubFirmwareDownloader: ULayer[FirmwareDownloader] = ZLayer.succeed(
-    new FirmwareDownloader {
-      override def downloadFirmware(manufacturer: Manufacturer, model: Model, version: Version)(using manufacturerHandler: DeviceManufacturerHandler): IO[EsperError, Firmware] = ???
+  class FirmwareDownloaderProbe(db: Ref[Seq[FirmwareDescriptor]]) extends FirmwareDownloader {
+    override def downloadFirmware(manufacturer: Manufacturer, model: Model, version: Version)(using manufacturerHandler: DeviceManufacturerHandler): IO[EsperError, Firmware] = for {
+      descriptor <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, Some(version))
+      result <- downloadFirmware(descriptor)
+    } yield result
 
-      override def downloadFirmware(firmwareDescriptor: FirmwareDescriptor): IO[EsperError, Firmware] = ???
+    override def downloadFirmware(firmwareDescriptor: FirmwareDescriptor): IO[EsperError, Firmware] = for {
+      _ <- db.update(_ :+ firmwareDescriptor)
+    } yield Firmware(
+      manufacturer = firmwareDescriptor.manufacturer,
+      model = firmwareDescriptor.model,
+      version = firmwareDescriptor.version,
+      data = Array.emptyByteArray,
+      size = 0
+    )
+
+    def probeInvocations: Ref[Seq[FirmwareDescriptor]] = db
+  }
+
+  class EmailServiceProbe(db: Ref[Seq[(String, String)]]) extends EmailService {
+    override def sendEmail(subject: String, content: String): Task[Unit] = {
+      db.update(_ :+ (subject, content))
     }
-  )
+    def probeInvocations: Ref[Seq[(String, String)]] = db
+  }
+
+  val stubFirmwareDownloader: ULayer[FirmwareDownloaderProbe] = ZLayer {
+    for {
+      ref <- Ref.make(Seq.empty[FirmwareDescriptor])
+    } yield FirmwareDownloaderProbe(ref)
+  }
 
   val stubPendingUpdateRepository: ULayer[PendingUpdateRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, PendingUpdate])
     } yield InMemoryPendingUpdateRepository(ref)
+  }
+
+  val stubEmailService: ULayer[EmailServiceProbe] = ZLayer {
+    for {
+      ref <- Ref.make(Seq.empty[(String, String)])
+    } yield EmailServiceProbe(ref)
   }
 
   val stubDeviceRepositoryThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(

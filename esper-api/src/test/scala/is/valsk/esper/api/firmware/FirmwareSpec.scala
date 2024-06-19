@@ -1,9 +1,10 @@
 package is.valsk.esper.api.firmware
 
 import is.valsk.esper.api.ApiSpec
+import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.*
-import is.valsk.esper.domain.Types.{Manufacturer, Model}
+import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import zio.{Exit, IO, ULayer, ZIO, ZLayer}
@@ -11,7 +12,12 @@ import zio.http.{Request, Response, URL}
 import zio.http.model.{HttpError, Method}
 
 trait FirmwareSpec extends ApiSpec {
-
+  val firmwareDescriptor: FirmwareDescriptor = FirmwareDescriptor(
+    manufacturer = manufacturer1,
+    model = model1,
+    version = Version("version2"),
+    url = UrlString.unsafeFrom("http://localhost")
+  )
   val stubManufacturerRegistryLayer: ULayer[Seq[DeviceHandler]] = ZLayer.succeed(
     Seq(
       new DeviceHandler {
@@ -21,7 +27,11 @@ trait FirmwareSpec extends ApiSpec {
 
         override def parseVersion(version: String): Either[MalformedVersion, Version] = ???
 
-        override def getFirmwareDownloadDetails(manufacturer: Manufacturer, model: Model, version: Option[Version]): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ???
+        override def getFirmwareDownloadDetails(manufacturer: Manufacturer, model: Model, version: Option[Version]): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = {
+          ZIO.succeed(
+            firmwareDescriptor
+          )
+        }
 
         override def versionOrdering: Ordering[Version] = SemanticVersion.Ordering
 

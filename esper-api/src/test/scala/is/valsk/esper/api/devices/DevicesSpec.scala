@@ -3,7 +3,6 @@ package is.valsk.esper.api.devices
 import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.hass.messages.MessageParser.ParseError
 import zio.{Exit, ZIO}
 import zio.http.{Request, Response, URL}
 import zio.http.model.{HttpError, Method}

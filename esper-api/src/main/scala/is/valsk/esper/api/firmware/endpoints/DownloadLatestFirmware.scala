@@ -1,5 +1,6 @@
 package is.valsk.esper.api.firmware.endpoints
 
+import is.valsk.esper.domain.ManufacturerNotSupported
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.services.FirmwareService
 import zio.http.Response
@@ -11,9 +12,12 @@ class DownloadLatestFirmware(
 ) {
 
   def apply(manufacturer: Manufacturer, model: Model): IO[HttpError, Response] = (for {
-      _ <- firmwareService.getOrDownloadLatestFirmware(manufacturer, model)
-    } yield Response.status(Status.Ok))
-      .mapError(_ => HttpError.BadRequest())
+    _ <- firmwareService.getOrDownloadLatestFirmware(manufacturer, model)
+  } yield Response.status(Status.Ok))
+    .mapError {
+      case e: ManufacturerNotSupported => HttpError.PreconditionFailed(e.getMessage)
+      case e => HttpError.InternalServerError(e.getMessage)
+    }
 }
 
 object DownloadLatestFirmware {
