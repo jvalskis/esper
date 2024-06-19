@@ -4,7 +4,6 @@ import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{FirmwareRepository, ManufacturerRepository}
-import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus
 import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait FirmwareService {

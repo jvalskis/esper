@@ -4,7 +4,6 @@ import eu.timepit.refined.types.string.NonEmptyString
 import io.getquill.jdbczio.Quill
 import io.getquill.{SnakeCase, *}
 import is.valsk.esper.domain.*
-import is.valsk.esper.domain.DeviceModel.*
 import is.valsk.esper.domain.Types.*
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*

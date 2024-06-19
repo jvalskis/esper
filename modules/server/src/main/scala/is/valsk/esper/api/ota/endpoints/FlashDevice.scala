@@ -9,7 +9,7 @@ import zio.http.Response
 import zio.http.model.HttpError
 import zio.http.model.HttpError.NotFound
 import zio.json.*
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZLayer}
 
 class FlashDevice(
     otaService: OtaService,
