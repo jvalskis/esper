@@ -1,6 +1,5 @@
 package is.valsk.esper.api.devices
 
-import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.domain.Device
@@ -12,35 +11,28 @@ import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
+object ListDevicesSpec extends ZIOSpecDefault with DevicesSpec {
 
   def spec = suite("ListDevicesSpec")(
-    test("Return an empty list if there are no devices") {
-      for {
-        result <- listDevices
-          .flatMap(parseResponse[List[Device]])
-      } yield assert(result)(isEmpty)
-    }
-      .provide(
-        deviceRepositoryLayerWithTestRepository,
-        DeviceApi.layer,
-        GetDevice.layer,
-        ListDevices.layer,
-        GetPendingUpdate.layer,
-        GetPendingUpdates.layer,
-        InMemoryPendingUpdateRepository.layer,
-      ),
-    test("Return all devices when there are some") {
-      for {
-        _ <- givenDevices(device1)
-        result <- listDevices
-          .flatMap(parseResponse[List[Device]])
-      } yield {
-        assert(result)(contains(device1))
+    suite("Normal flow")(
+      test("Return an empty list if there are no devices") {
+        for {
+          result <- listDevices
+            .flatMap(parseResponse[List[Device]])
+        } yield assert(result)(isEmpty)
+      },
+      test("Return all devices when there are some") {
+        for {
+          _ <- givenDevices(device1)
+          result <- listDevices
+            .flatMap(parseResponse[List[Device]])
+        } yield {
+          assert(result)(contains(device1))
+        }
       }
-    }
+    )
       .provide(
-        deviceRepositoryLayerWithTestRepository,
+        stubDeviceRepository,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,
@@ -56,7 +48,7 @@ object ListDevicesSpec extends ZIOSpecDefault with ApiSpec {
       )
     }
       .provide(
-        deviceRepositoryLayerThatThrowsException,
+        stubDeviceRepositoryThatThrowsException,
         DeviceApi.layer,
         GetDevice.layer,
         ListDevices.layer,

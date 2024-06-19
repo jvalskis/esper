@@ -1,16 +1,19 @@
 package is.valsk.esper.api
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.api.devices.DeviceApi
-import is.valsk.esper.api.ota.OtaApi
+import is.valsk.esper.device.DeviceManufacturerHandler
+import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
-import is.valsk.esper.domain.{Device, Firmware, PersistenceException, Types, Version}
+import is.valsk.esper.domain.{Device, EsperError, Firmware, PersistenceException, Types, Version}
 import is.valsk.esper.model.api.PendingUpdate
+import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, InMemoryDeviceRepository, InMemoryPendingUpdateRepository, PendingUpdateRepository}
-import zio.http.model.{HttpError, Method}
-import zio.http.{Request, Response, URL}
+import is.valsk.esper.services.{EmailService, FirmwareDownloader}
+import zio.http.Response
+import zio.http.model.HttpError
 import zio.json.*
-import zio.{Exit, IO, Ref, ULayer, URIO, ZIO, ZLayer}
+import zio.mock.Mock
+import zio.{Exit, IO, Ref, Task, ULayer, URIO, URLayer, ZIO, ZLayer, mock}
 
 import java.io.IOException
 
@@ -38,19 +41,57 @@ trait ApiSpec {
     version = Version("version"),
   )
 
-  val deviceRepositoryLayerWithTestRepository: ULayer[DeviceRepository] = ZLayer {
+  val stubDeviceRepository: ULayer[DeviceRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, Device])
     } yield InMemoryDeviceRepository(ref)
   }
 
-  val pendingUpdateRepositoryLayerWithTestRepository: ULayer[PendingUpdateRepository] = ZLayer {
+  class FirmwareDownloaderProbe(db: Ref[Seq[FirmwareDescriptor]]) extends FirmwareDownloader {
+    override def downloadFirmware(manufacturer: Manufacturer, model: Model, version: Version)(using manufacturerHandler: DeviceManufacturerHandler): IO[EsperError, Firmware] = for {
+      descriptor <- manufacturerHandler.getFirmwareDownloadDetails(manufacturer, model, Some(version))
+      result <- downloadFirmware(descriptor)
+    } yield result
+
+    override def downloadFirmware(firmwareDescriptor: FirmwareDescriptor): IO[EsperError, Firmware] = for {
+      _ <- db.update(_ :+ firmwareDescriptor)
+    } yield Firmware(
+      manufacturer = firmwareDescriptor.manufacturer,
+      model = firmwareDescriptor.model,
+      version = firmwareDescriptor.version,
+      data = Array.emptyByteArray,
+      size = 0
+    )
+
+    def probeInvocations: Ref[Seq[FirmwareDescriptor]] = db
+  }
+
+  class EmailServiceProbe(db: Ref[Seq[(String, String)]]) extends EmailService {
+    override def sendEmail(subject: String, content: String): Task[Unit] = {
+      db.update(_ :+ (subject, content))
+    }
+    def probeInvocations: Ref[Seq[(String, String)]] = db
+  }
+
+  val stubFirmwareDownloader: ULayer[FirmwareDownloaderProbe] = ZLayer {
+    for {
+      ref <- Ref.make(Seq.empty[FirmwareDescriptor])
+    } yield FirmwareDownloaderProbe(ref)
+  }
+
+  val stubPendingUpdateRepository: ULayer[PendingUpdateRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, PendingUpdate])
     } yield InMemoryPendingUpdateRepository(ref)
   }
 
-  val deviceRepositoryLayerThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(
+  val stubEmailService: ULayer[EmailServiceProbe] = ZLayer {
+    for {
+      ref <- Ref.make(Seq.empty[(String, String)])
+    } yield EmailServiceProbe(ref)
+  }
+
+  val stubDeviceRepositoryThatThrowsException: ULayer[DeviceRepository] = ZLayer.succeed(
     new DeviceRepository {
       override def get(id: DeviceId): IO[PersistenceException, Device] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
@@ -64,7 +105,7 @@ trait ApiSpec {
     }
   )
 
-  val pendingUpdateRepositoryLayerThatThrowsException: ULayer[PendingUpdateRepository] = ZLayer.succeed(
+  val stubPendingUpdateRepositoryThatThrowsException: ULayer[PendingUpdateRepository] = ZLayer.succeed(
     new PendingUpdateRepository {
       override def get(id: DeviceId): IO[PersistenceException, PendingUpdate] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
@@ -78,50 +119,23 @@ trait ApiSpec {
     }
   )
 
-  def getDeviceVersion(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDeviceVersionEndpoint(deviceId))).exit
-  } yield response
+  val stubFirmwareRepositoryThatThrowsException: ULayer[FirmwareRepository] = ZLayer.succeed(
+    new FirmwareRepository {
+      override def get(id: FirmwareKey): IO[PersistenceException, Firmware] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
-  def getDeviceStatus(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = getDeviceStatusEndpoint(deviceId))).exit
-  } yield response
+      override def getOpt(id: FirmwareKey): IO[PersistenceException, Option[Firmware]] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
-  def flashDevice(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = flashDeviceStatusEndpoint(deviceId))).exit
-  } yield response
+      override def getAll: IO[PersistenceException, List[Firmware]] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
-  def flashDevice(deviceId: DeviceId, version: Version): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = flashDeviceStatusEndpoint(deviceId, version))).exit
-  } yield response
+      override def add(firmware: Firmware): IO[PersistenceException, Firmware] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
-  def restartDevice(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = restartDeviceStatusEndpoint(deviceId))).exit
-  } yield response
+      override def update(firmware: Firmware): IO[PersistenceException, Firmware] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
-  def getDevice(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDeviceEndpoint(deviceId))).exit
-  } yield response
+      override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
-  def getPendingUpdate(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getPendingUpdateEndpoint(deviceId))).exit
-  } yield response
-
-  def getPendingUpdates: ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getPendingUpdatesEndpoint)).exit
-  } yield response
-
-  def listDevices: ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDevicesEndpoint)).exit
-  } yield response
+      override def listVersions(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, List[Version]] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
+    }
+  )
 
   def givenFirmwares(firmwares: Firmware*): URIO[FirmwareRepository, Unit] = for {
     firmwareRepository <- ZIO.service[FirmwareRepository]
@@ -138,51 +152,20 @@ trait ApiSpec {
     _ <- ZIO.foreach(pendingUpdates)(pendingUpdateRepository.add).orDie
   } yield ()
 
-  def getDevicesEndpoint: URL = {
-    URL.fromString("/devices").toOption.get
-  }
-
-  def otaEndpoint: URL = {
-    URL.fromString("/ota").toOption.get
-  }
-
-  def getDeviceEndpoint(deviceId: DeviceId): URL = {
-    getDevicesEndpoint ++ URL.fromString(s"/${deviceId.value}").toOption.get
-  }
-
-  def getPendingUpdateEndpoint(deviceId: DeviceId): URL = {
-    getDevicesEndpoint ++ URL.fromString(s"updates/${deviceId.value}").toOption.get
-  }
-
-  def getPendingUpdatesEndpoint: URL = {
-    getDevicesEndpoint ++ URL.fromString(s"updates").toOption.get
-  }
-
-  def otaEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint ++ URL.fromString(s"/${deviceId.value}").toOption.get
-  }
-
-  def getDeviceVersionEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/version").toOption.get
-  }
-
-  def getDeviceStatusEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/status").toOption.get
-  }
-
-  def flashDeviceStatusEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/flash").toOption.get
-  }
-
-  def flashDeviceStatusEndpoint(deviceId: DeviceId, version: Version): URL = {
-    flashDeviceStatusEndpoint(deviceId) ++ URL.fromString(s"/${version.value}").toOption.get
-  }
-
-  def restartDeviceStatusEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/restart").toOption.get
-  }
-
   def parseResponse[T](response: Exit[Option[HttpError], Response])(using JsonDecoder[T]): ZIO[Any, Any, T] = {
     response.map(_.body.asString.flatMap(x => ZIO.fromEither(x.fromJson[T]))).flatten
+  }
+
+  object MockEmailService extends Mock[EmailService] {
+    object SendEmail extends Effect[(String, String), Throwable, Unit]
+
+    val compose: URLayer[mock.Proxy, EmailService] =
+      ZLayer {
+        for {
+          proxy <- ZIO.service[mock.Proxy]
+        } yield new EmailService {
+          override def sendEmail(subject: String, content: String): Task[Unit] = proxy(SendEmail, subject, content)
+        }
+      }
   }
 }
