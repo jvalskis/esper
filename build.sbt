@@ -20,13 +20,15 @@ val slf4jVersion = "2.0.13"
 val refinedVersion = "0.11.2"
 val quillVersion = "4.8.4"
 val flywayVersion = "10.15.0"
-val tapirVersion = "1.10.8"
-val sttpVersion = "3.9.6"
+val tapirVersion = "1.10.9"
+val sttpVersion = "3.9.7"
 
 val commonDependencies = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-client" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % tapirVersion,
-    "com.softwaremill.sttp.client3" %% "zio" % sttpVersion
+    "com.softwaremill.sttp.tapir" %% "tapir-refined" % tapirVersion,
+    "com.softwaremill.sttp.client3" %% "zio" % sttpVersion,
+    "eu.timepit" %% "refined" % refinedVersion,
 )
 val serverDependencies = commonDependencies ++ Seq(
     "org.slf4j" % "slf4j-simple" % slf4jVersion,
@@ -39,17 +41,22 @@ val serverDependencies = commonDependencies ++ Seq(
     "dev.zio" %% "zio-config" % zioConfigVersion,
     "dev.zio" %% "zio-config-typesafe" % zioConfigVersion,
     "dev.zio" %% "zio-config-magnolia" % zioConfigVersion,
-    "eu.timepit" %% "refined" % refinedVersion,
     "io.getquill" %% "quill-jdbc-zio" % quillVersion,
     "org.postgresql" % "postgresql" % "42.7.3",
     "org.flywaydb" % "flyway-core" % flywayVersion,
     "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
     "org.eclipse.angus" % "angus-mail" % "2.0.3",
+    "com.softwaremill.sttp.tapir" %% "tapir-zio" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-http-server" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-refined" % tapirVersion,
 
+    "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
+    "dev.zio" %% "zio-test-junit" % zioVersion % Test,
     "dev.zio" %% "zio-test" % zioTestVersion % Test,
     "dev.zio" %% "zio-test-sbt" % zioTestVersion % Test,
     "dev.zio" %% "zio-test-magnolia" % zioTestVersion % Test,
-    "dev.zio" %% "zio-mock" % "1.0.0-RC12",
+    "dev.zio" %% "zio-mock" % "1.0.0-RC12" % Test,
 )
 
 lazy val common = crossProject(JVMPlatform, JSPlatform)

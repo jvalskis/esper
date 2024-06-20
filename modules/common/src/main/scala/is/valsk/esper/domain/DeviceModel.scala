@@ -1,6 +1,5 @@
 package is.valsk.esper.domain
 
-import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 

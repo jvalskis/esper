@@ -1,7 +1,6 @@
 package is.valsk.esper.domain
 
 import is.valsk.esper.domain.DeviceStatus.UpdateStatus
-import is.valsk.esper.domain.Version
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class FlashResult(

@@ -35,20 +35,20 @@ trait FirmwareEndpoints extends BaseEndpoint {
     .tag("firmwares")
     .name("downloadFirmware")
     .description("Download firmware for a specific device manufacturer, model and version")
-    .in("firmwares" / path[String]("manufacturer") / path[String]("model") / path[String]("version"))
+    .in("firmware" / path[String]("manufacturer") / path[String]("model") / path[String]("version"))
     .post
 
   val downloadLatestFirmwareEndpoint: Endpoint[Unit, (String, String), Throwable, Unit, Any] = baseEndpoint
     .tag("firmwares")
     .name("downloadLatestFirmware")
-    .description("Download latest firmware for a specific device manufactuer and model")
-    .in("firmwares" / path[String]("manufacturer") / path[String]("model"))
+    .description("Download latest firmware for a specific device manufacturer and model")
+    .in("firmware" / path[String]("manufacturer") / path[String]("model"))
     .post
 
   val deleteFirmwareEndpoint: Endpoint[Unit, (String, String, String), Throwable, Unit, Any] = baseEndpoint
     .tag("firmwares")
     .name("deleteFirmware")
     .description("Delete firmware for a specific device manufacturer and model")
-    .in("firmwares" / path[String]("manufacturer") / path[String]("model") / path[String]("version"))
+    .in("firmware" / path[String]("manufacturer") / path[String]("model") / path[String]("version"))
     .delete
 }

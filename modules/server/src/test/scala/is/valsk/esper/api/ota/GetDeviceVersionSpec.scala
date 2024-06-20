@@ -6,10 +6,8 @@ import is.valsk.esper.device.{DeviceHandler, DeviceProxyRegistry}
 import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
 import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
+import sttp.model.StatusCode
 import zio.*
-import zio.http.Response
-import zio.http.model.HttpError
-import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -21,33 +19,36 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
         for {
           _ <- givenDevices(device1)
           response <- getDeviceVersion(nonExistentDeviceId)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.NotFound(""))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.NotFound)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo("Not found")))
+        }
       },
       test("Fail with 412 (Precondition Failed) when device manufacturer is not supported") {
         for {
           _ <- givenDevices(device1.copy(manufacturer = unsupportedManufacturer))
           response <- getDeviceVersion(device1.id)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.PreconditionFailed(s"Manufacturer not supported: $unsupportedManufacturer"))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.PreconditionFailed)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo(s"Manufacturer not supported: $unsupportedManufacturer")))
+        }
       },
       test("Fail with 502 (Bad Gateway) when there is an exception while calling the device") {
         for {
           _ <- givenDevices(device1.copy(manufacturer = manufacturerWithFailingHandler))
           response <- getDeviceVersion(device1.id)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.BadGateway("error"))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.BadGateway)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo("error")))
+        }
       },
       test("Return the device version") {
         for {
           _ <- givenDevices(device1)
-          device <- getDeviceVersion(device1.id)
-            .flatMap(parseResponse[String])
+          response <- getDeviceVersion(device1.id)
+          result = response.body.toOption
         } yield {
-          assert(device)(equalTo("currentFirmwareVersion"))
+          assert(result)(isSome(equalTo("\"currentFirmwareVersion\"")))// TODO check why the value is in quotes
         }
       },
     ).provide(
@@ -71,9 +72,10 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {
         response <- getDeviceVersion(device1.id)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.InternalServerError("message"))))
-      )
+      } yield {
+        assert(response.code)(equalTo(StatusCode.InternalServerError)) &&
+          assert(response.body.swap.toOption)(isSome(equalTo("message")))
+      }
     }
       .provide(
         stubDeviceRepositoryThatThrowsException,

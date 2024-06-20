@@ -2,16 +2,22 @@ package is.valsk.esper.api.firmware
 
 import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
-import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler, DeviceStatus, FlashResult}
+import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler}
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
-import zio.{Exit, IO, ULayer, ZIO, ZLayer}
-import zio.http.{Request, Response, URL}
-import zio.http.model.{HttpError, Method}
+import sttp.client3.testing.SttpBackendStub
+import sttp.client3.{Response, UriContext, basicRequest}
+import sttp.monad.MonadError
+import sttp.tapir.server.stub.TapirStubInterpreter
+import sttp.tapir.ztapir.RIOMonadError
+import zio.{IO, Task, ULayer, ZIO, ZLayer}
 
 trait FirmwareSpec extends ApiSpec {
+
+  private given zioMonadError: MonadError[Task] = new RIOMonadError[Any]
+
   val firmwareDescriptor: FirmwareDescriptor = FirmwareDescriptor(
     manufacturer = manufacturer1,
     model = model1,
@@ -46,41 +52,64 @@ trait FirmwareSpec extends ApiSpec {
     )
   )
 
-  def listFirmwares(manufacturer: Manufacturer, model: Model): ZIO[FirmwareApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[FirmwareApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = listFirmwaresEndpoint(manufacturer, model))).exit
+  def listFirmwareVersions(manufacturer: Manufacturer, model: Model): ZIO[FirmwareApi, Throwable, Response[Either[String, String]]] = for {
+    firmwareApi <- ZIO.service[FirmwareApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(firmwareApi.listFirmwareVersionsEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/firmware/$manufacturer/$model/list")
+      .send(backendStub)
   } yield response
 
-  def getFirmware(manufacturer: Manufacturer, model: Model): ZIO[FirmwareApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[FirmwareApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getFirmwareEndpoint(manufacturer, model))).exit
+  def getFirmware(manufacturer: Manufacturer, model: Model): ZIO[FirmwareApi, Throwable, Response[Either[String, String]]] = for {
+    firmwareApi <- ZIO.service[FirmwareApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(firmwareApi.getLatestFirmwareEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/firmware/$manufacturer/$model")
+      .send(backendStub)
   } yield response
 
-  def getFirmware(manufacturer: Manufacturer, model: Model, version: Version): ZIO[FirmwareApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[FirmwareApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getFirmwareEndpoint(manufacturer, model, version))).exit
+  def getFirmware(manufacturer: Manufacturer, model: Model, version: Version): ZIO[FirmwareApi, Throwable, Response[Either[String, String]]] = for {
+    firmwareApi <- ZIO.service[FirmwareApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(firmwareApi.getFirmwareEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/firmware/$manufacturer/$model/${version.value}")
+      .send(backendStub)
   } yield response
 
-  def downloadLatestFirmware(manufacturer: Manufacturer, model: Model): ZIO[FirmwareApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[FirmwareApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = getFirmwareEndpoint(manufacturer, model))).exit
+  def downloadLatestFirmware(manufacturer: Manufacturer, model: Model): ZIO[FirmwareApi, Throwable, Response[Either[String, String]]] = for {
+    firmwareApi <- ZIO.service[FirmwareApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(firmwareApi.downloadLatestFirmwareEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .post(uri"/firmware/$manufacturer/$model")
+      .send(backendStub)
   } yield response
 
-  def downloadFirmware(manufacturer: Manufacturer, model: Model, version: Version): ZIO[FirmwareApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[FirmwareApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = getFirmwareEndpoint(manufacturer, model, version))).exit
+  def downloadFirmware(manufacturer: Manufacturer, model: Model, version: Version): ZIO[FirmwareApi, Throwable, Response[Either[String, String]]] = for {
+    firmwareApi <- ZIO.service[FirmwareApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(firmwareApi.downloadFirmwareEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .post(uri"/firmware/$manufacturer/$model/${version.value}")
+      .send(backendStub)
   } yield response
-
-  def getFirmwareEndpoint(manufacturer: Manufacturer, model: Model): URL = {
-    URL.fromString(s"/firmware/$manufacturer/$model").toOption.get
-  }
-
-  def getFirmwareEndpoint(manufacturer: Manufacturer, model: Model, version: Version): URL = {
-    getFirmwareEndpoint(manufacturer, model) ++ URL.fromString(s"/${version.value}").toOption.get
-  }
-
-  def listFirmwaresEndpoint(manufacturer: Manufacturer, model: Model): URL = {
-    getFirmwareEndpoint(manufacturer, model) ++ URL.fromString(s"/list").toOption.get
-  }
 
 }

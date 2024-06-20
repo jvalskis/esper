@@ -7,9 +7,8 @@ import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
 import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, PendingUpdateService}
+import sttp.model.StatusCode
 import zio.*
-import zio.http.Response
-import zio.http.model.HttpError
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -20,9 +19,10 @@ object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
       test("Fail with 412 (Precondition Failed) when device manufacturer is not supported") {
         for {
           response <- downloadLatestFirmware(unsupportedManufacturer, model1)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.PreconditionFailed(s"Manufacturer not supported: $unsupportedManufacturer"))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.PreconditionFailed)) &&
+          assert(response.body.swap.toOption)(isSome(equalTo(s"Manufacturer not supported: $unsupportedManufacturer")))
+        }
       },
       test("Download the latest firmware") {
         for {
@@ -159,9 +159,10 @@ object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {
         response <- downloadLatestFirmware(manufacturer1, model1)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.InternalServerError("message"))))
-      )
+      } yield {
+        assert(response.code)(equalTo(StatusCode.InternalServerError)) &&
+        assert(response.body.swap.toOption)(isSome(equalTo("message")))
+      }
     }.provide(
       stubDeviceRepositoryThatThrowsException,
       InMemoryManufacturerRepository.layer,

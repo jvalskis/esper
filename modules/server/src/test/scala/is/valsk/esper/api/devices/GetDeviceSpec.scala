@@ -4,9 +4,9 @@ import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.domain.Device
 import is.valsk.esper.repositories.InMemoryPendingUpdateRepository
+import sttp.model.StatusCode
 import zio.*
-import zio.http.model.HttpError
-import zio.http.Response
+import zio.json.DecoderOps
 import zio.test.*
 import zio.test.Assertion.*
 
@@ -18,17 +18,18 @@ object GetDeviceSpec extends ZIOSpecDefault with DevicesSpec {
         for {
           _ <- givenDevices(device1)
           response <- getDevice(nonExistentDeviceId)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.NotFound(nonExistentDeviceId.toString))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.NotFound)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo("Not found")))
+        }
       },
       test("Return the device") {
         for {
           _ <- givenDevices(device1)
           response <- getDevice(device1.id)
-            .flatMap(parseResponse[Device])
+          result = response.body.toOption.flatMap(_.fromJson[Device].toOption)
         } yield {
-          assert(response)(equalTo(device1))
+          assert(result)(isSome(equalTo(device1)))
         }
       }
     )
@@ -44,9 +45,10 @@ object GetDeviceSpec extends ZIOSpecDefault with DevicesSpec {
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {
         response <- getDevice(device1.id)
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.InternalServerError())))
-      )
+      } yield {
+        assert(response.code)(equalTo(StatusCode.InternalServerError)) &&
+        assert(response.body.swap.toOption)(isSome(equalTo("message")))
+      }
     }
       .provide(
         stubDeviceRepositoryThatThrowsException,

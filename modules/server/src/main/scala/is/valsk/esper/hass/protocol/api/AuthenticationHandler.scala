@@ -18,7 +18,7 @@ class AuthenticationHandler(config: HassConfig) extends HassResponseMessageHandl
 
   private def handleAuthInvalid(channel: WebSocketChannel, message: AuthInvalid): Task[Unit] = for {
     _ <- ZIO.logInfo(s"AuthInvalid: ${message.message}")
-//    _ <- channel.close()
+    _ <- channel.awaitShutdown
   } yield ()
 
   private def handleAuthRequired(channel: WebSocketChannel) = {

@@ -6,24 +6,25 @@ import is.valsk.esper.domain.Types.DeviceIdExtractor
 import is.valsk.esper.http.endpoints.DeviceEndpoints
 import sttp.tapir.*
 import sttp.tapir.server.ServerEndpoint
-import zio.{Task, URLayer, ZIO, ZLayer}
+import zio.{Task, URLayer, ZLayer}
 
 class DeviceApi(
-    getDevices: ListDevices,
+    listDevices: ListDevices,
     getDevice: GetDevice,
     getPendingUpdates: GetPendingUpdates,
     getPendingUpdate: GetPendingUpdate,
 ) extends DeviceEndpoints with BaseController {
 
+  val listDevicesEndpointImpl: ServerEndpoint[Any, Task] = listDevicesEndpoint.serverLogic(_ => listDevices().either)
+  val getDeviceEndpointImpl: ServerEndpoint[Any, Task] = getDeviceEndpoint.serverLogic { case DeviceIdExtractor(deviceId) => getDevice(deviceId).either }
+  val getPendingUpdateEndpointImpl: ServerEndpoint[Any, Task] = getPendingUpdateEndpoint.serverLogic { case DeviceIdExtractor(deviceId) => getPendingUpdate(deviceId).either }
+  val getPendingUpdatesEndpointImpl: ServerEndpoint[Any, Task] = getPendingUpdatesEndpoint.serverLogic(_ => getPendingUpdates().either)
+
   override val routes: List[ServerEndpoint[Any, Task]] = List(
-    listDevicesEndpoint
-      .serverLogic(_ => getDevices().either),
-    getDeviceEndpoint
-      .serverLogic { case DeviceIdExtractor(deviceId) => getDevice(deviceId).either },
-    getPendingUpdateEndpoint
-      .serverLogic { case DeviceIdExtractor(deviceId) => getPendingUpdate(deviceId).either },
-    getPendingUpdatesEndpoint
-      .serverLogic(_ => getPendingUpdates().either),
+    getDeviceEndpointImpl,
+    listDevicesEndpointImpl,
+    getPendingUpdateEndpointImpl,
+    getPendingUpdatesEndpointImpl,
   )
 }
 

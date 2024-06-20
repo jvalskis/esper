@@ -1,6 +1,5 @@
 package is.valsk.esper.domain
 
-import is.valsk.esper.domain.{Device, Version}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
 case class PendingUpdate(

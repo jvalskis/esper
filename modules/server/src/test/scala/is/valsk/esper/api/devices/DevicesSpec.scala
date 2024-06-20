@@ -3,45 +3,62 @@ package is.valsk.esper.api.devices
 import is.valsk.esper.api.ApiSpec
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
-import zio.{Exit, ZIO}
-import zio.http.{Request, Response, URL}
-import zio.http.model.{HttpError, Method}
+import sttp.client3.testing.SttpBackendStub
+import sttp.client3.{Response, UriContext, basicRequest}
+import sttp.monad.MonadError
+import sttp.tapir.server.stub.TapirStubInterpreter
+import sttp.tapir.ztapir.RIOMonadError
+import zio.{Task, ZIO}
 
 trait DevicesSpec extends ApiSpec {
 
-  def getDevice(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  private given zioMonadError: MonadError[Task] = new RIOMonadError[Any]
+
+  def getDevice(deviceId: DeviceId): ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDeviceEndpoint(deviceId))).exit
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(deviceApi.getDeviceEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/devices/$deviceId")
+      .send(backendStub)
   } yield response
 
-  def getPendingUpdate(deviceId: DeviceId): ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  def getPendingUpdate(deviceId: DeviceId): ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getPendingUpdateEndpoint(deviceId))).exit
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(deviceApi.getPendingUpdateEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/devices/updates/$deviceId")
+      .send(backendStub)
   } yield response
 
-  def getPendingUpdates: ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  def getPendingUpdates: ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getPendingUpdatesEndpoint)).exit
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(deviceApi.getPendingUpdatesEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/devices/updates")
+      .send(backendStub)
   } yield response
 
-  def listDevices: ZIO[DeviceApi, Nothing, Exit[Option[HttpError], Response]] = for {
+  def listDevices: ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDevicesEndpoint)).exit
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(deviceApi.listDevicesEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/devices")
+      .send(backendStub)
   } yield response
-
-  def getDevicesEndpoint: URL = {
-    URL.fromString("/devices").toOption.get
-  }
-
-  def getDeviceEndpoint(deviceId: DeviceId): URL = {
-    getDevicesEndpoint ++ URL.fromString(s"/$deviceId").toOption.get
-  }
-
-  def getPendingUpdateEndpoint(deviceId: DeviceId): URL = {
-    getDevicesEndpoint ++ URL.fromString(s"updates/$deviceId").toOption.get
-  }
-
-  def getPendingUpdatesEndpoint: URL = {
-    getDevicesEndpoint ++ URL.fromString(s"updates").toOption.get
-  }
 }

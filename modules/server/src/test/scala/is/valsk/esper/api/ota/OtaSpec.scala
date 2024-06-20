@@ -1,17 +1,22 @@
 package is.valsk.esper.api.ota
 
 import is.valsk.esper.api.ApiSpec
-import is.valsk.esper.domain.DeviceStatus.UpdateStatus
-import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler, DeviceStatus, FlashResult}
-import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
+import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler}
 import is.valsk.esper.domain.*
+import is.valsk.esper.domain.DeviceStatus.UpdateStatus
+import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
-import zio.http.model.{HttpError, Method}
-import zio.http.{Request, Response, URL}
-import zio.{Exit, IO, ULayer, ZIO, ZLayer}
+import sttp.client3.testing.SttpBackendStub
+import sttp.client3.{Response, UriContext, basicRequest}
+import sttp.monad.MonadError
+import sttp.tapir.server.stub.TapirStubInterpreter
+import sttp.tapir.ztapir.RIOMonadError
+import zio.{IO, Task, ULayer, ZIO, ZLayer}
 
 trait OtaSpec extends ApiSpec {
+
+  private given zioMonadError: MonadError[Task] = new RIOMonadError[Any]
 
   val stubManufacturerRegistryLayer: ULayer[Seq[DeviceHandler]] = ZLayer {
     val value = for {
@@ -79,57 +84,64 @@ trait OtaSpec extends ApiSpec {
     def supportedManufacturer: Manufacturer = manufacturerWithFailingHandler
   }
 
-  def otaEndpoint: URL = {
-    URL.fromString("/ota").toOption.get
-  }
-
-  def otaEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint ++ URL.fromString(s"/${deviceId.value}").toOption.get
-  }
-
-  def getDeviceVersionEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/version").toOption.get
-  }
-
-  def getDeviceStatusEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/status").toOption.get
-  }
-
-  def flashDeviceStatusEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/flash").toOption.get
-  }
-
-  def flashDeviceStatusEndpoint(deviceId: DeviceId, version: Version): URL = {
-    flashDeviceStatusEndpoint(deviceId) ++ URL.fromString(s"/${version.value}").toOption.get
-  }
-
-  def restartDeviceStatusEndpoint(deviceId: DeviceId): URL = {
-    otaEndpoint(deviceId) ++ URL.fromString(s"/restart").toOption.get
-  }
-
-  def getDeviceVersion(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.GET, url = getDeviceVersionEndpoint(deviceId))).exit
+  def getDeviceVersion(deviceId: DeviceId): ZIO[OtaApi, Throwable, Response[Either[String, String]]] = for {
+    otaApi <- ZIO.service[OtaApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(otaApi.getDeviceVersionEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/ota/$deviceId/version")
+      .send(backendStub)
   } yield response
 
-  def getDeviceStatus(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = getDeviceStatusEndpoint(deviceId))).exit
+  def getDeviceStatus(deviceId: DeviceId): ZIO[OtaApi, Throwable, Response[Either[String, String]]] = for {
+    otaApi <- ZIO.service[OtaApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(otaApi.getDeviceStatusEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .get(uri"/ota/$deviceId/status")
+      .send(backendStub)
   } yield response
 
-  def flashDevice(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = flashDeviceStatusEndpoint(deviceId))).exit
+  def flashDevice(deviceId: DeviceId): ZIO[OtaApi, Throwable, Response[Either[String, String]]] = for {
+    otaApi <- ZIO.service[OtaApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(otaApi.flashDeviceWithLatestVersionEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .post(uri"/ota/$deviceId/flash")
+      .send(backendStub)
   } yield response
 
-  def flashDevice(deviceId: DeviceId, version: Version): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = flashDeviceStatusEndpoint(deviceId, version))).exit
+  def flashDevice(deviceId: DeviceId, version: Version): ZIO[OtaApi, Throwable, Response[Either[String, String]]] = for {
+    otaApi <- ZIO.service[OtaApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(otaApi.flashDeviceEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .post(uri"/ota/$deviceId/flash/${version.value}")
+      .send(backendStub)
   } yield response
 
-  def restartDevice(deviceId: DeviceId): ZIO[OtaApi, Nothing, Exit[Option[HttpError], Response]] = for {
-    deviceApi <- ZIO.service[OtaApi]
-    response <- deviceApi.app.runZIO(Request.default(method = Method.POST, url = restartDeviceStatusEndpoint(deviceId))).exit
+  def restartDevice(deviceId: DeviceId): ZIO[OtaApi, Throwable, Response[Either[String, String]]] = for {
+    otaApi <- ZIO.service[OtaApi]
+    backendStub <- ZIO.succeed(
+      TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
+        .whenServerEndpointRunLogic(otaApi.restartDeviceEndpointImpl)
+        .backend()
+    )
+    response <- basicRequest
+      .post(uri"/ota/$deviceId/restart")
+      .send(backendStub)
   } yield response
 
 }

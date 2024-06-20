@@ -1,6 +1,6 @@
 package is.valsk.esper.domain
 
-import zio.json.{JsonCodec, JsonDecoder, JsonEncoder}
+import zio.json.{JsonDecoder, JsonEncoder}
 
 import scala.annotation.tailrec
 

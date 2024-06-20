@@ -1,6 +1,7 @@
 package is.valsk.esper.api.ota
 
 import is.valsk.esper.api.devices.GetDeviceSpec.test
+import is.valsk.esper.api.ota.GetDeviceVersionSpec.unsupportedManufacturer
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
 import is.valsk.esper.device.*
 import is.valsk.esper.domain.*
@@ -8,10 +9,9 @@ import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
-import is.valsk.esper.services.{EmailService, FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
+import is.valsk.esper.services.*
+import sttp.model.StatusCode
 import zio.*
-import zio.http.Response
-import zio.http.model.HttpError
 import zio.mock.{Expectation, Mock}
 import zio.test.*
 import zio.test.Assertion.*
@@ -26,9 +26,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
         for {
           _ <- givenDevices(device1)
           response <- restartDevice(nonExistentDeviceId)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.NotFound(""))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.NotFound)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo("Not found")))
+        }
       }
         .provide(
           stubDeviceRepository,
@@ -62,9 +63,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
       {
         for {
           response <- restartDevice(device1.id)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.InternalServerError("message"))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.InternalServerError)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo("message")))
+        }
       }
         .provide(
           stubDeviceRepositoryThatThrowsException,
@@ -99,9 +101,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
         for {
           _ <- givenDevices(device1.copy(manufacturer = unsupportedManufacturer))
           response <- restartDevice(device1.id)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.PreconditionFailed(s"Manufacturer not supported: $unsupportedManufacturer"))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.PreconditionFailed)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo(s"Manufacturer not supported: $unsupportedManufacturer")))
+        }
       }
         .provide(
           stubDeviceRepository,
@@ -139,9 +142,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
         for {
           _ <- givenDevices(device1)
           response <- restartDevice(device1.id)
-        } yield assert(response)(
-          fails(isSome(equalTo(HttpError.BadGateway("error"))))
-        )
+        } yield {
+          assert(response.code)(equalTo(StatusCode.BadGateway)) &&
+            assert(response.body.swap.toOption)(isSome(equalTo("error")))
+        }
       }
         .provide(
           stubDeviceRepository,

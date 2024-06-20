@@ -4,10 +4,10 @@ import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.DeviceRepository
+import sttp.model.StatusCode
 import zio.*
-import zio.http.Response
-import zio.http.model.HttpError
 import zio.test.*
+import zio.json.*
 import zio.test.Assertion.*
 
 object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
@@ -17,16 +17,16 @@ object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
       test("Return an empty list if there are no pending updates") {
         for {
           response <- getPendingUpdates
-            .flatMap(parseResponse[List[PendingUpdate]])
-        } yield assert(response)(isEmpty)
+          result = response.body.toSeq.flatMap(_.fromJson[List[PendingUpdate]].toSeq).flatten
+        } yield assert(result)(isEmpty)
       },
       test("Return the pending update") {
         for {
           _ <- givenPendingUpdates(pendingUpdate1)
           response <- getPendingUpdates
-            .flatMap(parseResponse[List[PendingUpdate]])
+          result = response.body.toSeq.flatMap(_.fromJson[List[PendingUpdate]].toSeq).flatten
         } yield {
-          assert(response)(contains(pendingUpdate1))
+          assert(result)(contains(pendingUpdate1))
         }
       }
     )
@@ -43,9 +43,10 @@ object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the pending update") {
       for {
         response <- getPendingUpdates
-      } yield assert(response)(
-        fails(isSome(equalTo(HttpError.InternalServerError())))
-      )
+      } yield {
+        assert(response.code)(equalTo(StatusCode.InternalServerError)) &&
+        assert(response.body.swap.toOption)(isSome(equalTo("message")))
+      }
     }
       .provide(
         stubDeviceRepository,

@@ -1,7 +1,6 @@
 package is.valsk.esper.domain
 
 import eu.timepit.refined.types.string.NonEmptyString
-import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{codec, *}
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
 import zio.json.{DeriveJsonCodec, DeriveJsonDecoder, DeriveJsonEncoder, JsonCodec, JsonDecoder, JsonEncoder}
 
@@ -17,8 +16,8 @@ case class Device(
 
 object Device {
 
-  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder, codec}
-  import is.valsk.esper.domain.Types.UrlString.{decoder, encoder, codec}
+  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder}
+  import is.valsk.esper.domain.Types.UrlString.{decoder, encoder}
 
   given encoder: JsonEncoder[Device] = DeriveJsonEncoder.gen[Device]
   given decoder: JsonDecoder[Device] = DeriveJsonDecoder.gen[Device]

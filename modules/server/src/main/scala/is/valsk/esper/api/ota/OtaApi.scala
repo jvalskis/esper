@@ -6,7 +6,7 @@ import is.valsk.esper.domain.Types.DeviceIdExtractor
 import is.valsk.esper.domain.Version
 import is.valsk.esper.http.endpoints.OtaEndpoints
 import sttp.tapir.server.ServerEndpoint
-import zio.{Task, URLayer, ZIO, ZLayer}
+import zio.{Task, URLayer, ZLayer}
 
 class OtaApi(
     getDeviceVersion: GetDeviceVersion,
@@ -15,22 +15,28 @@ class OtaApi(
     restartDevice: RestartDevice,
 ) extends OtaEndpoints with BaseController {
 
+  val getDeviceVersionEndpointImpl: ServerEndpoint[Any, Task] = getDeviceVersionEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+    getDeviceVersion(deviceId).either
+  }
+  val flashDeviceEndpointImpl: ServerEndpoint[Any, Task] = flashDeviceEndpoint.serverLogic { case (DeviceIdExtractor(deviceId), Version(version)) =>
+    flashDevice(deviceId, Some(version)).either
+  }
+  val flashDeviceWithLatestVersionEndpointImpl: ServerEndpoint[Any, Task] = flashDeviceWithLatestVersionEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+    flashDevice(deviceId, None).either
+  }
+  val getDeviceStatusEndpointImpl: ServerEndpoint[Any, Task] = getDeviceStatusEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+    getDeviceStatus(deviceId).either
+  }
+  val restartDeviceEndpointImpl: ServerEndpoint[Any, Task] = restartDeviceEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+    restartDevice(deviceId).either
+  }
+
   override val routes: List[ServerEndpoint[Any, Task]] = List(
-    getDeviceVersionEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
-      getDeviceVersion(deviceId).either
-    },
-    flashDeviceEndpoint.serverLogic { case (DeviceIdExtractor(deviceId), Version(version)) =>
-      flashDevice(deviceId, Some(version)).either
-    },
-    flashDeviceWithLatestVersionEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
-      flashDevice(deviceId, None).either
-    },
-    getDeviceStatusEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
-      getDeviceStatus(deviceId).either
-    },
-    restartDeviceEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
-      restartDevice(deviceId).either
-    },
+    getDeviceVersionEndpointImpl,
+    flashDeviceEndpointImpl,
+    flashDeviceWithLatestVersionEndpointImpl,
+    getDeviceStatusEndpointImpl,
+    restartDeviceEndpointImpl,
   )
 }
 

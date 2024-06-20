@@ -36,7 +36,7 @@ trait OtaEndpoints extends BaseEndpoint {
     .name("getDeviceStatus")
     .description("Get device status")
     .in("ota" / path[String]("deviceId") / "status")
-    .post
+    .get
     .out(jsonBody[DeviceStatus])
 
   val restartDeviceEndpoint: Endpoint[Unit, String, Throwable, Unit, Any] = baseEndpoint

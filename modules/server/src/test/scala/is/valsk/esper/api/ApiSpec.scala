@@ -5,16 +5,12 @@ import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
-import is.valsk.esper.domain.{Device, EsperError, Firmware, PersistenceException, Types, Version}
-import is.valsk.esper.domain.PendingUpdate
+import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
-import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, InMemoryDeviceRepository, InMemoryPendingUpdateRepository, PendingUpdateRepository}
+import is.valsk.esper.repositories.*
 import is.valsk.esper.services.{EmailService, FirmwareDownloader}
-import zio.http.Response
-import zio.http.model.HttpError
-import zio.json.*
 import zio.mock.Mock
-import zio.{Exit, IO, Ref, Task, ULayer, URIO, URLayer, ZIO, ZLayer, mock}
+import zio.{IO, Ref, Task, ULayer, URIO, URLayer, ZIO, ZLayer, mock}
 
 import java.io.IOException
 
@@ -152,10 +148,6 @@ trait ApiSpec {
     pendingUpdateRepository <- ZIO.service[PendingUpdateRepository]
     _ <- ZIO.foreach(pendingUpdates)(pendingUpdateRepository.add).orDie
   } yield ()
-
-  def parseResponse[T](response: Exit[Option[HttpError], Response])(using JsonDecoder[T]): ZIO[Any, Any, T] = {
-    response.map(_.body.asString.flatMap(x => ZIO.fromEither(x.fromJson[T]))).flatten
-  }
 
   object MockEmailService extends Mock[EmailService] {
     object SendEmail extends Effect[(String, String), Throwable, Unit]
