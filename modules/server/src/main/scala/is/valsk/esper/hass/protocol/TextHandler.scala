@@ -7,7 +7,7 @@ import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponse
 import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.*
-import zio.http.socket.{WebSocketChannelEvent, WebSocketFrame}
+import zio.http.{WebSocketChannelEvent, WebSocketFrame}
 
 class TextHandler(
     handleHassMessages: PartialHassResponseMessageHandler,
@@ -15,7 +15,7 @@ class TextHandler(
 ) extends ChannelHandler {
 
   override def get: PartialChannelHandler = {
-    case ChannelEvent(channel, ChannelRead(WebSocketFrame.Text(json))) =>
+    case (channel, Read(WebSocketFrame.Text(json))) =>
       val result = for {
         parsedMessage <- messageParser.parseMessage(json)
         _ <- handleHassMessages(HassResponseMessageContext(channel, parsedMessage))

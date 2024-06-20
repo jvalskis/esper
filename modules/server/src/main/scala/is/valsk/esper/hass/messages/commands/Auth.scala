@@ -9,7 +9,7 @@ case class Auth(
 ) extends HassRequestMessage
 
 object Auth {
-  implicit val encoder: JsonEncoder[Auth] = DeriveJsonEncoder.gen[Auth]
+  given encoder: JsonEncoder[Auth] = DeriveJsonEncoder.gen[Auth]
 
   def apply(accessToken: String): Auth = Auth(Type.Auth.typeName, accessToken)
 }

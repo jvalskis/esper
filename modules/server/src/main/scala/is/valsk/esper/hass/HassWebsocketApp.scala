@@ -5,7 +5,6 @@ import is.valsk.esper.hass.protocol.ChannelHandler
 import is.valsk.esper.hass.protocol.ChannelHandler.PartialChannelHandler
 import zio.*
 import zio.http.*
-import zio.http.socket.WebSocketChannelEvent
 
 trait HassWebsocketApp {
   def run: Task[Nothing]
@@ -18,8 +17,10 @@ object HassWebsocketApp {
   ) extends HassWebsocketApp {
 
     def run: Task[Nothing] = {
-      val client = Http.collectZIO[WebSocketChannelEvent](channelHandler)
-        .toSocketApp
+      val client = Handler
+        .webSocket {
+          channel => channel.receiveAll(event => channelHandler(channel, event))
+        }
         .connect(config.webSocketUrl)
       for {
         _ <- ZIO.logInfo(s"Connecting to HASS @ ${config.webSocketUrl}")

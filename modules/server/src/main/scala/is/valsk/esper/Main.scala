@@ -2,7 +2,7 @@ package is.valsk.esper
 
 import io.getquill.SnakeCase
 import io.getquill.jdbczio.Quill
-import is.valsk.esper.api.ApiServerApp
+import is.valsk.esper.api.{ApiServerApp, HttpApi}
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.api.firmware.FirmwareApi
@@ -96,6 +96,7 @@ object Main extends ZIOAppDefault {
 
       // API
       ApiServerApp.configuredLayer,
+      HttpApi.layer,
       // API - Firmware
       FirmwareApi.layer,
       GetFirmware.layer,

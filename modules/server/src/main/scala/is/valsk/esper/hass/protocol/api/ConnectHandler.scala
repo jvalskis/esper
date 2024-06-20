@@ -6,7 +6,8 @@ import is.valsk.esper.hass.messages.responses.AuthOK
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import zio.*
 import zio.http.*
-import zio.http.socket.WebSocketFrame
+import zio.http.ChannelEvent.Read
+import zio.http.WebSocketFrame
 import zio.json.*
 
 class ConnectHandler(
@@ -19,7 +20,7 @@ class ConnectHandler(
         messageId <- messageIdGenerator.generate()
         json = DeviceRegistryList(messageId).toJson
         _ <- ZIO.logInfo(s"Sending message $json")
-        _ <- channel.writeAndFlush(WebSocketFrame.text(json))
+        _ <- channel.send(Read(WebSocketFrame.text(json)))
       } yield ()
   }
 }

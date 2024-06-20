@@ -15,8 +15,8 @@ enum Type(val typeName: String) {
 }
 
 object Type {
-  implicit val typeDecoder: JsonDecoder[Type] = DeriveJsonDecoder.gen[Type]
-  implicit val typeEncoder: JsonEncoder[Type] = DeriveJsonEncoder.gen[Type]
+  given typeDecoder: JsonDecoder[Type] = DeriveJsonDecoder.gen[Type]
+  given typeEncoder: JsonEncoder[Type] = DeriveJsonEncoder.gen[Type]
 
   def parse(typeName: String): Either[ParseError, Type] = Type.values.find(_.typeName == typeName).toRight(ParseError(s"Unknown type: $typeName"))
 

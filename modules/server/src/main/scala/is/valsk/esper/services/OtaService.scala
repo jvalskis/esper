@@ -1,8 +1,8 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.device.{DeviceProxyRegistry, DeviceStatus, FlashResult}
+import is.valsk.esper.device.DeviceProxyRegistry
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.domain.{Device, EsperError, Firmware, Version}
+import is.valsk.esper.domain.{Device, DeviceStatus, EsperError, FlashResult, Firmware, Version}
 import is.valsk.esper.repositories.DeviceRepository
 import zio.{IO, URLayer, ZLayer}
 

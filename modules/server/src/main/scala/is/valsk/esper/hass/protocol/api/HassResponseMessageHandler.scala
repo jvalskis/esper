@@ -3,8 +3,7 @@ package is.valsk.esper.hass.protocol.api
 import is.valsk.esper.hass.messages.HassResponseMessage
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.PartialHassResponseMessageHandler
 import zio.*
-import zio.http.Channel
-import zio.http.socket.WebSocketFrame
+import zio.http.WebSocketChannel
 
 trait HassResponseMessageHandler {
 
@@ -18,7 +17,7 @@ object HassResponseMessageHandler {
   val empty: PartialHassResponseMessageHandler = PartialFunction.empty[HassResponseMessageContext, Task[Unit]]
 
   case class HassResponseMessageContext(
-      channel: Channel[WebSocketFrame],
+      channel: WebSocketChannel,
       message: HassResponseMessage
   )
 }

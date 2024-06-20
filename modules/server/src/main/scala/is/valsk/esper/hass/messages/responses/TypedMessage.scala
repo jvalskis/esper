@@ -7,5 +7,5 @@ case class TypedMessage(
 )
 
 object TypedMessage {
-  implicit val decoder: JsonDecoder[TypedMessage] = DeriveJsonDecoder.gen[TypedMessage]
+  given decoder: JsonDecoder[TypedMessage] = DeriveJsonDecoder.gen[TypedMessage]
 }

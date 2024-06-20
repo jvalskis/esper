@@ -9,5 +9,5 @@ case class AuthOK(
 ) extends HassResponseMessage
 
 object AuthOK {
-  implicit val decoder: JsonDecoder[AuthOK] = DeriveJsonDecoder.gen[AuthOK]
+  given decoder: JsonDecoder[AuthOK] = DeriveJsonDecoder.gen[AuthOK]
 }

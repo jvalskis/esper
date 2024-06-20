@@ -3,7 +3,7 @@ package is.valsk.esper.domain
 import eu.timepit.refined.api.{Refined, RefinedTypeOps}
 import eu.timepit.refined.string.Url
 import eu.timepit.refined.types.string.NonEmptyString
-import zio.json.{JsonDecoder, JsonEncoder}
+import zio.json.{JsonCodec, JsonDecoder, JsonEncoder}
 
 object Types {
 
@@ -25,8 +25,9 @@ object Types {
   }
 
   object NonEmptyStringImplicits {
-    implicit val encoder: JsonEncoder[NonEmptyString] = JsonEncoder[String].contramap(_.toString)
-    implicit val decoder: JsonDecoder[NonEmptyString] = JsonDecoder[String].mapOrFail(NonEmptyString.from)
+    given encoder: JsonEncoder[NonEmptyString] = JsonEncoder[String].contramap(_.toString)
+    given decoder: JsonDecoder[NonEmptyString] = JsonDecoder[String].mapOrFail(NonEmptyString.from)
+    given codec: JsonCodec[NonEmptyString] = JsonCodec(encoder, decoder)
   }
 
   object NonEmptyStringExtractor {
@@ -40,7 +41,8 @@ object Types {
   type UrlString = String Refined Url
 
   object UrlString extends RefinedTypeOps[UrlString, String] {
-    implicit val encoder: JsonEncoder[UrlString] = JsonEncoder[String].contramap(_.toString)
-    implicit val decoder: JsonDecoder[UrlString] = JsonDecoder[String].mapOrFail(UrlString.from)
+    given encoder: JsonEncoder[UrlString] = JsonEncoder[String].contramap(_.toString)
+    given decoder: JsonDecoder[UrlString] = JsonDecoder[String].mapOrFail(UrlString.from)
+    given codec: JsonCodec[UrlString] = JsonCodec(encoder, decoder)
   }
 }

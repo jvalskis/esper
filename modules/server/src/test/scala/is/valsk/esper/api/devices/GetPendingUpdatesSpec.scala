@@ -2,7 +2,7 @@ package is.valsk.esper.api.devices
 
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
-import is.valsk.esper.model.api.PendingUpdate
+import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.DeviceRepository
 import zio.*
 import zio.http.Response

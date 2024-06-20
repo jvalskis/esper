@@ -4,11 +4,11 @@ import is.valsk.esper.hass.messages.MessageParser.ParseError
 import zio.http.{Client, Request, Response}
 import zio.json.*
 import zio.stream.*
-import zio.{TaskLayer, URLayer, ZIO, ZLayer}
+import zio.{Scope, TaskLayer, URLayer, ZIO, ZLayer}
 
-class HttpClient {
+class HttpClient(client: Client) {
 
-  def get(url: String): ZIO[Any, Throwable, Response] = request(url)
+  def get(url: String): ZIO[Any, Throwable, Response] = request(Request.get(url))
 
   def get(req: Request): ZIO[Any, Throwable, Response] = request(req)
 
@@ -24,17 +24,10 @@ class HttpClient {
   }
 
   def getJson[T](url: String)(using JsonDecoder[T]): ZIO[Any, Throwable, T] = {
-    request(url)
-      .flatMap(_.body.asString)
-      .flatMap(response => ZIO
-        .fromEither(response.fromJson[T])
-        .mapError(ParseError(_))
-      )
+    getJson(Request.get(url))
   }
 
-  private def request(request: Request) = Client.request(request).provide(Client.default)
-
-  private def request(url: String) = Client.request(url).provide(Client.default)
+  private def request(request: Request) = client.request(request).provide(Scope.default)
 }
 
 object HttpClient {
@@ -42,7 +35,7 @@ object HttpClient {
   val layer: URLayer[Client, HttpClient] = ZLayer {
     for {
       client <- ZIO.service[Client]
-    } yield HttpClient()
+    } yield HttpClient(client)
   }
 
   val configuredLayer: TaskLayer[HttpClient] = Client.default >>> layer

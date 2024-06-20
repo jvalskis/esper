@@ -2,11 +2,11 @@ package is.valsk.esper.repositories
 
 import eu.timepit.refined.types.string.NonEmptyString
 import io.getquill.jdbczio.Quill
-import io.getquill.{SnakeCase, *}
+import io.getquill.*
 import is.valsk.esper.domain
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
-import is.valsk.esper.model.api.PendingUpdate
+import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.model.db.PendingUpdateDto
 import zio.*
 

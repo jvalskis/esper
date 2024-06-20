@@ -4,7 +4,8 @@ import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.ota.GetDeviceStatusSpec.stubPendingUpdateRepository
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
 import is.valsk.esper.device.*
-import is.valsk.esper.device.DeviceStatus.UpdateStatus
+import is.valsk.esper.domain.DeviceStatus.UpdateStatus
+import is.valsk.esper.domain
 import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
 import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
@@ -57,7 +58,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         test("Fail with 412 (Precondition Failed) when latest firmware is not found (mismatching model)") {
           {
             for {
-              _ <- givenFirmwares(Firmware(
+              _ <- givenFirmwares(domain.Firmware(
                 manufacturer = device1.manufacturer,
                 model = otherModel,
                 version = Version("version"),
@@ -213,7 +214,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         },
         test("Fail with 412 (Precondition Failed) when latest firmware is not found (mismatching model)") {
           for {
-            _ <- givenFirmwares(Firmware(
+            _ <- givenFirmwares(domain.Firmware(
               manufacturer = device1.manufacturer,
               model = otherModel,
               version = Version("version"),

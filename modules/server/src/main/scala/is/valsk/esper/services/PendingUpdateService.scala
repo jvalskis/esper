@@ -1,7 +1,7 @@
 package is.valsk.esper.services
 
-import is.valsk.esper.domain.{EsperError, *}
-import is.valsk.esper.model.api.PendingUpdate
+import is.valsk.esper.domain.*
+import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository, PendingUpdateRepository}
 import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus
 import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus.LatestFirmwareStatus

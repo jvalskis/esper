@@ -1,4 +1,4 @@
-package is.valsk.esper.model.api
+package is.valsk.esper.domain
 
 import is.valsk.esper.domain.{Device, Version}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
@@ -12,6 +12,6 @@ object PendingUpdate {
 
   import is.valsk.esper.domain.Device.{decoder, encoder}
 
-  implicit val encoder: JsonEncoder[PendingUpdate] = DeriveJsonEncoder.gen[PendingUpdate]
-  implicit val decoder: JsonDecoder[PendingUpdate] = DeriveJsonDecoder.gen[PendingUpdate]
+  given encoder: JsonEncoder[PendingUpdate] = DeriveJsonEncoder.gen[PendingUpdate]
+  given decoder: JsonDecoder[PendingUpdate] = DeriveJsonDecoder.gen[PendingUpdate]
 }

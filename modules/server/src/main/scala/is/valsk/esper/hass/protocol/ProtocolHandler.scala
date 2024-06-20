@@ -5,44 +5,44 @@ import zio.*
 import zio.http.*
 import zio.http.ChannelEvent.*
 import zio.http.ChannelEvent.UserEvent.{HandshakeComplete, HandshakeTimeout}
-import zio.http.socket.{WebSocketChannelEvent, WebSocketFrame}
+import zio.http.{WebSocketChannelEvent, WebSocketFrame}
 
 class ProtocolHandler extends ChannelHandler {
 
   override def get: PartialChannelHandler = {
-    case ChannelEvent(channel, UserEventTriggered(event)) =>
+    case (channel, UserEventTriggered(event)) =>
       event match {
         case HandshakeComplete => handshakeCompleteHandler(channel)
         case HandshakeTimeout => handshakeTimeoutHandler(channel)
       }
 
-    case ChannelEvent(channel, ChannelRegistered) =>
+    case (channel, Registered) =>
       channelRegisteredHandler(channel)
 
-    case ChannelEvent(channel, ChannelUnregistered) =>
+    case (channel, Unregistered) =>
       channelUnregisteredHandler(channel)
 
-    case ChannelEvent(channel, ChannelRead(WebSocketFrame.Ping)) =>
+    case (channel, Read(WebSocketFrame.Ping)) =>
       pingHandler(channel)
   }
 
-  protected def pingHandler(ch: Channel[WebSocketFrame]): Task[Unit] = {
+  protected def pingHandler(channel: WebSocketChannel): Task[Unit] = {
     for {
       _ <- ZIO.logInfo("Received PING - sending PONG")
-      _ <- ch.writeAndFlush(WebSocketFrame.Pong)
+      _ <- channel.send(Read(WebSocketFrame.Pong))
     } yield ()
   }
 
-  protected def channelRegisteredHandler(ch: Channel[WebSocketFrame]): Task[Unit] =
+  protected def channelRegisteredHandler(ch: WebSocketChannel): Task[Unit] =
     ZIO.logInfo("Connection opened!")
 
-  protected def channelUnregisteredHandler(ch: Channel[WebSocketFrame]): Task[Unit] =
+  protected def channelUnregisteredHandler(ch: WebSocketChannel): Task[Unit] =
     ZIO.logInfo("Connection closed!")
 
-  protected def handshakeCompleteHandler(ch: Channel[WebSocketFrame]): Task[Unit] =
+  protected def handshakeCompleteHandler(ch: WebSocketChannel): Task[Unit] =
     ZIO.logInfo("Connection started!")
 
-  protected def handshakeTimeoutHandler(ch: Channel[WebSocketFrame]): Task[Unit] =
+  protected def handshakeTimeoutHandler(ch: WebSocketChannel): Task[Unit] =
     ZIO.logInfo("Connection failed!")
 }
 

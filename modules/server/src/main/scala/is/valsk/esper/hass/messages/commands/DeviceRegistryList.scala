@@ -9,7 +9,7 @@ case class DeviceRegistryList(
 ) extends HassRequestMessage with HassIdentifiableMessage
 
 object DeviceRegistryList {
-  implicit val encoder: JsonEncoder[DeviceRegistryList] = DeriveJsonEncoder.gen[DeviceRegistryList]
+  given encoder: JsonEncoder[DeviceRegistryList] = DeriveJsonEncoder.gen[DeviceRegistryList]
 
   def apply(id: Int): DeviceRegistryList = DeviceRegistryList(Type.DeviceRegistryList.typeName, id)
 }

@@ -1,5 +1,6 @@
 package is.valsk.esper.domain
 
+import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
@@ -11,8 +12,8 @@ case class DeviceModel(
 object DeviceModel {
   import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder}
 
-  implicit val encoder: JsonEncoder[DeviceModel] = DeriveJsonEncoder.gen[DeviceModel]
-  implicit val decoder: JsonDecoder[DeviceModel] = DeriveJsonDecoder.gen[DeviceModel]
+  given encoder: JsonEncoder[DeviceModel] = DeriveJsonEncoder.gen[DeviceModel]
+  given decoder: JsonDecoder[DeviceModel] = DeriveJsonDecoder.gen[DeviceModel]
 
   def apply(manufacturer: String, model: String): Either[String, DeviceModel] = for {
     manufacturerRefined <- Manufacturer.from(manufacturer)

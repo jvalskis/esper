@@ -9,7 +9,7 @@ import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
 import is.valsk.esper.services.{EmailService, FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
-import zio.{mock, *}
+import zio.*
 import zio.http.Response
 import zio.http.model.HttpError
 import zio.mock.{Expectation, Mock}

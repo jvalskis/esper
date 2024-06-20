@@ -1,28 +1,38 @@
 package is.valsk.esper.api.ota
 
+import is.valsk.esper.api.BaseController
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
-import is.valsk.esper.domain.Types.NonEmptyStringExtractor
+import is.valsk.esper.domain.Types.DeviceIdExtractor
 import is.valsk.esper.domain.Version
-import zio.http.*
-import zio.http.model.{HttpError, Method}
-import zio.{URLayer, ZIO, ZLayer}
+import is.valsk.esper.http.endpoints.OtaEndpoints
+import sttp.tapir.server.ServerEndpoint
+import zio.{Task, URLayer, ZIO, ZLayer}
 
 class OtaApi(
     getDeviceVersion: GetDeviceVersion,
     flashDevice: FlashDevice,
     getDeviceStatus: GetDeviceStatus,
     restartDevice: RestartDevice,
-) {
+) extends OtaEndpoints with BaseController {
 
-  val app: HttpApp[Any, HttpError] = Http.collectZIO[Request] {
-    case Method.GET -> !! / "ota" / NonEmptyStringExtractor(deviceId) / "version" => getDeviceVersion(deviceId)
-    case Method.POST -> !! / "ota" / NonEmptyStringExtractor(deviceId) / "flash" => flashDevice(deviceId, None)
-    case Method.POST -> !! / "ota" / NonEmptyStringExtractor(deviceId) / "flash" / Version(version) => flashDevice(deviceId, Some(version))
-    case Method.POST -> !! / "ota" / NonEmptyStringExtractor(deviceId) / "status" => getDeviceStatus(deviceId)
-    case Method.POST -> !! / "ota" / NonEmptyStringExtractor(deviceId) / "restart" => restartDevice(deviceId)
-  }
+  override val routes: List[ServerEndpoint[Any, Task]] = List(
+    getDeviceVersionEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+      getDeviceVersion(deviceId).either
+    },
+    flashDeviceEndpoint.serverLogic { case (DeviceIdExtractor(deviceId), Version(version)) =>
+      flashDevice(deviceId, Some(version)).either
+    },
+    flashDeviceWithLatestVersionEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+      flashDevice(deviceId, None).either
+    },
+    getDeviceStatusEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+      getDeviceStatus(deviceId).either
+    },
+    restartDeviceEndpoint.serverLogic { case DeviceIdExtractor(deviceId) =>
+      restartDevice(deviceId).either
+    },
+  )
 }
-
 
 object OtaApi {
 

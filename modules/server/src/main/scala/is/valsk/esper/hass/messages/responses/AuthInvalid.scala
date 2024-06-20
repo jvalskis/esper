@@ -9,5 +9,5 @@ case class AuthInvalid(
 ) extends HassResponseMessage
 
 object AuthInvalid {
-  implicit val decoder: JsonDecoder[AuthInvalid] = DeriveJsonDecoder.gen[AuthInvalid]
+  given decoder: JsonDecoder[AuthInvalid] = DeriveJsonDecoder.gen[AuthInvalid]
 }

@@ -3,9 +3,10 @@ package is.valsk.esper.api
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
+import is.valsk.esper.domain
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
 import is.valsk.esper.domain.{Device, EsperError, Firmware, PersistenceException, Types, Version}
-import is.valsk.esper.model.api.PendingUpdate
+import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, InMemoryDeviceRepository, InMemoryPendingUpdateRepository, PendingUpdateRepository}
 import is.valsk.esper.services.{EmailService, FirmwareDownloader}
@@ -27,7 +28,7 @@ trait ApiSpec {
   val unsupportedManufacturer: Manufacturer = Manufacturer.unsafeFrom("unsupported-manufacturer")
   val model1: NonEmptyString = Model.unsafeFrom("model1")
   val otherModel: NonEmptyString = Model.unsafeFrom("other-model")
-  protected val device1: Device = Device(
+  protected val device1: Device = domain.Device(
     id = NonEmptyString.unsafeFrom("id"),
     url = UrlString.unsafeFrom("https://fake.url"),
     name = NonEmptyString.unsafeFrom("name"),

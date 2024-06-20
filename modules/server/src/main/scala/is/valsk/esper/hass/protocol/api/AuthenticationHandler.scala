@@ -5,8 +5,8 @@ import is.valsk.esper.hass.messages.commands.Auth
 import is.valsk.esper.hass.messages.responses.{AuthInvalid, AuthRequired}
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import zio.*
+import zio.http.ChannelEvent.Read
 import zio.http.*
-import zio.http.socket.WebSocketFrame
 import zio.json.*
 
 class AuthenticationHandler(config: HassConfig) extends HassResponseMessageHandler {
@@ -16,16 +16,16 @@ class AuthenticationHandler(config: HassConfig) extends HassResponseMessageHandl
     case HassResponseMessageContext(channel, _: AuthRequired) => handleAuthRequired(channel)
   }
 
-  private def handleAuthInvalid(channel: Channel[WebSocketFrame], message: AuthInvalid): Task[Unit] = for {
+  private def handleAuthInvalid(channel: WebSocketChannel, message: AuthInvalid): Task[Unit] = for {
     _ <- ZIO.logInfo(s"AuthInvalid: ${message.message}")
-    _ <- channel.close()
+//    _ <- channel.close()
   } yield ()
 
-  private def handleAuthRequired(channel: Channel[WebSocketFrame]) = {
+  private def handleAuthRequired(channel: WebSocketChannel) = {
     for {
       _ <- ZIO.logInfo(s"AuthRequired: sending auth message")
       authMessage = Auth(config.accessToken)
-      _ <- channel.writeAndFlush(WebSocketFrame.text(authMessage.toJson))
+      _ <- channel.send(Read(WebSocketFrame.text(authMessage.toJson)))
     } yield ()
   }
 }

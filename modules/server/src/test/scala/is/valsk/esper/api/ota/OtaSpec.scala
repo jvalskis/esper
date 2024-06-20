@@ -1,7 +1,7 @@
 package is.valsk.esper.api.ota
 
 import is.valsk.esper.api.ApiSpec
-import is.valsk.esper.device.DeviceStatus.UpdateStatus
+import is.valsk.esper.domain.DeviceStatus.UpdateStatus
 import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler, DeviceStatus, FlashResult}
 import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model}
 import is.valsk.esper.domain.*

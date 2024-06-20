@@ -2,7 +2,7 @@ package is.valsk.esper.repositories
 
 import eu.timepit.refined.types.string.NonEmptyString
 import io.getquill.jdbczio.Quill
-import io.getquill.{SnakeCase, *}
+import io.getquill.*
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey

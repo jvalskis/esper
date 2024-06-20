@@ -9,5 +9,5 @@ case class AuthRequired(
 ) extends HassResponseMessage
 
 object AuthRequired {
-  implicit val decoder: JsonDecoder[AuthRequired] = DeriveJsonDecoder.gen[AuthRequired]
+  given decoder: JsonDecoder[AuthRequired] = DeriveJsonDecoder.gen[AuthRequired]
 }

@@ -1,6 +1,6 @@
 package is.valsk.esper.domain
 
-import zio.json.{JsonDecoder, JsonEncoder}
+import zio.json.{JsonCodec, JsonDecoder, JsonEncoder}
 
 import scala.annotation.tailrec
 
@@ -19,8 +19,9 @@ case class Version(
 }
 
 object Version {
-  implicit val decoder: JsonDecoder[Version] = JsonDecoder[String].map(Version(_))
-  implicit val encoder: JsonEncoder[Version] = JsonEncoder[String].contramap(_.value)
+  given decoder: JsonDecoder[Version] = JsonDecoder[String].map(Version(_))
+  given encoder: JsonEncoder[Version] = JsonEncoder[String].contramap(_.value)
+//  given codec: JsonCodec[Version] = JsonCodec(encoder, decoder)
 
   def unapply(string: String): Option[Version] = Some(Version(string))
 }

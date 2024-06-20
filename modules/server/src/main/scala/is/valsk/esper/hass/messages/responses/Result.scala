@@ -29,7 +29,7 @@ case class HassError(
 )
 
 object Result {
-  implicit val hassErrorDecoder: JsonDecoder[HassError] = DeriveJsonDecoder.gen[HassError]
-  implicit val hassResultDecoder: JsonDecoder[HassResult] = DeriveJsonDecoder.gen[HassResult]
-  implicit val decoder: JsonDecoder[Result] = DeriveJsonDecoder.gen[Result]
+  given hassErrorDecoder: JsonDecoder[HassError] = DeriveJsonDecoder.gen[HassError]
+  given hassResultDecoder: JsonDecoder[HassResult] = DeriveJsonDecoder.gen[HassResult]
+  given decoder: JsonDecoder[Result] = DeriveJsonDecoder.gen[Result]
 }
