@@ -15,9 +15,5 @@ object ShellyConfig {
   given config: Config[ShellyConfig] =
     deriveConfig[ShellyConfig].nested("shelly")
 
-  val layer: ZLayer[Any, Config.Error, ShellyConfig] = ZLayer {
-    for {
-      shellyConfig <- ZIO.config[ShellyConfig]
-    } yield shellyConfig
-  }
+  val layer: ZLayer[Any, Config.Error, ShellyConfig] = ZLayer.fromZIO(ZIO.config[ShellyConfig])
 }
