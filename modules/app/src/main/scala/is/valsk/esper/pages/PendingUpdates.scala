@@ -3,34 +3,19 @@ package is.valsk.esper.pages
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import is.valsk.esper.components.Anchors
-import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, Name, UrlString}
+import is.valsk.esper.core.ZJS.*
+import is.valsk.esper.domain.{Device, PendingUpdate}
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
-import is.valsk.esper.domain.{Device, PendingUpdate, Version}
-import is.valsk.esper.http.endpoints.DeviceEndpoints
-import sttp.client3.UriContext
-import sttp.client3.impl.zio.FetchZioBackend
-import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.{Runtime, Unsafe, ZIO}
+import is.valsk.esper.domain.RefinedTypeExtensions.refinedToString
+import scala.language.implicitConversions
 
 object PendingUpdates {
-
 
   private val pendingUpdateBus = EventBus[List[PendingUpdate]]()
 
   def fetchPendingUpdates(): Unit = {
-    val pendingUpdateEndpoints = new DeviceEndpoints {}
-    val getPendingUpdates = pendingUpdateEndpoints.getPendingUpdatesEndpoint
-    val backend = FetchZioBackend()
-    val interpreter = SttpClientInterpreter()
-    val request = interpreter.toRequestThrowDecodeFailures(getPendingUpdates, Some(uri"http://localhost:9000")).apply(())
-    val pendingUpdatesZIO = backend.send(request).map(_.body).absolve
-    Unsafe.unsafe { implicit unsafe =>
-      Runtime.default.unsafe.fork(
-        pendingUpdatesZIO.tap(list => ZIO.attempt(pendingUpdateBus.emit(list)))
-      )
-    }
-    ()
+    useBackend(_.devices.getPendingUpdatesEndpoint(())).emitTo(pendingUpdateBus)
   }
 
   def apply(): ReactiveHtmlElement[HTMLElement] = {
