@@ -2,7 +2,7 @@ package is.valsk.esper.api.devices
 
 import is.valsk.esper.api.BaseController
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
-import is.valsk.esper.domain.Types.DeviceIdExtractor
+import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.http.endpoints.DeviceEndpoints
 import sttp.tapir.*
 import sttp.tapir.server.ServerEndpoint
@@ -16,8 +16,8 @@ class DeviceApi(
 ) extends DeviceEndpoints with BaseController {
 
   val listDevicesEndpointImpl: ServerEndpoint[Any, Task] = listDevicesEndpoint.serverLogic(_ => listDevices().either)
-  val getDeviceEndpointImpl: ServerEndpoint[Any, Task] = getDeviceEndpoint.serverLogic { case DeviceIdExtractor(deviceId) => getDevice(deviceId).either }
-  val getPendingUpdateEndpointImpl: ServerEndpoint[Any, Task] = getPendingUpdateEndpoint.serverLogic { case DeviceIdExtractor(deviceId) => getPendingUpdate(deviceId).either }
+  val getDeviceEndpointImpl: ServerEndpoint[Any, Task] = getDeviceEndpoint.serverLogic { case DeviceId(deviceId) => getDevice(deviceId).either }
+  val getPendingUpdateEndpointImpl: ServerEndpoint[Any, Task] = getPendingUpdateEndpoint.serverLogic { case DeviceId(deviceId) => getPendingUpdate(deviceId).either }
   val getPendingUpdatesEndpointImpl: ServerEndpoint[Any, Task] = getPendingUpdatesEndpoint.serverLogic(_ => getPendingUpdates().either)
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(

@@ -26,7 +26,7 @@ class ShellyDeviceHandler(
   private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r
 
-  val supportedManufacturer: Manufacturer = Manufacturer.unsafeFrom("Shelly")
+  val supportedManufacturer: Manufacturer = Manufacturer("Shelly")
 
   override def parseVersion(version: String): Either[MalformedVersion, Version] = version match {
     case shellyApiVersionPattern(version) => Right(Version(version))

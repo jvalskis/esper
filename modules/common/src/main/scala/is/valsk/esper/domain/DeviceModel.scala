@@ -9,18 +9,18 @@ case class DeviceModel(
 )
 
 object DeviceModel {
-  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder}
+//  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder}
 
   given encoder: JsonEncoder[DeviceModel] = DeriveJsonEncoder.gen[DeviceModel]
   given decoder: JsonDecoder[DeviceModel] = DeriveJsonDecoder.gen[DeviceModel]
 
-  def apply(manufacturer: String, model: String): Either[String, DeviceModel] = for {
-    manufacturerRefined <- Manufacturer.from(manufacturer)
-    modelRefined <- Model.from(model)
-  } yield DeviceModel(
-    manufacturerRefined,
-    modelRefined
-  )
+//  def apply(manufacturer: String, model: String): Either[String, DeviceModel] = for {
+//    manufacturerRefined <- Manufacturer(manufacturer)
+//    modelRefined <- Model(model)
+//  } yield DeviceModel(
+//    manufacturerRefined,
+//    modelRefined
+//  )
 
   def apply(firmware: Firmware): DeviceModel = DeviceModel(firmware.manufacturer, firmware.model)
 

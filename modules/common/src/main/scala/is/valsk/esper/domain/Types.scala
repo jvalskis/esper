@@ -1,48 +1,68 @@
 package is.valsk.esper.domain
 
-import eu.timepit.refined.api.{Refined, RefinedTypeOps}
-import eu.timepit.refined.string.Url
-import eu.timepit.refined.types.string.NonEmptyString
-import zio.json.{JsonCodec, JsonDecoder, JsonEncoder}
+//import eu.timepit.refined.api.{Refined, RefinedTypeOps}
+//import eu.timepit.refined.string.Url
+//import eu.timepit.refined.types.string.NonEmptyString
+//import zio.json.{DeriveJsonDecoder, JsonCodec, JsonDecoder, JsonEncoder}
 
 object Types {
 
-  type Manufacturer = NonEmptyString
-  val Manufacturer = NonEmptyString
+  type Manufacturer = String//NonEmptyString
 
-  object ManufacturerExtractor {
-    def unapply(arg: String): Option[Manufacturer] = Manufacturer.from(arg).toOption
+  object Manufacturer /*extends RefinedTypeOps[Manufacturer, String] */{
+//    def apply(value: String): Manufacturer = NonEmptyString.unsafeFrom(value)
+    def apply(value: String): String = value
+    def unapply(value: String): Option[String] = Some(value)
   }
 
-  type Model = NonEmptyString
-  val Model = NonEmptyString
+  type Model = String
 
-  type DeviceId = NonEmptyString
-  val DeviceId = NonEmptyString
+  object Model /*extends RefinedTypeOps[Model, String]*/ {
+//    def apply(value: String): Model = NonEmptyString.unsafeFrom(value)
+    def apply(value: String): String = value
+    def unapply(value: String): Option[String] = Some(value)
+  }
 
-  object ModelExtractor {
-    def unapply(arg: String): Option[Model] = Model.from(arg).toOption
+  type DeviceId = String//NonEmptyString
+
+  object DeviceId /*extends RefinedTypeOps[DeviceId, String]*/ {
+//    def apply(value: String): DeviceId = NonEmptyString.unsafeFrom(value)
+    def apply(value: String): String = value
+    def unapply(value: String): Option[String] = Some(value)
   }
 
   object NonEmptyStringImplicits {
-    given encoder: JsonEncoder[NonEmptyString] = JsonEncoder[String].contramap(_.toString)
-    given decoder: JsonDecoder[NonEmptyString] = JsonDecoder[String].mapOrFail(NonEmptyString.from)
-    given codec: JsonCodec[NonEmptyString] = JsonCodec(encoder, decoder)
+//    given encoder: JsonEncoder[NonEmptyString] = JsonEncoder[String].contramap(_.toString)
+//
+//    given decoder: JsonDecoder[NonEmptyString] = JsonDecoder[String].mapOrFail(NonEmptyString.from)
+//
+//    given codec: JsonCodec[NonEmptyString] = JsonCodec(encoder, decoder)
   }
 
-  object NonEmptyStringExtractor {
-    def unapply(arg: String): Option[NonEmptyString] = NonEmptyString.from(arg).toOption
+  type Name = String//NonEmptyString
+
+  object Name/* extends RefinedTypeOps[NonEmptyString, String] */{
+//    def apply(value: String): DeviceId = NonEmptyString.unsafeFrom(value)
+    def apply(value: String): String = value
+    def unapply(value: String): Option[String] = Some(value)
   }
 
-  object DeviceIdExtractor {
-    def unapply(arg: String): Option[DeviceId] = DeviceId.from(arg).toOption
-  }
+  type UrlString = String //Refined Url
 
-  type UrlString = String Refined Url
-
-  object UrlString extends RefinedTypeOps[UrlString, String] {
-    given encoder: JsonEncoder[UrlString] = JsonEncoder[String].contramap(_.toString)
-    given decoder: JsonDecoder[UrlString] = JsonDecoder[String].mapOrFail(UrlString.from)
-    given codec: JsonCodec[UrlString] = JsonCodec(encoder, decoder)
+  object UrlString /*extends RefinedTypeOps[UrlString, String]*/ {
+//    given encoder: JsonEncoder[UrlString] = JsonEncoder[String].contramap(_.toString)
+//
+//    given decoder: JsonDecoder[UrlString] = JsonDecoder[String].mapOrFail(UrlString.from)
+//
+//    given codec: JsonCodec[UrlString] = JsonCodec(encoder, decoder)
+//
+//    def apply(value: String): UrlString = UrlString.unsafeFrom(value)
+//    given encoder: JsonEncoder[UrlString] = JsonEncoder[UrlString].contramap(identity)
+//
+//    given decoder: JsonDecoder[UrlString] = JsonDecoder[UrlString].map(identity)
+//
+//    given codec: JsonCodec[UrlString] = JsonCodec(encoder, decoder)
+    def apply(value: String): String = value
+    def unapply(value: String): Option[String] = Some(value)
   }
 }

@@ -26,9 +26,9 @@ val sttpVersion = "3.9.7"
 val commonDependencies = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-client" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-refined" % tapirVersion,
+//    "com.softwaremill.sttp.tapir" %% "tapir-refined" % tapirVersion,
     "com.softwaremill.sttp.client3" %% "zio" % sttpVersion,
-    "eu.timepit" %% "refined" % refinedVersion,
+//    "eu.timepit" %% "refined" % refinedVersion,
 )
 val serverDependencies = commonDependencies ++ Seq(
     "org.slf4j" % "slf4j-simple" % slf4jVersion,

@@ -12,7 +12,7 @@ object Router {
     mainTag(
       routes(
         div(
-          cls := "container-fluid",
+          cls := "container-fluid p-0",
           (pathEnd | path("pending-updates")) {
             PendingUpdates()
           },

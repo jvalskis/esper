@@ -3,23 +3,21 @@ package is.valsk.esper.components
 import com.raquo.laminar.api.L.*
 import com.raquo.laminar.codecs.StringAsIsCodec
 import com.raquo.laminar.nodes.ReactiveHtmlElement
+import is.valsk.esper.common.Constants
 import is.valsk.esper.components.Anchors.renderNavLink
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 
-import scala.scalajs.js
-import scala.scalajs.js.annotation.JSImport
-
-object Header {
+object  Header {
   def apply(): ReactiveHtmlElement[HTMLElement] = {
     div(
       cls := "container-fluid p-0",
       div(
-        cls := "jvm-nav",
+        cls := "esper-nav-bar",
         div(
           cls := "container",
           navTag(
-            cls := "navbar navbar-expand-lg navbar-light JVM-nav",
+            cls := "navbar navbar-expand-lg navbar-light esper-nav",
             div(
               cls := "container",
               renderLogo(),
@@ -37,7 +35,7 @@ object Header {
                 cls := "collapse navbar-collapse",
                 idAttr := "navbarNav2",
                 ul(
-                  cls := "navbar-nav ms-auto menu align-center expanded text-center SMN_effect-3",
+                  cls := "navbar-nav ms-auto menu align-center expanded text-center",
                   renderNavLinks()
                 )
               )
@@ -48,15 +46,11 @@ object Header {
     )
   }
 
-  @js.native
-  @JSImport("/static/img/icon.png", JSImport.Default)
-  private val logoImage: String = js.native
-
   private def renderLogo() = a(
     href := "/",
     cls := "navbar-brand",
     img(
-      src := logoImage,
+      src := Constants.LogoImage,
       cls := "home-logo",
       alt := "Esper",
     )
@@ -69,7 +63,7 @@ object Header {
   private def renderNavLink(text: String, location: String) = {
     li(
       cls := "nav-item",
-      Anchors.renderNavLink(text, location, "nav-link jvm-item")
+      Anchors.renderNavLink(text, location, "nav-link esper-item")
     )
   }
 }

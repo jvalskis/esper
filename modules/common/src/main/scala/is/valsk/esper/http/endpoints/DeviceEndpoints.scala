@@ -3,7 +3,7 @@ package is.valsk.esper.http.endpoints
 import is.valsk.esper.domain.Device.*
 import is.valsk.esper.domain.{Device, PendingUpdate}
 import sttp.tapir.*
-import sttp.tapir.codec.refined.*
+//import sttp.tapir.codec.refined.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
 

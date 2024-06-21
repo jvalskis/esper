@@ -34,3 +34,8 @@ metals.sbt
 
 # Dockerfile
 .env
+
+# FE specific
+/modules/app/.parcel-cache
+/modules/app/dist
+/modules/app/node_modules
