@@ -30,6 +30,12 @@ metals.sbt
 .idea
 .idea_modules
 /.worksheet/
+.run
 
 # Dockerfile
 .env
+
+# FE specific
+/modules/app/.parcel-cache
+/modules/app/dist
+/modules/app/node_modules
