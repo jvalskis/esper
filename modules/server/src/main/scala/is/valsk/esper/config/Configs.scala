@@ -1,6 +1,5 @@
 package is.valsk.esper.config
 
-import zio.config.magnolia
 import zio.config.magnolia.{DeriveConfig, deriveConfig}
 import zio.{Config, Layer, Tag, ZIO, ZLayer}
 

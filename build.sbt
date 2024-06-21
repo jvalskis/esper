@@ -26,9 +26,9 @@ val sttpVersion = "3.9.7"
 val commonDependencies = Seq(
     "com.softwaremill.sttp.tapir" %% "tapir-sttp-client" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-zio" % tapirVersion,
-//    "com.softwaremill.sttp.tapir" %% "tapir-refined" % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-refined" % tapirVersion,
     "com.softwaremill.sttp.client3" %% "zio" % sttpVersion,
-//    "eu.timepit" %% "refined" % refinedVersion,
+    "eu.timepit" %% "refined" % refinedVersion,
 )
 val serverDependencies = commonDependencies ++ Seq(
     "org.slf4j" % "slf4j-simple" % slf4jVersion,
@@ -76,8 +76,10 @@ lazy val app = (project in file("modules/app"))
             libraryDependencies ++= Seq(
                 "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client" % tapirVersion,
                 "com.softwaremill.sttp.tapir" %%% "tapir-json-zio" % tapirVersion,
+                "com.softwaremill.sttp.tapir" %%% "tapir-refined" % tapirVersion,
                 "com.softwaremill.sttp.client3" %%% "zio" % sttpVersion,
-                "dev.zio" %%% "zio-json" % "0.4.2",
+                "dev.zio" %%% "zio-json" % zioJsonVersion,
+                "eu.timepit" %% "refined" % refinedVersion,
                 "io.frontroute" %%% "frontroute" % "0.18.1" // Brings in Laminar 16
             ),
             scalaJSLinkerConfig ~= {

@@ -8,7 +8,7 @@ import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFir
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
 import is.valsk.esper.device.DeviceHandler
-import is.valsk.esper.domain.{DeviceStatus, FlashResult, *}
+import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
@@ -16,7 +16,6 @@ import is.valsk.esper.services.HttpClient
 import zio.http.{Path, Request, URL}
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 import zio.{Chunk, IO, RLayer, Schedule, URLayer, ZIO, ZLayer, durationInt}
-import is.valsk.esper.RefinedTypeExtensions.refinedToString
 
 class ShellyDeviceHandler(
     serverConfig: HttpServerConfig,

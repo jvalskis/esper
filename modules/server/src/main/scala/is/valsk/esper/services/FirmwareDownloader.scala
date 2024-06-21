@@ -6,6 +6,8 @@ import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
 import zio.stream.ZSink
 import zio.{IO, URLayer, ZIO, ZLayer}
+import is.valsk.esper.domain.RefinedTypeExtensions.refinedToString
+import scala.language.implicitConversions
 
 trait FirmwareDownloader {
 

@@ -78,13 +78,13 @@ object Main extends ZIOAppDefault {
       softwareVersion = None
     ))
     _ <- manufacturerRepository.add(new DeviceHandler {
-      override def supportedManufacturer: Manufacturer = "ACME"
+      override def supportedManufacturer: Manufacturer = Manufacturer("ACME")
 
       override def getFirmwareDownloadDetails(manufacturer: Manufacturer, model: Model, version: Option[Version]): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ZIO.succeed(FirmwareDescriptor(
         manufacturer = manufacturer,
         model = model,
         version = Version("version2"),
-        url = "http://localhost/acme-firmware",
+        url = UrlString("http://localhost/acme-firmware"),
       ))
 
       override def versionOrdering: Ordering[Version] = SemanticVersion.Ordering

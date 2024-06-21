@@ -15,8 +15,8 @@ case class Device(
 
 object Device {
 
-//  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder}
-//  import is.valsk.esper.domain.Types.UrlString.{decoder, encoder}
+  import is.valsk.esper.domain.Types.NonEmptyStringImplicits.{decoder, encoder}
+  import is.valsk.esper.domain.Types.UrlString.{decoder, encoder}
 
   given encoder: JsonEncoder[Device] = DeriveJsonEncoder.gen[Device]
   given decoder: JsonDecoder[Device] = DeriveJsonDecoder.gen[Device]
