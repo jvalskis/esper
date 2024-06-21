@@ -1,6 +1,7 @@
 package is.valsk.esper.api
 
 import is.valsk.esper.config.HttpServerConfig
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import zio.http.*
 import zio.http.netty.NettyConfig
@@ -26,7 +27,9 @@ object ApiServerApp {
       endpoints <- httpApi.endpointsZIO
       _ <- Server.serve(
         ZioHttpInterpreter(
-          ZioHttpServerOptions.default
+          ZioHttpServerOptions.default.appendInterceptor(
+            CORSInterceptor.default
+          )
         ).toHttp(endpoints) @@ Middleware.debug
       )
     } yield ()

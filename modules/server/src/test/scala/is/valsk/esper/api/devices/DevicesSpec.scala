@@ -46,7 +46,7 @@ trait DevicesSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/devices/updates")
+      .get(uri"/devices/updates/list")
       .send(backendStub)
   } yield response
 

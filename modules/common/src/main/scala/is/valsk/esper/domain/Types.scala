@@ -13,6 +13,7 @@ object Types {
 //    def apply(value: String): Manufacturer = NonEmptyString.unsafeFrom(value)
     def apply(value: String): String = value
     def unapply(value: String): Option[String] = Some(value)
+    def from(value: String): Either[String, String] = Right(value)
   }
 
   type Model = String
@@ -21,6 +22,7 @@ object Types {
 //    def apply(value: String): Model = NonEmptyString.unsafeFrom(value)
     def apply(value: String): String = value
     def unapply(value: String): Option[String] = Some(value)
+    def from(value: String): Either[String, String] = Right(value)
   }
 
   type DeviceId = String//NonEmptyString
@@ -29,6 +31,7 @@ object Types {
 //    def apply(value: String): DeviceId = NonEmptyString.unsafeFrom(value)
     def apply(value: String): String = value
     def unapply(value: String): Option[String] = Some(value)
+    def from(value: String): Either[String, String] = Right(value)
   }
 
   object NonEmptyStringImplicits {
@@ -64,5 +67,6 @@ object Types {
 //    given codec: JsonCodec[UrlString] = JsonCodec(encoder, decoder)
     def apply(value: String): String = value
     def unapply(value: String): Option[String] = Some(value)
+    def from(value: String): Either[String, String] = Right(value)
   }
 }

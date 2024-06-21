@@ -28,7 +28,7 @@ trait DeviceEndpoints extends BaseEndpoint {
     .tag("devices")
     .name("getPendingUpdates")
     .description("List all devices with pending updates")
-    .in("devices" / "updates")
+    .in("devices" / "updates" / "list")
     .get
     .out(jsonBody[List[PendingUpdate]])
 

@@ -21,10 +21,10 @@ class DeviceApi(
   val getPendingUpdatesEndpointImpl: ServerEndpoint[Any, Task] = getPendingUpdatesEndpoint.serverLogic(_ => getPendingUpdates().either)
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(
+    getPendingUpdatesEndpointImpl,
+    getPendingUpdateEndpointImpl,
     getDeviceEndpointImpl,
     listDevicesEndpointImpl,
-    getPendingUpdateEndpointImpl,
-    getPendingUpdatesEndpointImpl,
   )
 }
 

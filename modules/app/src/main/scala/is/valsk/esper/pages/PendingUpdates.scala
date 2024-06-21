@@ -7,50 +7,35 @@ import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, Name, UrlStri
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 import is.valsk.esper.domain.{Device, PendingUpdate, Version}
+import is.valsk.esper.http.endpoints.DeviceEndpoints
+import sttp.client3.UriContext
+import sttp.client3.impl.zio.FetchZioBackend
+import sttp.tapir.client.sttp.SttpClientInterpreter
+import zio.{Runtime, Unsafe, ZIO}
 
 object PendingUpdates {
 
-  val dummyPendingUpdates = List(
-    PendingUpdate(
-      device = Device(
-        id = DeviceId("10001"),
-        url = UrlString("http://localhost/iot/acme-door-sensor-3000-1"),
-        manufacturer = Manufacturer("ACME"),
-        model = Model("WS5000"),
-        name = Name("Window Sensor 5000"),
-        nameByUser = Some("Small window"),
-        softwareVersion = Some(Version("version1"))
-      ),
-      version = Version("version2")
-    ),
-    PendingUpdate(
-      device = Device(
-        id = DeviceId("10002"),
-        url = UrlString("http://localhost/iot/acme-door-sensor-3000-2"),
-        manufacturer = Manufacturer("ACME"),
-        model = Model("DS3000"),
-        name = Name("Door Sensor 3000"),
-        nameByUser = Some("Big door"),
-        softwareVersion = Some(Version("version10"))
-      ),
-      version = Version("version12")
-    ),
-    PendingUpdate(
-      device = Device(
-        id = DeviceId("10003"),
-        url = UrlString("http://localhost/iot/acme-door-sensor-3000-3"),
-        manufacturer = Manufacturer("ACME"),
-        model = Model("DS3000"),
-        name = Name("Door Sensor 3000"),
-        nameByUser = None,
-        softwareVersion = None
-      ),
-      version = Version("version12")
-    ),
-  )
+
+  private val pendingUpdateBus = EventBus[List[PendingUpdate]]()
+
+  def fetchPendingUpdates(): Unit = {
+    val pendingUpdateEndpoints = new DeviceEndpoints {}
+    val getPendingUpdates = pendingUpdateEndpoints.getPendingUpdatesEndpoint
+    val backend = FetchZioBackend()
+    val interpreter = SttpClientInterpreter()
+    val request = interpreter.toRequestThrowDecodeFailures(getPendingUpdates, Some(uri"http://localhost:9000")).apply(())
+    val pendingUpdatesZIO = backend.send(request).map(_.body).absolve
+    Unsafe.unsafe { implicit unsafe =>
+      Runtime.default.unsafe.fork(
+        pendingUpdatesZIO.tap(list => ZIO.attempt(pendingUpdateBus.emit(list)))
+      )
+    }
+    ()
+  }
 
   def apply(): ReactiveHtmlElement[HTMLElement] = {
     sectionTag(
+      onMountCallback(_ => fetchPendingUpdates()),
       cls := "section-1",
       div(
         cls := "container device-list-hero",
@@ -65,17 +50,11 @@ object PendingUpdates {
           cls := "row pending-update-body",
           div(
             cls := "col-md",
-            renderPendingUpdates()
+            children <-- pendingUpdateBus.events.map(_.map(renderPendingUpdate))
           )
         )
       )
     )
-  }
-
-  private def renderPendingUpdates() = {
-    dummyPendingUpdates.map { pendingUpdate =>
-      renderPendingUpdate(pendingUpdate)
-    }
   }
 
   private def renderManufacturerIcon(device: Device) =

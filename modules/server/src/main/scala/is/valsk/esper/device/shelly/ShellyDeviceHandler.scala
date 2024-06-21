@@ -16,6 +16,7 @@ import is.valsk.esper.services.HttpClient
 import zio.http.{Path, Request, URL}
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 import zio.{Chunk, IO, RLayer, Schedule, URLayer, ZIO, ZLayer, durationInt}
+import is.valsk.esper.RefinedTypeExtensions.refinedToString
 
 class ShellyDeviceHandler(
     serverConfig: HttpServerConfig,

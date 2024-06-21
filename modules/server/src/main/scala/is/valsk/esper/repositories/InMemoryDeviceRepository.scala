@@ -1,6 +1,5 @@
 package is.valsk.esper.repositories
 
-import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.Types.DeviceId
 import zio.*
@@ -20,7 +19,7 @@ object InMemoryDeviceRepository {
 
   val layer: ULayer[DeviceRepository] = ZLayer {
     for {
-      ref <- Ref.make(Map.empty[NonEmptyString, Device])
+      ref <- Ref.make(Map.empty[DeviceId, Device])
     } yield InMemoryDeviceRepository(ref)
   }
 }

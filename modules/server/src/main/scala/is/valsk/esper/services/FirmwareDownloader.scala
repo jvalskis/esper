@@ -26,7 +26,7 @@ object FirmwareDownloader {
     } yield firmware
 
     override def downloadFirmware(firmwareDescriptor: FirmwareDescriptor): IO[FirmwareDownloadError, Firmware] = for {
-      bytes <- httpClient.download(firmwareDescriptor.url.toString)
+      bytes <- httpClient.download(firmwareDescriptor.url)
         .run(ZSink.collectAll[Byte])
         .mapError(e => FirmwareDownloadFailed(e.getMessage, firmwareDescriptor.manufacturer, firmwareDescriptor.model, Some(e)))
       firmware = Firmware(
