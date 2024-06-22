@@ -1,7 +1,6 @@
 package is.valsk.esper.config
 
-import sttp.model.Uri
-import zio.{Config, ZIO, ZLayer}
+import zio.{Config, ZLayer}
 
 case class BackendClientConfig(
     uri: String

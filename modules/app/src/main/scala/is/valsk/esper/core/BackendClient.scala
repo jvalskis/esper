@@ -8,7 +8,7 @@ import sttp.client3.impl.zio.FetchZioBackend
 import sttp.client3.{Request, SttpBackend, UriContext}
 import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp.SttpClientInterpreter
-import zio.{Config, Layer, RLayer, Task, ULayer, URLayer, ZIO, ZLayer}
+import zio.{Config, Layer, Task, URLayer, ZIO, ZLayer}
 
 trait BackendClient {
   val devices: DeviceEndpoints

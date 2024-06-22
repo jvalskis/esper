@@ -4,7 +4,7 @@ import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain
-import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, UrlString}
+import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, Name, UrlString}
 import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.repositories.*
@@ -16,18 +16,18 @@ import java.io.IOException
 
 trait ApiSpec {
 
-  protected val nonExistentDeviceId: DeviceId = NonEmptyString.unsafeFrom("non-existent-device-id")
+  protected val nonExistentDeviceId: DeviceId = DeviceId("non-existent-device-id")
 
-  val manufacturer1: Manufacturer = Manufacturer.unsafeFrom("test-device-1")
-  val otherManufacturer: Manufacturer = Manufacturer.unsafeFrom("otherManufacturer")
-  val manufacturerWithFailingHandler: Manufacturer = Manufacturer.unsafeFrom("failing-manufacturer")
-  val unsupportedManufacturer: Manufacturer = Manufacturer.unsafeFrom("unsupported-manufacturer")
-  val model1: NonEmptyString = Model.unsafeFrom("model1")
-  val otherModel: NonEmptyString = Model.unsafeFrom("other-model")
+  val manufacturer1: Manufacturer = Manufacturer("test-device-1")
+  val otherManufacturer: Manufacturer = Manufacturer("otherManufacturer")
+  val manufacturerWithFailingHandler: Manufacturer = Manufacturer("failing-manufacturer")
+  val unsupportedManufacturer: Manufacturer = Manufacturer("unsupported-manufacturer")
+  val model1: NonEmptyString = Model("model1")
+  val otherModel: NonEmptyString = Model("other-model")
   protected val device1: Device = domain.Device(
-    id = NonEmptyString.unsafeFrom("id"),
-    url = UrlString.unsafeFrom("https://fake.url"),
-    name = NonEmptyString.unsafeFrom("name"),
+    id = DeviceId("id"),
+    url = UrlString("https://fake.url"),
+    name = Name("name"),
     nameByUser = Some("nameByUser"),
     model = model1,
     softwareVersion = Some(Version("softwareVersion")),

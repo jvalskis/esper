@@ -10,8 +10,9 @@
     --black: #000000;
     --white: #ffffff;
     --btn-focus: #1ed19a;
-    --hero-background-color: #110049;
     --btn-hover: #3aa6f7;
+    --btn-disabled: #b5cbc4;
+    --hero-background-color: #110049;
     --text-color: #233d7b;
     --bg-gradient: linear-gradient(
             45deg,
@@ -122,6 +123,13 @@ main .section-1 .pending-update-cards .pending-update-card-btn-apply button:focu
     background: var(--btn-focus);
 }
 
+main .section-1 .pending-update-cards .pending-update-card-btn-apply button:disabled {
+    background: var(--btn-disabled);
+}
+
+main .section-1 .pending-update-cards .container .row + .row {
+    margin-top: 1rem;
+}
 
 .device-detail {
     display: flex;
