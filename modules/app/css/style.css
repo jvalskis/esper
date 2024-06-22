@@ -75,7 +75,7 @@ main .section-1 .pending-update-cards .pending-update-card-contents h2 {
 main .section-1 .pending-update-cards .pending-update-card-btn-apply {
     position: relative;
     display: flex;
-    width: 20%;
+    width: 15%;
     float: right;
     justify-content: flex-end;
     align-items: center;

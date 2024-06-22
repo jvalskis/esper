@@ -1,18 +1,16 @@
 package is.valsk.esper.pages
 
-import com.raquo.airstream.ownership.OneTimeOwner
 import com.raquo.laminar.api.L.{*, given}
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import is.valsk.esper.components.Anchors
+import is.valsk.esper.components.ProgressBar.ProgressStatus
+import is.valsk.esper.components.{DeviceComponent, ProgressBar}
 import is.valsk.esper.core.BackendClient
 import is.valsk.esper.core.ZJS.*
-import is.valsk.esper.domain.DeviceStatus.UpdateStatus
-import is.valsk.esper.domain.{Device, FlashResult, PendingUpdate}
-import org.scalajs.dom
-import org.scalajs.dom.HTMLElement
-import is.valsk.esper.domain.RefinedTypeExtensions.refinedToString
+import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.domain.Types.DeviceId
-import zio.ZIO
+import is.valsk.esper.handlers.FlashProcessHandler
+import is.valsk.esper.handlers.FlashProcessHandler.*
+import org.scalajs.dom.HTMLElement
 
 import scala.language.implicitConversions
 
@@ -48,54 +46,28 @@ object PendingUpdates {
     )
   }
 
-  private def renderManufacturerIcon(device: Device) =
-    img(
-      cls := "img-fluid",
-      src := "TODO manufacturer placeholder",
-      alt := device.manufacturer
-    )
-
-  private def renderDetail(icon: String, value: String) =
+  private def renderPendingUpdate(id: (DeviceId, String), pendingUpdate: PendingUpdate, pendingUpdateSignal: Signal[PendingUpdate]) = {
+    val flashProgress = new FlashProcessHandler(pendingUpdate).progress
     div(
-      cls := "device-detail",
-      i(cls := s"fa $icon device-detail-icon"),
-      p(
-        cls := "device-detail-value",
-        value
+      cls := "pending-update-cards",
+      div(
+        cls := "container",
+        div(
+          cls := "row",
+          DeviceComponent(
+            device = pendingUpdate.device,
+            deviceSignal = pendingUpdateSignal.map(_.device),
+          )(
+            renderActionSlot = renderAction(pendingUpdate, flashProgress),
+            renderOverviewSlot = DeviceComponent.renderDetail("fa-sd-card yellow", s"${pendingUpdate.version.value}"),
+          ),
+        ),
+        renderProgress(flashProgress.signal)
       )
     )
-
-  private def renderOverview(update: PendingUpdate) =
-    div(
-      cls := "device-summary",
-      renderDetail("fa-microchip", s"${update.device.manufacturer} / ${update.device.model}"),
-      renderDetail("fa-sd-card", s"${update.device.softwareVersion.map(_.value).getOrElse("N/A")}"),
-      renderDetail("fa-sd-card yellow", s"${update.version.value}"),
-    )
-
-  trait Restartable {
-    self: FlashProgress =>
-    override def canStart: Boolean = true
   }
 
-  trait FlashProgress {
-    def canStart: Boolean = false
-    def progressValue: Double = 0
-  }
-
-  case object NotInProgress extends FlashProgress with Restartable
-
-  case object Start extends FlashProgress {
-    override def progressValue: Double = 10d
-  }
-
-  case class InProgress(override val progressValue: Double) extends FlashProgress
-
-  case class Done(result: Either[String, String]) extends FlashProgress with Restartable {
-    override def progressValue: Double = 100d
-  }
-
-  private def renderAction(pendingUpdate: PendingUpdate, flashProgress: Var[FlashProgress]) = {
+  private def renderAction(pendingUpdate: PendingUpdate, flashProgress: Var[FlashProgress]): ReactiveHtmlElement[HTMLElement] = {
     div(
       cls := "pending-update-card-btn-apply",
       button(
@@ -108,94 +80,36 @@ object PendingUpdates {
     )
   }
 
-  private def renderPendingUpdate(id: (DeviceId, String), pendingUpdate: PendingUpdate, pendingUpdateSignal: Signal[PendingUpdate]) = {
-    val flashProgress = Var[FlashProgress](NotInProgress)
-    flashProgress.signal.map(println).observe(new OneTimeOwner(() => ()))
-    flashProgress.signal.map {
-      case Start =>
-        useBackend(_.ota.flashDeviceEndpoint(pendingUpdate.device.id, pendingUpdate.version.value))
-          .map {
-            case FlashResult(_, currentVersion, UpdateStatus.done) => Done(Right(currentVersion.value))
-            case _ => InProgress(50)
-          }
-          .tapError(e => {
-            ZIO.attempt(flashProgress.set(Done(Left(e.getMessage))))
-          })
-          .setTo(flashProgress)
-      case _ => ()
-    }.observe(new OneTimeOwner(() => ()))
-    div(
-      cls := "pending-update-cards",
-      div(
-        cls := "container",
+  private def renderProgress(flashProgress: Signal[FlashProgress]) = {
+    val progressSignal = flashProgress.map {
+      case result@Done(Right(_)) => ProgressStatus(result.progressValue, "progress-bar bg-success")
+      case result@Done(Left(_)) => ProgressStatus(result.progressValue, "progress-bar bg-danger")
+      case result => ProgressStatus(result.progressValue)
+    }
+    child.maybe <-- flashProgress.map {
+      case NotInProgress => None
+      case flashProgress => Some(
         div(
           cls := "row",
           div(
-            cls := "col",
+            cls := "pending-update-card-progress",
             div(
-              cls := "pending-update-card-img",
-              renderManufacturerIcon(pendingUpdate.device)
-            ),
-            div(
-              cls := "pending-update-card-contents",
-              h5(
-                Anchors.renderNavLink(
-                  s"${pendingUpdate.device.name} ${pendingUpdate.device.nameByUser.fold("")(name => s" / $name")}",
-                  pendingUpdate.device.url,
-                  "device-title-link"
-                )
-              ),
-              renderOverview(pendingUpdate),
-            ),
-            renderAction(pendingUpdate, flashProgress),
-          )
-        ),
-        child.maybe <-- flashProgress.signal.map {
-          case NotInProgress => None
-          case x => Some(
-            div(
-              cls := "row",
-              div(
-                cls := "pending-update-card-progress",
-                div(
-                  cls := "pending-update-card-flash-progress",
-                  renderProgressBar(flashProgress.signal),
-                  x match {
-                    case Start => "Starting..."
-                    case InProgress(_) => "Flashing..."
-                    case Done(result) => result.fold(x => s"Error: $x", _ => "Done!")
-                    case _ => "Unknown?"
-                  }
-                )
-              )
+              cls := "pending-update-card-flash-progress",
+              ProgressBar(progressSignal),
+              renderProgressStatusInfo(flashProgress)
             )
           )
-        }
+        )
       )
-    )
+    }
   }
 
-  private def renderProgressBar(signal: StrictSignal[FlashProgress]) = {
-    val percentSignal = signal.map {
-      case Done(_) => 100d
-      case _ => 75d
+  private def renderProgressStatusInfo(flashProgress: FlashProgress) = {
+    flashProgress match {
+      case Start => "Starting..."
+      case InProgress(_) => "Flashing..."
+      case Done(result) => result.fold(x => s"Error: $x", _ => "Done!")
+      case _ => "Unknown?"
     }
-    div(
-      cls := "progress",
-      role := "progressbar",
-      aria.label := "Firmware flash process progress",
-      aria.valueNow <-- percentSignal,
-      aria.valueMin := 0,
-      aria.valueMax := 100,
-      div(
-        cls <-- signal
-          .map {
-            case Done(Left(_)) => "bg-danger"
-            case _ => ""
-          }
-          .map(value => s"$value progress-bar progress-bar-striped progress-bar-animated"),
-        width <-- percentSignal.map(value => s"$value%")
-      )
-    )
   }
 }
