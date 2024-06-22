@@ -11,6 +11,7 @@ import is.valsk.esper.domain.{Device, FlashResult, PendingUpdate}
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 import is.valsk.esper.domain.RefinedTypeExtensions.refinedToString
+import is.valsk.esper.domain.Types.DeviceId
 import zio.ZIO
 
 import scala.language.implicitConversions
@@ -40,7 +41,7 @@ object PendingUpdates {
           cls := "row pending-update-body",
           div(
             cls := "col-md",
-            children <-- pendingUpdateBus.events.map(_.map(renderPendingUpdate))
+            children <-- pendingUpdateBus.events.split(pendingUpdate => (pendingUpdate.device.id, pendingUpdate.version.value))(renderPendingUpdate)
           )
         )
       )
@@ -107,7 +108,7 @@ object PendingUpdates {
     )
   }
 
-  private def renderPendingUpdate(pendingUpdate: PendingUpdate) = {
+  private def renderPendingUpdate(id: (DeviceId, String), pendingUpdate: PendingUpdate, pendingUpdateSignal: Signal[PendingUpdate]) = {
     val flashProgress = Var[FlashProgress](NotInProgress)
     flashProgress.signal.map(println).observe(new OneTimeOwner(() => ()))
     flashProgress.signal.map {
