@@ -4,8 +4,7 @@ import is.valsk.esper.config.HttpServerConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import zio.http.*
-import zio.http.netty.NettyConfig
-import zio.{RLayer, Task, ULayer, URLayer, ZIO, ZLayer}
+import zio.{RLayer, Task, TaskLayer, ZIO, ZLayer}
 
 trait ApiServerApp {
   def run: Task[Unit]
@@ -14,13 +13,10 @@ trait ApiServerApp {
 object ApiServerApp {
   private class ApiServerAppLive(
       httpApi: HttpApi,
-      httpServerConfig: HttpServerConfig,
   ) extends ApiServerApp {
 
     def run: Task[Unit] = serverProgram.provide(
-      serverConfig,
-      nettyConfig,
-      Server.customized,
+      configuredServerLayer
     )
 
     private val serverProgram = for {
@@ -33,15 +29,14 @@ object ApiServerApp {
         ).toHttp(endpoints) @@ Middleware.debug
       )
     } yield ()
-
-    private val serverConfig: ULayer[Server.Config] =
-      ZLayer.succeed(Server.Config.default.binding(httpServerConfig.host, httpServerConfig.port))
-
-    private val nettyConfig: ULayer[NettyConfig] =
-      ZLayer.succeed(NettyConfig.default)
   }
 
-  val layer: URLayer[HttpServerConfig & HttpApi, ApiServerApp] = ZLayer.fromFunction(ApiServerAppLive(_, _))
+  private val serverConfig: RLayer[HttpServerConfig, Server.Config] = ZLayer {
+    ZIO.service[HttpServerConfig].map(config => Server.Config.default.binding(config.host, config.port))
+  }
 
-  val configuredLayer: RLayer[HttpApi, ApiServerApp] = HttpServerConfig.layer >>> layer
+  private val configuredServerLayer: TaskLayer[Server] =
+    HttpServerConfig.layer >>> serverConfig >>> Server.live
+
+  val configuredLayer: RLayer[HttpApi, ApiServerApp] = ZLayer.fromFunction(ApiServerAppLive(_))
 }
