@@ -2,8 +2,7 @@ package is.valsk.esper.core
 
 import is.valsk.esper.config.BackendClientConfig
 import is.valsk.esper.http.endpoints.{DeviceEndpoints, FirmwareEndpoints, OtaEndpoints}
-import sttp.capabilities.WebSockets
-import sttp.capabilities.zio.ZioStreams
+import sttp.client3.httpclient.zio.SttpClient
 import sttp.client3.impl.zio.FetchZioBackend
 import sttp.client3.{Request, SttpBackend, UriContext}
 import sttp.tapir.Endpoint
@@ -19,7 +18,7 @@ trait BackendClient {
 }
 
 class BackendClientLive(
-    backend: SttpBackend[Task, ZioStreams & WebSockets],
+    backend: SttpClient,
     interpreter: SttpClientInterpreter,
     config: BackendClientConfig,
 ) extends BackendClient {
@@ -37,10 +36,10 @@ class BackendClientLive(
 }
 
 object BackendClient {
-  val layer: URLayer[BackendClientConfig & SttpBackend[Task, ZioStreams with WebSockets] & SttpClientInterpreter, BackendClient] = ZLayer {
+  val layer: URLayer[BackendClientConfig & SttpClient & SttpClientInterpreter, BackendClient] = ZLayer {
     for {
       config <- ZIO.service[BackendClientConfig]
-      backend <- ZIO.service[SttpBackend[Task, ZioStreams with WebSockets]]
+      backend <- ZIO.service[SttpClient]
       interpreter <- ZIO.service[SttpClientInterpreter]
     } yield new BackendClientLive(backend, interpreter, config)
   }
