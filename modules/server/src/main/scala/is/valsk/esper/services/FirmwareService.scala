@@ -53,6 +53,7 @@ object FirmwareService {
           _ <- ZIO.logInfo(s"Downloading firmware version=$version for $manufacturer $model")
           firmware <- firmwareDownloader.downloadFirmware(manufacturer, model, version)(using manufacturerHandler)
           persistedFirmware <- persistFirmware(firmware)
+          _ <- ZIO.logInfo(s"Firmware version=$version for $manufacturer $model has been downloaded")
         } yield persistedFirmware
       }
     } yield firmware
