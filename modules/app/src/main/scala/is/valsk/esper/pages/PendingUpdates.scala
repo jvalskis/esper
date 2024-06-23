@@ -82,8 +82,8 @@ object PendingUpdates {
 
   private def renderProgress(flashProgress: Signal[FlashProgress]) = {
     val progressSignal = flashProgress.map {
-      case result@Done(Right(_)) => ProgressStatus(result.progressValue, "progress-bar bg-success")
-      case result@Done(Left(_)) => ProgressStatus(result.progressValue, "progress-bar bg-danger")
+      case result@Done(Right(_)) => ProgressStatus(result.progressValue, "bg-success")
+      case result@Done(Left(_)) => ProgressStatus(result.progressValue, "bg-danger")
       case result => ProgressStatus(result.progressValue)
     }
     child.maybe <-- flashProgress.map {

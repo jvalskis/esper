@@ -17,7 +17,8 @@ object ProgressBar {
       aria.valueMin := 0,
       aria.valueMax := 100,
       div(
-        cls <-- signal.map(value => s"${value.cls} progress-bar progress-bar-striped progress-bar-animated"),
+        cls := "progress-bar progress-bar-striped progress-bar-animated",
+        cls <-- signal.map(value => s"${value.cls}"),
         width <-- signal.map(value => s"${value.percent}%")
       )
     )
