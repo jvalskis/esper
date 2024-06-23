@@ -1,8 +1,9 @@
-package is.valsk.esper.services
+package is.valsk.esper
 
 import is.valsk.esper.config.ScheduleConfig
 import is.valsk.esper.domain.{DeviceModel, EsperError, PersistenceException}
 import is.valsk.esper.repositories.DeviceRepository
+import is.valsk.esper.services.FirmwareService
 import zio.Schedule.*
 import zio.{IO, RLayer, Random, Schedule, UIO, ZIO, ZLayer, durationInt}
 

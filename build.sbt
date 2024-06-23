@@ -12,7 +12,7 @@ ThisBuild / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 val zioVersion = "2.1.3"
 val zioJsonVersion = "0.7.0"
-val zioHttpVersion = "0.0.5"
+val zioHttpVersion = "3.0.0-RC8"
 val zioLoggingVersion = "2.3.0"
 val zioTestVersion = "2.1.3"
 val zioConfigVersion = "4.0.2"
@@ -80,7 +80,7 @@ lazy val app = (project in file("modules/app"))
                 "com.softwaremill.sttp.client3" %%% "zio" % sttpVersion,
                 "dev.zio" %%% "zio-json" % zioJsonVersion,
                 "eu.timepit" %% "refined" % refinedVersion,
-                //                "dev.zio" %%% "zio-config" % zioConfigVersion,// TODO enable when zio-config is awailable in scala3 + scalajs
+                //                "dev.zio" %%% "zio-config" % zioConfigVersion,// TODO enable when zio-config is available in scala3 + scalajs
                 //                "dev.zio" %%% "zio-config-magnolia" % zioConfigVersion,
                 "io.frontroute" %%% "frontroute" % "0.18.1" // Brings in Laminar 16
             ),
