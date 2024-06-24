@@ -1,6 +1,6 @@
 package is.valsk.esper
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L.*
 import frontroute.LinkHandler
 import is.valsk.esper.components.{Header, Router}
 import org.scalajs.dom

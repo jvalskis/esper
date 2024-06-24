@@ -1,10 +1,9 @@
 package is.valsk.esper.components
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.RefinedTypeExtensions.refinedToString
-import is.valsk.esper.handlers.FlashProcessHandler
 import org.scalajs.dom
 import org.scalajs.dom.{HTMLDivElement, HTMLElement}
 

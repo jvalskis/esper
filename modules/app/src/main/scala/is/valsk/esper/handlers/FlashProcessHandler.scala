@@ -1,8 +1,7 @@
 package is.valsk.esper.handlers
 
 import com.raquo.airstream.ownership.OneTimeOwner
-import com.raquo.laminar.api.L.{*, given}
-import is.valsk.esper.core.BackendClient
+import com.raquo.laminar.api.L.*
 import is.valsk.esper.core.ZJS.*
 import is.valsk.esper.domain.DeviceStatus.UpdateStatus
 import is.valsk.esper.domain.RefinedTypeExtensions.refinedToString

@@ -1,6 +1,6 @@
 package is.valsk.esper.pages
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import is.valsk.esper.components.ProgressBar.ProgressStatus
 import is.valsk.esper.components.{DeviceComponent, ProgressBar}
@@ -12,6 +12,7 @@ import is.valsk.esper.handlers.FlashProcessHandler
 import is.valsk.esper.handlers.FlashProcessHandler.*
 import org.scalajs.dom.HTMLElement
 
+import scala.annotation.nowarn
 import scala.language.implicitConversions
 
 object PendingUpdates {
@@ -46,7 +47,7 @@ object PendingUpdates {
     )
   }
 
-  private def renderPendingUpdate(id: (DeviceId, String), pendingUpdate: PendingUpdate, pendingUpdateSignal: Signal[PendingUpdate]) = {
+  private def renderPendingUpdate(@nowarn id: (DeviceId, String), pendingUpdate: PendingUpdate, pendingUpdateSignal: Signal[PendingUpdate]) = {
     val flashProgress = new FlashProcessHandler(pendingUpdate).progress
     div(
       cls := "pending-update-cards",
@@ -67,7 +68,7 @@ object PendingUpdates {
     )
   }
 
-  private def renderAction(pendingUpdate: PendingUpdate, flashProgress: Var[FlashProgress]): ReactiveHtmlElement[HTMLElement] = {
+  private def renderAction(@nowarn pendingUpdate: PendingUpdate, flashProgress: Var[FlashProgress]): ReactiveHtmlElement[HTMLElement] = {
     div(
       cls := "pending-update-card-btn-apply",
       button(

@@ -1,8 +1,7 @@
 package is.valsk.esper.components
 
-import com.raquo.laminar.api.L.{*, given}
+import com.raquo.laminar.api.L.*
 import com.raquo.laminar.nodes.ReactiveHtmlElement
-import is.valsk.esper.core.ZJS.*
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 
