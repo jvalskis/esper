@@ -27,7 +27,7 @@ import zio.logging.backend.SLF4J
 import zio.stream.ZStream
 import zio.config.typesafe.FromConfigSourceTypesafe
 
-object Main extends ZIOAppDefault {
+object Application extends ZIOAppDefault {
 
   override val bootstrap: URLayer[Any, Unit] = Runtime.removeDefaultLoggers >>> Runtime.setConfigProvider(ConfigProvider.fromResourcePath()) >>> SLF4J.slf4j
 
