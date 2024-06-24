@@ -2,6 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "is.valsk"
 ThisBuild / scalaVersion := "3.3.3"
 ThisBuild / scalacOptions ++= Seq(
+    "-Werror",
     "-Wunused:all",
     "-Wvalue-discard",
     "-unchecked",
@@ -107,4 +108,15 @@ lazy val root = (project in file("."))
         )
         .aggregate(server, app)
         .dependsOn(server, app)
+
+lazy val stagingBuild = (project in file("build/staging"))
+        .enablePlugins(JavaAppPackaging, DockerPlugin)
+        .settings(
+            name := "esper-staging",
+            dockerBaseImage := "openjdk:21-slim-buster",
+            dockerExposedPorts ++= Seq(9000),
+            Compile / mainClass := Some("is.valsk.esper.Application"),
+            Compile / resourceDirectory := (server / Compile / resourceDirectory).value
+        )
+        .dependsOn(server)
 

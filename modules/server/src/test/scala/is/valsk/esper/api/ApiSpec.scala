@@ -99,6 +99,8 @@ trait ApiSpec {
       override def add(device: Device): IO[PersistenceException, Device] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
       override def update(device: Device): IO[PersistenceException, Device] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
+      
+      override def delete(id: DeviceId): IO[PersistenceException, Unit] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
     }
   )
 
@@ -113,6 +115,8 @@ trait ApiSpec {
       override def add(device: PendingUpdate): IO[PersistenceException, PendingUpdate] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
       override def update(device: PendingUpdate): IO[PersistenceException, PendingUpdate] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
+      
+      override def delete(id: DeviceId): IO[PersistenceException, Unit] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
     }
   )
 
@@ -127,6 +131,8 @@ trait ApiSpec {
       override def add(firmware: Firmware): IO[PersistenceException, Firmware] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
       override def update(firmware: Firmware): IO[PersistenceException, Firmware] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
+
+      override def delete(id: FirmwareKey): IO[PersistenceException, Unit] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 
       override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]] = ZIO.fail(PersistenceException("message", Some(IOException("test"))))
 

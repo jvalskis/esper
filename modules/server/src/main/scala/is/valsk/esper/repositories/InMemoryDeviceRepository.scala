@@ -13,6 +13,8 @@ class InMemoryDeviceRepository(map: Ref[Map[DeviceId, Device]]) extends DeviceRe
   override def add(device: Device): UIO[Device] = map.update(map => map + (device.id -> device)).as(device)
 
   override def update(device: Device): UIO[Device] = map.update(map => map + (device.id -> device)).as(device)
+  
+  override def delete(id: DeviceId): UIO[Unit] = map.update(map => map - id).unit
 }
 
 object InMemoryDeviceRepository {

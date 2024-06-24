@@ -14,6 +14,8 @@ class InMemoryManufacturerRepository(map: Ref[Map[Manufacturer, DeviceHandler]])
   override def add(value: DeviceHandler): UIO[DeviceHandler] = map.update(map => map + (value.supportedManufacturer -> value)).as(value)
 
   override def update(value: DeviceHandler): IO[PersistenceException, DeviceHandler] = map.update(map => map + (value.supportedManufacturer -> value)).as(value)
+  
+  override def delete(manufacturer: Manufacturer): IO[PersistenceException, Unit] = map.update(map => map - manufacturer).unit
 }
 
 object InMemoryManufacturerRepository {

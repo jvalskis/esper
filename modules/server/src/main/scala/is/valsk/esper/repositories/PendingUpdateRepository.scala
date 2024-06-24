@@ -93,7 +93,9 @@ object PendingUpdateRepository {
         .mapError(e => PersistenceException(e.getMessage, Some(e)))
         .map(_ => value)
     }
-
+    
+    override def delete(id: DeviceId): IO[EntityNotFound | PersistenceException, Unit] = ???
+    
     private def map(value: PendingUpdate): PendingUpdateDto = {
       PendingUpdateDto(
         id = value.device.id,

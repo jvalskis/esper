@@ -11,14 +11,15 @@ class InMemoryPendingUpdateRepository(
 
   override def getAll: UIO[List[PendingUpdate]] = map.get.map(_.values.toList)
 
-  override def add(pendingUpdate: PendingUpdate): IO[PersistenceException, PendingUpdate] = for {
-    _ <- map.update(map => map + (pendingUpdate.device.id -> pendingUpdate))
-  } yield pendingUpdate
-
-  override def update(pendingUpdate: PendingUpdate): IO[PersistenceException, PendingUpdate] = for {
-    _ <- map.update(map => map + (pendingUpdate.device.id -> pendingUpdate))
-  } yield pendingUpdate
-
+  override def add(pendingUpdate: PendingUpdate): IO[PersistenceException, PendingUpdate] =
+    map.update(map => map + (pendingUpdate.device.id -> pendingUpdate)).as(pendingUpdate)
+    
+  override def update(pendingUpdate: PendingUpdate): IO[PersistenceException, PendingUpdate] = 
+    map.update(map => map + (pendingUpdate.device.id -> pendingUpdate)).as(pendingUpdate)  
+    
+  override def delete(id: DeviceId): IO[PersistenceException, Unit] =
+    map.update(map => map - id).unit
+    
   override def getOpt(id: DeviceId): UIO[Option[PendingUpdate]] = map.get.map(_.get(id))
 
 }

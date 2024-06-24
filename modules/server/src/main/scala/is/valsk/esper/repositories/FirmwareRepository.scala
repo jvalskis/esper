@@ -87,6 +87,8 @@ object FirmwareRepository {
     }
 
     override def update(value: Firmware): IO[PersistenceException, Firmware] = ???
+    
+    override def delete(key: FirmwareKey): IO[PersistenceException, Unit] = ???
   }
 
   val live: URLayer[Quill.Postgres[SnakeCase], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_))

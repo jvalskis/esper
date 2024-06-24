@@ -20,6 +20,10 @@ class InMemoryFirmwareRepository(
   override def update(firmware: Firmware): IO[PersistenceException, Firmware] = for {
     _ <- map.update(map => map + (FirmwareKey(firmware) -> firmware))
   } yield firmware
+  
+  override def delete(id: FirmwareKey): IO[PersistenceException, Unit] = for {
+    _ <- map.update(map => map - id)
+  } yield ()
 
   override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): UIO[Option[Firmware]] = for {
     firmwares <- map.get.map(_.values)

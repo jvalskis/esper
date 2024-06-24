@@ -18,4 +18,6 @@ trait Repository[K, R] {
   def add(value: R): IO[PersistenceException, R]
 
   def update(value: R): IO[EntityNotFound | PersistenceException, R]
+  
+  def delete(id: K): IO[EntityNotFound | PersistenceException, Unit]
 }
