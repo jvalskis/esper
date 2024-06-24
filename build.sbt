@@ -91,7 +91,9 @@ lazy val app = (project in file("modules/app"))
             semanticdbEnabled := true,
             autoAPIMappings := true,
             scalaJSUseMainModuleInitializer := true,
-            Compile / mainClass := Some("is.valsk.esper.App")
+            Compile / mainClass := Some("is.valsk.esper.App"),
+            // Normalize output of fastOptJS and fullOptJS
+            Compile / fastOptJS / artifactPath := ((Compile / fastOptJS / crossTarget).value / ((fastOptJS / moduleName).value + "-opt.js"))
         )
         .enablePlugins(ScalaJSPlugin)
         .dependsOn(common.js)
