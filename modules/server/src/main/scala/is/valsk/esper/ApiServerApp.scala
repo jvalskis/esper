@@ -21,22 +21,27 @@ object ApiServerApp {
 
     private val serverProgram = for {
       endpoints <- httpApi.endpointsZIO
-      _ <- Server.serve(
+      _ <- ZIO.logInfo("Starting the server...")
+      _ <- Server.install(
         ZioHttpInterpreter(
           ZioHttpServerOptions.default.appendInterceptor(
             CORSInterceptor.default
           )
         ).toHttp(endpoints) @@ Middleware.debug
       )
-    } yield ()
+      _ <- ZIO.service[Server.Config]
+        .flatMap(config => ZIO.logInfo(s"Server started. Listening on address '${config.address}'"))
+        .provide(configuredServerConfigLayer)
+      result <- ZIO.never
+    } yield result
   }
 
-  private val serverConfig: RLayer[HttpServerConfig, Server.Config] = ZLayer {
+  private val configuredServerConfigLayer: TaskLayer[Server.Config] = HttpServerConfig.layer >>> ZLayer {
     ZIO.service[HttpServerConfig].map(config => Server.Config.default.binding(config.host, config.port))
   }
 
   private val configuredServerLayer: TaskLayer[Server] =
-    HttpServerConfig.layer >>> serverConfig >>> Server.live
+    configuredServerConfigLayer >>> Server.live
 
   val configuredLayer: RLayer[HttpApi, ApiServerApp] = ZLayer.fromFunction(ApiServerAppLive(_))
 }
