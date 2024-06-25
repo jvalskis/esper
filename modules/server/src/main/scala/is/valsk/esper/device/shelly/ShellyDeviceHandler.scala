@@ -2,18 +2,18 @@ package is.valsk.esper.device.shelly
 
 import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.config.HttpServerConfig
+import is.valsk.esper.device.DeviceHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
-import is.valsk.esper.domain.DeviceStatus.UpdateStatus
 import is.valsk.esper.device.shelly.ShellyDeviceHandler.{ApiEndpoints, ShellyFirmwareEntry}
 import is.valsk.esper.device.shelly.api.Ota
 import is.valsk.esper.device.shelly.api.Ota.decoder
-import is.valsk.esper.device.DeviceHandler
 import is.valsk.esper.domain.*
+import is.valsk.esper.domain.DeviceStatus.UpdateStatus
 import is.valsk.esper.domain.Types.{Manufacturer, Model, UrlString}
 import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.services.HttpClient
-import zio.http.{Path, Request, URL}
+import zio.http.{Path, URL}
 import zio.json.{DeriveJsonDecoder, JsonDecoder}
 import zio.{Chunk, IO, RLayer, Schedule, URLayer, ZIO, ZLayer, durationInt}
 
@@ -137,7 +137,7 @@ class ShellyDeviceHandler(
         .map(_.setQueryParams("url" -> Chunk.succeed(resolveGetFirmwareEndpoint(firmware))))
         .mapError(e => ApiCallFailed("Failed to form the request URL", device, Some(e)))
       _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Url: $otaUrl")
-      response <- httpClient.getJson[Ota](Request.get(otaUrl))
+      response <- httpClient.getJson[Ota](otaUrl.toJavaURI.toString)
         .logError("Failed to flash firmware")
         .mapError(e => ApiCallFailed(e.getMessage, device, Some(e)))
       _ <- ZIO.logInfo(s"Flashing firmware to device: ${device.id} (${device.name}). Response: $response")
