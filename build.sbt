@@ -72,6 +72,7 @@ lazy val common = crossProject(JVMPlatform, JSPlatform)
             )
         )
 
+val publish = taskKey[Unit]("Publish app")
 lazy val app = (project in file("modules/app"))
         .settings(
             libraryDependencies ++= Seq(
@@ -93,7 +94,30 @@ lazy val app = (project in file("modules/app"))
             scalaJSUseMainModuleInitializer := true,
             Compile / mainClass := Some("is.valsk.esper.App"),
             // Normalize output of fastOptJS and fullOptJS
-            Compile / fastOptJS / artifactPath := ((Compile / fastOptJS / crossTarget).value / ((fastOptJS / moduleName).value + "-opt.js"))
+            Seq(fastOptJS, fullOptJS).map(task =>
+                Compile / task / artifactPath := ((Compile / task / crossTarget).value / "main.js"),
+            ),
+            cleanFiles ++= Seq(
+                baseDirectory.value / "dist-prod",
+                baseDirectory.value / "dist",
+            ),
+
+            publish := {
+                // Generate Scala.js JS output for production
+                (Compile / fullOptJS).value
+
+                // Install JS dependencies from package-lock.json
+                val npmCiExitCode = Process("npm ci", cwd = baseDirectory.value).!
+                if (npmCiExitCode > 0) {
+                    throw new IllegalStateException(s"npm ci failed. See above for reason")
+                }
+
+                // Build the frontend with vite
+                val buildExitCode = Process("npm run build-prod", cwd = baseDirectory.value).!
+                if (buildExitCode > 0) {
+                    throw new IllegalStateException(s"Building frontend failed. See above for reason")
+                }
+            }
         )
         .enablePlugins(ScalaJSPlugin)
         .dependsOn(common.js)

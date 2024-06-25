@@ -39,3 +39,4 @@ metals.sbt
 /modules/app/.parcel-cache
 /modules/app/dist
 /modules/app/node_modules
+/modules/app/dist-prod/
