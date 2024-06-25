@@ -10,30 +10,25 @@ services:
       - POSTGRES_PASSWORD=${ESPER_DATABASE_PASSWORD}
     ports:
       - 5432:5432
-    volumes:
-      - ./src/main/resources/sql:/docker-entrypoint-initdb.d/:ro
-  esper_api:
-    build:
-      context: esper-api
-      args:
-        - VERSION=${IMAGE_ESPER_VERSION}
-    image: jvalskis/esper-api:${IMAGE_ESPER_VERSION}
+  esper:
+    image: esper:${IMAGE_ESPER_VERSION}
     restart: always
     ports:
       - 9000:9000
     environment:
       - HASS_WEBSOCKET_URL
       - HASS_ACCESS_TOKEN
+      - ESPER_DATABASE_NAME
       - ESPER_DATABASE_USER
       - ESPER_DATABASE_PASSWORD
-      - ESPER_DATABASE_NAME
-      - ESPER_DATABASE_SERVER
-  esper_gui:
-    build:
-      context: esper-gui
-    image: jvalskis/esper-gui:${IMAGE_ESPER_VERSION}
-    restart: always
-    ports:
-      - 8080:8080
-    environment:
-      - ESPER_API_ADDRESS
+      - ESPER_DATABASE_URL
+      - ESPER_MAIL_SMTP_HOST
+      - ESPER_MAIL_SMTP_PORT
+      - ESPER_MAIL_SMTP_TLS
+      - ESPER_MAIL_SMTP_SSL
+      - ESPER_MAIL_SMTP_USERNAME
+      - ESPER_MAIL_SMTP_PASSWORD
+      - ESPER_MAIL_SMTP_FROM
+      - ESPER_MAIL_SMTP_RECIPIENTS
+      - ESPER_PORT
+      - ESPER_HOST

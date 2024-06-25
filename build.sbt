@@ -1,3 +1,5 @@
+import scala.sys.process.Process
+
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "is.valsk"
 ThisBuild / scalaVersion := "3.3.3"
@@ -64,6 +66,7 @@ lazy val common = crossProject(JVMPlatform, JSPlatform)
         .crossType(CrossType.Pure)
         .in(file("modules/common"))
         .settings(
+            name := "esper-common",
             libraryDependencies ++= commonDependencies
         )
         .jsSettings(
@@ -71,6 +74,9 @@ lazy val common = crossProject(JVMPlatform, JSPlatform)
                 "io.github.cquiroz" %%% "scala-java-time" % "2.5.0" // implementations of java.time classes for Scala.JS,
             )
         )
+
+val publishLocalImage = taskKey[Unit]("Packages all artifacts and creates a Docker image")
+val buildJS = taskKey[Unit]("Build JS")
 
 lazy val app = (project in file("modules/app"))
         .settings(
@@ -93,32 +99,73 @@ lazy val app = (project in file("modules/app"))
             scalaJSUseMainModuleInitializer := true,
             Compile / mainClass := Some("is.valsk.esper.App"),
             // Normalize output of fastOptJS and fullOptJS
-            Compile / fastOptJS / artifactPath := ((Compile / fastOptJS / crossTarget).value / ((fastOptJS / moduleName).value + "-opt.js"))
+            Seq(fastOptJS, fullOptJS).map(task =>
+                Compile / task / artifactPath := ((Compile / task / crossTarget).value / "main.js"),
+            ),
+            cleanFiles ++= Seq(
+                baseDirectory.value / "dist-prod",
+                baseDirectory.value / "dist",
+            ),
+
+            buildJS := {
+                // Generate Scala.js JS output for production
+                (Compile / fullOptJS).value
+
+                // Install JS dependencies from package-lock.json
+                val npmCiExitCode = Process("npm ci", cwd = baseDirectory.value).!
+                if (npmCiExitCode > 0) {
+                    throw new IllegalStateException(s"npm ci failed. See above for reason")
+                }
+
+                // Build the frontend with vite
+                val buildExitCode = Process("npm run build-prod", cwd = baseDirectory.value).!
+                if (buildExitCode > 0) {
+                    throw new IllegalStateException(s"Building frontend failed. See above for reason")
+                }
+            },
         )
         .enablePlugins(ScalaJSPlugin)
         .dependsOn(common.js)
 
+lazy val packagedApp = (project in file("build/packaged-app"))
+        .enablePlugins(JavaAppPackaging)
+        .settings(
+            name := "esper-app",
+            Compile / unmanagedResourceDirectories += (app / baseDirectory).value / "dist-prod",
+            publishLocalImage := {
+                Def.sequential(
+                    app / buildJS,
+                    publishLocal,
+                ).value
+            },
+        )
+
 lazy val server = (project in file("modules/server"))
         .settings(
-            libraryDependencies ++= serverDependencies
+            name := "esper-server",
+            libraryDependencies ++= serverDependencies,
         )
         .dependsOn(common.jvm)
 
 lazy val root = (project in file("."))
         .settings(
             name := "esper",
+            Compile / doc / sources := Seq.empty,
+            Compile / packageDoc / publishArtifact := false,
         )
         .aggregate(server, app)
         .dependsOn(server, app)
 
+
 lazy val stagingBuild = (project in file("build/staging"))
         .enablePlugins(JavaAppPackaging, DockerPlugin)
         .settings(
-            name := "esper-staging",
             dockerBaseImage := "openjdk:21-slim-buster",
             dockerExposedPorts ++= Seq(9000),
             Compile / mainClass := Some("is.valsk.esper.Application"),
-            Compile / resourceDirectory := (server / Compile / resourceDirectory).value
+            publishLocalImage := {
+                (Docker / publishLocal).value
+            },
         )
-        .dependsOn(server)
-
+        .dependsOn(server, packagedApp)
+        .aggregate(server, packagedApp)
