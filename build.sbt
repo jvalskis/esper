@@ -156,10 +156,10 @@ lazy val root = (project in file("."))
         .aggregate(server, app)
         .dependsOn(server, app)
 
-
 lazy val stagingBuild = (project in file("build/staging"))
         .enablePlugins(JavaAppPackaging, DockerPlugin)
         .settings(
+            name := "esper",
             dockerBaseImage := "openjdk:21-slim-buster",
             dockerExposedPorts ++= Seq(9000),
             Compile / mainClass := Some("is.valsk.esper.Application"),
