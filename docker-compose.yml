@@ -11,7 +11,7 @@ services:
     ports:
       - 5432:5432
   esper:
-    image: esper:${IMAGE_ESPER_VERSION}
+    image: jvalskis/esper:${IMAGE_ESPER_VERSION}
     restart: always
     ports:
       - 9000:9000

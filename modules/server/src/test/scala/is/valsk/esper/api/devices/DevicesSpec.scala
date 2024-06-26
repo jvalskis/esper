@@ -22,7 +22,7 @@ trait DevicesSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/devices/$deviceId")
+      .get(uri"/api/devices/$deviceId")
       .send(backendStub)
   } yield response
 
@@ -34,7 +34,7 @@ trait DevicesSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/devices/updates/$deviceId")
+      .get(uri"/api/devices/updates/$deviceId")
       .send(backendStub)
   } yield response
 
@@ -46,7 +46,7 @@ trait DevicesSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/devices/updates/list")
+      .get(uri"/api/devices/updates/list")
       .send(backendStub)
   } yield response
 
@@ -58,7 +58,7 @@ trait DevicesSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/devices")
+      .get(uri"/api/devices")
       .send(backendStub)
   } yield response
 }
