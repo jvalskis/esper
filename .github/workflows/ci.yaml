@@ -110,7 +110,5 @@ jobs:
       - name: Release
         run: sbt 'release with-defaults release-version ${{ github.event.release.tag_name }}'
         env:
-          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_REPOSITORY: ${{ secrets.DOCKER_REPOSITORY }}
