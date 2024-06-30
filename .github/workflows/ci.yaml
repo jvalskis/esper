@@ -1,0 +1,111 @@
+name: CI
+env:
+  JDK_JAVA_OPTIONS: -XX:+PrintCommandLineFlags
+'on':
+  workflow_dispatch: {}
+  release:
+    types:
+      - published
+  push: {}
+  pull_request:
+    branches-ignore:
+      - gh-pages
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && github.run_id || github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+      - name: Install libuv
+        run: sudo apt-get update && sudo apt-get install -y libuv1-dev
+      - name: Setup Scala
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+          check-latest: true
+      - name: Cache Dependencies
+        uses: coursier/cache-action@v6
+      - name: Check all code compiles
+        run: sbt +Test/compile
+      - name: Check artifacts build process
+        run: sbt +publishLocal
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        java:
+          - '11'
+          - '17'
+          - '21'
+    steps:
+      - name: Install libuv
+        run: sudo apt-get update && sudo apt-get install -y libuv1-dev
+      - name: Setup Scala
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: ${{ matrix.java }}
+          check-latest: true
+      - name: Cache Dependencies
+        uses: coursier/cache-action@v6
+      - name: Git Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+      - name: Test
+        run: sbt +test
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    needs:
+      - test
+      - build
+    steps:
+      - name: Report Successful CI
+        run: echo "ci passed"
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    continue-on-error: false
+    needs:
+      - ci
+    if: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+      - name: Install libuv
+        run: sudo apt-get update && sudo apt-get install -y libuv1-dev
+      - name: Setup Scala
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: '17'
+          check-latest: true
+      - name: Cache Dependencies
+        uses: coursier/cache-action@v6
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2.2.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Release
+        run: sbt release with-defaults release-version ${{ github.event.release.tag_name }}
+        env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

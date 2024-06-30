@@ -60,7 +60,7 @@ trait FirmwareSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/firmware/$manufacturer/$model/list")
+      .get(uri"/api/firmware/$manufacturer/$model/list")
       .send(backendStub)
   } yield response
 
@@ -72,7 +72,7 @@ trait FirmwareSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/firmware/$manufacturer/$model")
+      .get(uri"/api/firmware/$manufacturer/$model")
       .send(backendStub)
   } yield response
 
@@ -84,7 +84,7 @@ trait FirmwareSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/firmware/$manufacturer/$model/${version.value}")
+      .get(uri"/api/firmware/$manufacturer/$model/${version.value}")
       .send(backendStub)
   } yield response
 
@@ -96,7 +96,7 @@ trait FirmwareSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .post(uri"/firmware/$manufacturer/$model")
+      .post(uri"/api/firmware/$manufacturer/$model")
       .send(backendStub)
   } yield response
 
@@ -108,7 +108,7 @@ trait FirmwareSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .post(uri"/firmware/$manufacturer/$model/${version.value}")
+      .post(uri"/api/firmware/$manufacturer/$model/${version.value}")
       .send(backendStub)
   } yield response
 

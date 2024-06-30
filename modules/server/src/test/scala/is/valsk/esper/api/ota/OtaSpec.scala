@@ -92,7 +92,7 @@ trait OtaSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/ota/$deviceId/version")
+      .get(uri"/api/ota/$deviceId/version")
       .send(backendStub)
   } yield response
 
@@ -104,7 +104,7 @@ trait OtaSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .get(uri"/ota/$deviceId/status")
+      .get(uri"/api/ota/$deviceId/status")
       .send(backendStub)
   } yield response
 
@@ -116,7 +116,7 @@ trait OtaSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .post(uri"/ota/$deviceId/flash")
+      .post(uri"/api/ota/$deviceId/flash")
       .send(backendStub)
   } yield response
 
@@ -128,7 +128,7 @@ trait OtaSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .post(uri"/ota/$deviceId/flash/${version.value}")
+      .post(uri"/api/ota/$deviceId/flash/${version.value}")
       .send(backendStub)
   } yield response
 
@@ -140,7 +140,7 @@ trait OtaSpec extends ApiSpec {
         .backend()
     )
     response <- basicRequest
-      .post(uri"/ota/$deviceId/restart")
+      .post(uri"/api/ota/$deviceId/restart")
       .send(backendStub)
   } yield response
 
