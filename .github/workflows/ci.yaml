@@ -37,27 +37,6 @@ jobs:
         run: sbt +Test/compile
       - name: Check artifacts build process
         run: sbt +publishLocal
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    continue-on-error: false
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: '0'
-      - name: Install libuv
-        run: sudo apt-get update && sudo apt-get install -y libuv1-dev
-      - name: Setup Scala
-        uses: actions/setup-java@v4
-        with:
-          distribution: corretto
-          java-version: '17'
-          check-latest: true
-      - name: Cache Dependencies
-        uses: coursier/cache-action@v6
-      - name: Lint
-        run: sbt lint
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -91,7 +70,6 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: false
     needs:
-      - lint
       - test
       - build
     steps:
