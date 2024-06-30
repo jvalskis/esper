@@ -157,7 +157,6 @@ lazy val root = (project in file("."))
       runTest,
       setReleaseVersion,
       commitReleaseVersion,
-      tagRelease,
       releaseStepTask(stagingBuild / Docker / publish),
       setNextVersion,
       commitNextVersion,
