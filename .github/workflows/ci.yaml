@@ -86,7 +86,7 @@ jobs:
       - name: Git Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: master
           fetch-depth: '0'
       - name: Install libuv
         run: sudo apt-get update && sudo apt-get install -y libuv1-dev
