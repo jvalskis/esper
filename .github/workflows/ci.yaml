@@ -22,7 +22,7 @@ jobs:
       - name: Git Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: '0'
+          ref: ${{ github.ref }}
       - name: Install libuv
         run: sudo apt-get update && sudo apt-get install -y libuv1-dev
       - name: Setup Scala
