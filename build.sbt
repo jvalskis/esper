@@ -104,7 +104,6 @@ lazy val app = (project in file("modules/app"))
       Compile / task / artifactPath := ((Compile / task / crossTarget).value / "main.js"),
     ),
     cleanFiles ++= Seq(
-      baseDirectory.value / "dist-prod",
       baseDirectory.value / "dist",
     ),
 
@@ -123,7 +122,7 @@ lazy val app = (project in file("modules/app"))
       if (buildExitCode > 0) {
         throw new IllegalStateException(s"Building frontend failed. See above for reason")
       }
-      baseDirectory.value / "dist-prod"
+      baseDirectory.value / "target" / "staging"
     },
   )
   .enablePlugins(ScalaJSPlugin)
@@ -133,7 +132,7 @@ lazy val stagingApp = (project in file("build/staging-app"))
   .enablePlugins(JavaAppPackaging)
   .settings(
     name := "esper-app",
-    Compile / unmanagedResourceDirectories += (app / baseDirectory).value / "dist-prod",
+    Compile / unmanagedResourceDirectories += (app / baseDirectory).value / "target" / "staging",
     publishLocal := publishLocal.dependsOn(app / stage).value
   )
 
@@ -163,7 +162,7 @@ lazy val root = (project in file("."))
       pushChanges
     )
   )
-  .aggregate(server, app, stagingBuild)
+  .aggregate(server, app, stagingBuild, stagingApp)
   .dependsOn(server, app)
 
 lazy val stagingBuild = (project in file("build/staging"))
@@ -181,4 +180,3 @@ lazy val stagingBuild = (project in file("build/staging"))
     ).value
   )
   .dependsOn(server, stagingApp)
-  .aggregate(server, stagingApp)
