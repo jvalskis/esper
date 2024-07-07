@@ -6,7 +6,7 @@
 #
 image:
   # -- image repository
-  repository: jvalskis/esper-app
+  repository: jvalskis/esper
   # -- image tag
   # @default -- chart.appVersion
   tag:
@@ -20,7 +20,7 @@ strategy:
 # @default -- See below
 env:
   # -- Service hostname
-  ESPER_HOST: "localhost"
+  ESPER_HOST: "0.0.0.0"
   # -- Service port
   ESPER_PORT: 80
   # -- Home assistant websocket
@@ -34,7 +34,7 @@ env:
   # -- Postgres database
   ESPER_DATABASE_NAME: "esper"
   # -- Postgres host
-  ESPER_DATABASE_SERVER: "esper-postgresql"
+  ESPER_DATABASE_URL: "jdbc:postgresql://db:5432/esper"
   # -- Postgres port
   ESPER_DATABASE_PORT: 5432
   # -- Value in seconds for how long to wait for a Shelly device to flash firmware
