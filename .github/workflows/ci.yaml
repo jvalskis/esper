@@ -1,13 +1,17 @@
 name: CI
 env:
   JDK_JAVA_OPTIONS: -XX:+PrintCommandLineFlags
-'on':
+on:
   workflow_dispatch: {}
   release:
     types:
       - published
-  push: {}
+  push:
+    paths-ignore:
+      - "charts/esper/**"
   pull_request:
+    paths-ignore:
+      - "charts/esper/**"
     branches-ignore:
       - gh-pages
 concurrency:
