@@ -133,7 +133,7 @@ lazy val stagingApp = (project in file("build/staging-app"))
   .settings(
     name := "esper-app",
     Compile / unmanagedResourceDirectories += (app / baseDirectory).value / "target" / "staging",
-    publishLocal := publishLocal.dependsOn(app / stage).value
+    publishLocal := publishLocal.dependsOn(app / stage).value,
   )
 
 lazy val server = (project in file("modules/server"))
@@ -176,6 +176,9 @@ lazy val stagingBuild = (project in file("build/staging"))
     dockerUpdateLatest := true,
     Compile / mainClass := Some("is.valsk.esper.Application"),
     Docker / publishLocal := (Docker / publishLocal).dependsOn(
+      stagingApp / publishLocal
+    ).value,
+    Docker / publish := (Docker / publish).dependsOn(
       stagingApp / publishLocal
     ).value
   )
