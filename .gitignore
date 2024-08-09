@@ -41,3 +41,4 @@ metals.sbt
 /modules/app/dist
 /modules/app/node_modules
 /modules/app/dist-prod/
+/charts/esper/charts/
