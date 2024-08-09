@@ -3,6 +3,32 @@ entries:
   esper:
   - apiVersion: v2
     appVersion: 0.2.0
+    created: "2024-08-09T14:07:39.554848381Z"
+    dependencies:
+    - name: common
+      repository: https://bjw-s.github.io/helm-charts/
+      version: 3.3.1
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 15.5.21
+    description: Esper is an IOT device firmware manager
+    digest: 692d060b6f35323b7b6f2577a8064bb5a1d47920b9a533946fe8029ac99d0d81
+    home: https://github.com/jvalskis/esper/tree/master/charts/esper
+    keywords:
+    - esper
+    kubeVersion: '>=1.16.0-0'
+    maintainers:
+    - name: jvalskis
+      url: https://github.com/jvalskis
+    name: esper
+    sources:
+    - https://github.com/jvalskis/esper
+    urls:
+    - https://github.com/jvalskis/esper/releases/download/esper-chart-3.0.0/esper-3.0.0.tgz
+    version: 3.0.0
+  - apiVersion: v2
+    appVersion: 0.2.0
     created: "2024-07-07T20:23:55.157506619Z"
     dependencies:
     - name: common
@@ -157,4 +183,4 @@ entries:
     urls:
     - https://github.com/jvalskis/esper/releases/download/esper-1.0.0/esper-1.0.0.tgz
     version: 1.0.0
-generated: "2024-07-07T20:23:55.157534611Z"
+generated: "2024-08-09T14:07:39.554867857Z"
