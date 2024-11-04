@@ -2,30 +2,25 @@ package is.valsk.esper
 
 import io.getquill.SnakeCase
 import io.getquill.jdbczio.Quill
-import is.valsk.esper.api.{ApiServerApp, HttpApi}
 import is.valsk.esper.api.devices.DeviceApi
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.api.firmware.FirmwareApi
 import is.valsk.esper.api.firmware.endpoints.*
 import is.valsk.esper.api.ota.OtaApi
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
-import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
+import is.valsk.esper.api.{ApiServerApp, HttpApi}
 import is.valsk.esper.device.shelly.ShellyDeviceHandler
-import is.valsk.esper.device.{DeviceHandler, DeviceManufacturerHandler, DeviceProxyRegistry}
-import is.valsk.esper.domain.DeviceStatus.UpdateStatus
-import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, Name, UrlString}
-import is.valsk.esper.domain.{Device, DeviceApiError, DeviceStatus, Firmware, FirmwareDownloadError, FlashResult, MalformedVersion, SemanticVersion, Version}
+import is.valsk.esper.device.{DeviceHandler, DeviceProxyRegistry}
+import is.valsk.esper.hass.HassWebsocketApp
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, MessageParser, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
-import is.valsk.esper.hass.HassWebsocketApp
-import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.repositories.*
 import is.valsk.esper.services.*
 import zio.*
+import zio.config.typesafe.FromConfigSourceTypesafe
 import zio.logging.backend.SLF4J
 import zio.stream.ZStream
-import zio.config.typesafe.FromConfigSourceTypesafe
 
 object Application extends ZIOAppDefault {
 
@@ -33,79 +28,8 @@ object Application extends ZIOAppDefault {
 
   def program: ZIO[ManufacturerRepository & DeviceRepository & HassWebsocketApp & ApiServerApp & LatestFirmwareMonitorApp & FlywayService, Throwable, Unit] = for {
     _ <- ZIO.logInfo("Starting application...")
-    _ <- fillDummyData
     _ <- runMigrations
     _ <- startApplication
-  } yield ()
-
-  private def fillDummyData: ZIO[ManufacturerRepository & DeviceRepository, Throwable, Unit] = for {
-    manufacturerRepository <- ZIO.service[ManufacturerRepository]
-    deviceRepository <- ZIO.service[DeviceRepository]
-    _ <- deviceRepository.add(Device(
-      id = DeviceId("10001"),
-      url = UrlString("http://localhost/iot/acme-door-sensor-3000-1"),
-      manufacturer = Manufacturer("ACME"),
-      model = Model("WS5000"),
-      name = Name("Window Sensor 5000"),
-      nameByUser = Some("Small window"),
-      softwareVersion = Some(Version("version1"))
-    ))
-    _ <- deviceRepository.add(Device(
-      id = DeviceId("10002"),
-      url = UrlString("http://localhost/iot/acme-door-sensor-3000-2"),
-      manufacturer = Manufacturer("ACME"),
-      model = Model("DS3000"),
-      name = Name("Door Sensor 3000"),
-      nameByUser = Some("Big door"),
-      softwareVersion = Some(Version("version10"))
-    ))
-    _ <- deviceRepository.add(Device(
-      id = DeviceId("10003"),
-      url = UrlString("http://localhost/iot/acme-door-sensor-3000-3"),
-      manufacturer = Manufacturer("ACME"),
-      model = Model("DS3000"),
-      name = Name("Door Sensor 3000"),
-      nameByUser = None,
-      softwareVersion = None
-    ))
-    _ <- deviceRepository.add(Device(
-      id = DeviceId("sh-100001"),
-      url = UrlString("http://localhost/iot/shelly-dw-1"),
-      manufacturer = Manufacturer("Shelly"),
-      model = Model("SHDW-2"),
-      name = Name("Shelly Door/Window sensor"),
-      nameByUser = Some("Bedroom / Window"),
-      softwareVersion = None
-    ))
-    _ <- manufacturerRepository.add(new DeviceHandler {
-      override def supportedManufacturer: Manufacturer = Manufacturer("ACME")
-
-      override def getFirmwareDownloadDetails(manufacturer: Manufacturer, model: Model, version: Option[Version]): IO[FirmwareDownloadError, DeviceManufacturerHandler.FirmwareDescriptor] = ZIO.succeed(FirmwareDescriptor(
-        manufacturer = manufacturer,
-        model = model,
-        version = Version("version2"),
-        url = UrlString("http://localhost/acme-firmware"),
-      ))
-
-      override def versionOrdering: Ordering[Version] = SemanticVersion.Ordering
-
-      override def getCurrentFirmwareVersion(device: Device): IO[DeviceApiError, Version] = ZIO.succeed(Version("version1"))
-
-      override def flashFirmware(device: Device, firmware: Firmware): IO[DeviceApiError, FlashResult] = ZIO.succeed(
-        FlashResult(
-          previousVersion = Version("version1"),
-          currentVersion = Version("version2"),
-          updateStatus = UpdateStatus.done)
-      )
-
-      override def getDeviceStatus(device: Device): IO[DeviceApiError, DeviceStatus] = ZIO.succeed(DeviceStatus(UpdateStatus.done))
-
-      override def restartDevice(device: Device): IO[DeviceApiError, Unit] = ZIO.unit
-
-      override def toDomain(hassDevice: HassResult): IO[MalformedVersion | MessageParser.ParseError, Device] = ???
-
-      override def parseVersion(version: String): Either[MalformedVersion, Version] = Right(Version(version))
-    })
   } yield ()
 
   private def runMigrations: RIO[FlywayService, Unit] = for {
