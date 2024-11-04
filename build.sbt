@@ -16,7 +16,7 @@ ThisBuild / testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 val zioVersion = "2.1.11"
 val zioJsonVersion = "0.7.0"
-val zioHttpVersion = "3.0.0-RC8"
+val zioHttpVersion = "3.0.1"
 val zioLoggingVersion = "2.3.0"
 val zioTestVersion = "2.1.3"
 val zioConfigVersion = "4.0.2"
