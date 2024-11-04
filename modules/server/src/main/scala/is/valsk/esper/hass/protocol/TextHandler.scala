@@ -17,6 +17,7 @@ class TextHandler(
   override def get: PartialChannelHandler = {
     case (channel, Read(WebSocketFrame.Text(json))) =>
       val result = for {
+        _ <- ZIO.logDebug(json)
         parsedMessage <- messageParser.parseMessage(json)
         _ <- handleHassMessages(HassResponseMessageContext(channel, parsedMessage))
       } yield ()

@@ -17,6 +17,7 @@ case class HassResult(
     configuration_url: Option[String],
     hw_version: Option[String],
     model: Option[String],
+    model_id: Option[String],
     name: String,
     name_by_user: Option[String],
     sw_version: Option[String],

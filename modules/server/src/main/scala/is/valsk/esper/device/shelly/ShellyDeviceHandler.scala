@@ -23,7 +23,6 @@ class ShellyDeviceHandler(
     httpClient: HttpClient,
 ) extends DeviceHandler {
 
-  private val hardwareAndModelRegex = "(.+) \\((.+)\\)".r
   private val shellyApiVersionPattern = ".*?/(v.*?)[-@]\\w+".r
 
   val supportedManufacturer: Manufacturer = Manufacturer("Shelly")
@@ -35,7 +34,7 @@ class ShellyDeviceHandler(
 
   override def toDomain(hassDevice: HassResult): IO[MalformedVersion | ParseError, Device] = {
     val device: IO[MalformedVersion | String, Device] = for {
-      refinedModel <- ZIO.fromEither(resolveModel(hassDevice))
+      refinedModel <- ZIO.fromEither(hassDevice.model_id.map(Model.from).getOrElse(Left("Model Id is empty")))
       refinedUrl <- ZIO.fromEither(hassDevice.configuration_url.map(UrlString.from).getOrElse(Left("Configuration URL is empty")))
       refinedId <- ZIO.fromEither(NonEmptyString.from(hassDevice.id))
       refinedName <- ZIO.fromEither(NonEmptyString.from(hassDevice.name))
@@ -94,17 +93,6 @@ class ShellyDeviceHandler(
       .replace("{{file}}", firmwareEntry.file)
       .replace("{{version}}", firmwareEntry.version.value)
   )
-
-  private def resolveModel(hassDevice: HassResult): Either[String, Model] = {
-    hassDevice.hw_version
-      .flatMap {
-        case hardwareAndModelRegex(_, model) => Some(model)
-        case _ => None
-      }
-      .map(Right(_))
-      .getOrElse(Left("Invalid hw_version format"))
-      .flatMap(Model.from)
-  }
 
   private def callOta(device: Device): IO[DeviceApiError, Ota] = {
     val endpoint = ApiEndpoints.ota(device.url)
