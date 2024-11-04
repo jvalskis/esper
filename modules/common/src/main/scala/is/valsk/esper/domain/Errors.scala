@@ -10,7 +10,7 @@ sealed trait FirmwareDownloadError extends Exception with EsperError
 
 case class DeviceNotFound(deviceId: DeviceId) extends EsperError
 
-case class FailedToSendEmail(cause: Option[Throwable] = None) extends Exception("Failed to send email", cause.orNull) with EsperError
+case class EmailDeliveryError(message: String, cause: Throwable) extends Exception("Failed to send email", cause) with EsperError
 
 case class ManufacturerNotSupported(manufacturer: Manufacturer) extends Exception(s"Manufacturer not supported: $manufacturer") with EsperError with FirmwareDownloadError
 

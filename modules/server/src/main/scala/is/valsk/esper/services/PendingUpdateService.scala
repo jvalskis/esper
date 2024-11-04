@@ -5,7 +5,7 @@ import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository, PendingUpdateRepository}
 import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus
 import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus.LatestFirmwareStatus
-import zio.{IO, URLayer, ZIO, ZLayer}
+import zio.{IO, Task, UIO, URLayer, ZIO, ZLayer}
 
 trait PendingUpdateService {
 
@@ -28,32 +28,41 @@ object PendingUpdateService {
       emailService: EmailService,
   ) extends PendingUpdateService {
 
-    def deviceAdded(device: Device): IO[EsperError, Unit] = for {
-      _ <- ZIO.logInfo("Checking device firmware status after new device was added...")
-      _ <- checkDeviceVersion(device)
-    } yield ()
-
-    def deviceRemoved(device: Device): IO[EsperError, Unit] = {
+    def deviceAdded(device: Device): UIO[Unit] = {
+      for {
+        _ <- ZIO.logInfo("Checking device firmware status after new device was added...")
+        _ <- checkDeviceVersion(device)
+      } yield ()
+    }.catchAll(e =>
+        ZIO.logError(s"Failed to send email: $e")
+    )
+    
+    def deviceRemoved(device: Device): UIO[Unit] = {
       ZIO.unit
     }
 
-    def deviceUpdated(device: Device): IO[EsperError, Unit] = {
+    def deviceUpdated(device: Device): UIO[Unit] = {
       ZIO.unit
     }
 
-    def firmwareDownloaded(firmware: Firmware): IO[EsperError, Unit] = for {
-      _ <- ZIO.logInfo("Checking device firmware status after new firmware was downloaded...")
-      devices <- deviceRepository.getAll
-        .map(_.filter(device => device.manufacturer == firmware.manufacturer && device.model == firmware.model))
-      result <- ZIO.foreach(devices)(checkDeviceVersion)
-      _ <- sendNotificationIfNeeded(result.flatten)
-    } yield ()
+    def firmwareDownloaded(firmware: Firmware): UIO[Unit] = {
+      for {
+        _ <- ZIO.logInfo("Checking device firmware status after new firmware was downloaded...")
+        devices <- deviceRepository.getAll
+          .map(_.filter(device => device.manufacturer == firmware.manufacturer && device.model == firmware.model))
+        result <- ZIO.foreach(devices)(checkDeviceVersion)
+        _ <- sendNotificationIfNeeded(result.flatten)
+      } yield ()
+    }.catchAll {
+      case EmailDeliveryError(message, _) =>
+        ZIO.logError(s"Failed to send email: $message")
+    }
 
-    private def sendNotificationIfNeeded(pendingUpdates: List[PendingUpdate]): IO[FailedToSendEmail, Unit] = pendingUpdates match {
+    private def sendNotificationIfNeeded(pendingUpdates: List[PendingUpdate]): Task[Unit] = pendingUpdates match {
       case Nil => ZIO.unit
       case updates => for {
         _ <- ZIO.logInfo(s"Sending firmware update notifications for ${updates.size} devices...")
-        _ <- sendEmail(updates)
+        _ <- sendEmail(updates).retryN(3)
       } yield ()
     }
 
@@ -91,7 +100,7 @@ object PendingUpdateService {
       }
     } yield status
 
-    private def sendEmail(updates: List[PendingUpdate]): IO[FailedToSendEmail, Unit] = {
+    private def sendEmail(updates: List[PendingUpdate]): Task[Unit] = {
       emailService
         .sendEmail(
           subject = s"Esper: there are ${updates.size} pending updates",
@@ -103,8 +112,6 @@ object PendingUpdateService {
                |</ul>
                |""".stripMargin
         )
-        .mapError(e => FailedToSendEmail(Some(e)))
-        .logError
     }
   }
 
