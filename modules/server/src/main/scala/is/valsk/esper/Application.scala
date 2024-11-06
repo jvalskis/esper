@@ -45,7 +45,7 @@ object Application extends ZIOAppDefault {
     periodicLatestFirmwareDownloadApp <- ZIO.service[LatestFirmwareMonitorApp]
     _ <- ZStream
       .mergeAllUnbounded(16)(
-        ZStream.fromZIO(hassWebsocketApp.run).retry(Schedule.fixed(1000.seconds)),
+        ZStream.fromZIO(hassWebsocketApp.run).retry(Schedule.forever),
         ZStream.fromZIO(apiServerApp.run),
         ZStream.fromZIO(periodicLatestFirmwareDownloadApp.run),
       )
