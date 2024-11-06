@@ -7,7 +7,7 @@ import is.valsk.esper.hass.messages.responses.*
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import is.valsk.esper.repositories.{DeviceRepository, ManufacturerRepository}
 import is.valsk.esper.services.PendingUpdateService
-import zio.*
+import zio.{Queue, *}
 import zio.http.*
 
 class ResultHandler(
@@ -44,7 +44,6 @@ class ResultHandler(
 
   private def addDeviceToRegistry(domainDevice: Device): IO[EsperError, Unit] = for {
     _ <- deviceRepository.add(domainDevice)
-    _ <- pendingUpdateService.deviceAdded(domainDevice)
     _ <- ZIO.logInfo(s"Updated device registry with device: $domainDevice")
   } yield ()
 }

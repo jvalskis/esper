@@ -11,12 +11,16 @@ import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDevice
 import is.valsk.esper.api.{ApiServerApp, HttpApi}
 import is.valsk.esper.device.shelly.ShellyDeviceHandler
 import is.valsk.esper.device.{DeviceHandler, DeviceProxyRegistry}
+import is.valsk.esper.event.{DeviceEvent, DeviceEventDispatcher, DeviceEventListener, FirmwareEvent, FirmwareEventDispatcher, FirmwareEventListener}
 import is.valsk.esper.hass.HassWebsocketApp
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, MessageParser, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
+import is.valsk.esper.listeners.CheckForPendingUpdatesOnFirmwareAddedListener
+import is.valsk.esper.listeners.CheckForPendingUpdatesOnFirmwareAddedListener.CheckForPendingUpdatesOnFirmwareAddedListenerLive
 import is.valsk.esper.repositories.*
 import is.valsk.esper.services.*
+import is.valsk.esper.services.CheckForPendingUpdatesOnDeviceAddedListener.CheckForPendingUpdatesOnDeviceAddedListenerLive
 import zio.*
 import zio.config.typesafe.FromConfigSourceTypesafe
 import zio.logging.backend.SLF4J
@@ -73,6 +77,30 @@ object Application extends ZIOAppDefault {
       shellyDeviceHandler <- ZIO.service[ShellyDeviceHandler]
     } yield Seq(
       shellyDeviceHandler
+    )
+  }
+
+  private val deviceEventListenerLayer: ULayer[Seq[DeviceEventListener]] = ZLayer {
+    {
+      for {
+        listener <- ZIO.service[CheckForPendingUpdatesOnDeviceAddedListenerLive]
+      } yield Seq(
+        listener
+      )
+    }.provide(
+      CheckForPendingUpdatesOnDeviceAddedListener.layer
+    )
+  }
+
+  private val firmwareEventListenerLayer: ULayer[Seq[FirmwareEventListener]] = ZLayer {
+    {
+      for {
+        listener <- ZIO.service[CheckForPendingUpdatesOnFirmwareAddedListenerLive]
+      } yield Seq(
+        listener
+      )
+    }.provide(
+      CheckForPendingUpdatesOnFirmwareAddedListener.layer
     )
   }
 
@@ -141,6 +169,14 @@ object Application extends ZIOAppDefault {
       // Other
       HttpClient.configuredLayer,
       quillPostgresLayer,
+
+      // Events
+      ZLayer.fromZIO(Queue.unbounded[FirmwareEvent]),
+      ZLayer.fromZIO(Queue.unbounded[DeviceEvent]),
+      deviceEventListenerLayer,
+      firmwareEventListenerLayer,
+      FirmwareEventDispatcher.layer,
+      DeviceEventDispatcher.layer,
     )
     .onError(cause =>
       val effect = if (cause.failures.exists(_.isInstanceOf[Config.Error])) {

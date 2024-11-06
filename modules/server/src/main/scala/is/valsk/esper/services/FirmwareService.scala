@@ -85,12 +85,7 @@ object FirmwareService {
       }
     } yield firmware
 
-    private def persistFirmware(firmware: Firmware) = for {
-      firmware <- firmwareRepository
-        .add(firmware)
-        .logError("Failed to persist firmware")
-      _ <- pendingUpdateService.firmwareDownloaded(firmware)
-    } yield firmware
+    private def persistFirmware(firmware: Firmware) = firmwareRepository.add(firmware)
   }
 
   val layer: URLayer[FirmwareRepository & ManufacturerRepository & FirmwareDownloader & PendingUpdateService, FirmwareService] = ZLayer.fromFunction(FirmwareServiceLive(_, _, _, _))

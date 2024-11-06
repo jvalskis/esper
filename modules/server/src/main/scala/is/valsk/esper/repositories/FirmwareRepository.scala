@@ -5,6 +5,7 @@ import io.getquill.jdbczio.Quill
 import io.getquill.*
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
+import is.valsk.esper.event.{FirmwareDownloaded, FirmwareEvent}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
 
@@ -20,6 +21,7 @@ trait FirmwareRepository extends Repository[FirmwareKey, Firmware] {
 object FirmwareRepository {
   private class FirmwareRepositoryLive(
       quill: Quill.Postgres[SnakeCase],
+      firmwareEventQueue: Queue[FirmwareEvent],
   ) extends FirmwareRepository {
 
     import quill.*
@@ -59,9 +61,12 @@ object FirmwareRepository {
           .insertValue(lift(firmware))
           .returning(fw => fw)
       }
-      run(q)
-        .mapError(e => PersistenceException(e.getMessage, Some(e)))
-        .map(_ => firmware)
+      for {
+        persistedFirmware <- run(q)
+          .mapError(e => PersistenceException(e.getMessage, Some(e)))
+          .map(_ => firmware)
+        _ <- firmwareEventQueue.offer(FirmwareDownloaded(firmware))
+      } yield firmware
     }
 
     override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]] = for {
@@ -91,7 +96,7 @@ object FirmwareRepository {
     override def delete(key: FirmwareKey): IO[PersistenceException, Unit] = ???
   }
 
-  val live: URLayer[Quill.Postgres[SnakeCase], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_))
+  val live: URLayer[Quill.Postgres[SnakeCase] & Queue[FirmwareEvent], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_, _))
 
   case class FirmwareKey(
       manufacturer: Manufacturer,
