@@ -35,7 +35,7 @@ controllers:
           # -- Postgres user
           ESPER_DATABASE_USER: "esper"
           # -- Postgres password
-          ESPER_DATABASE_PASSWORD: "password"
+          #  ESPER_DATABASE_PASSWORD: "password"
           # -- Postgres database
           ESPER_DATABASE_NAME: "esper"
           # -- Postgres host
@@ -47,9 +47,9 @@ controllers:
           # -- SMTP port
           #  ESPER_MAIL_SMTP_PORT:
           # -- SMTP tls enabled
-          #  ESPER_MAIL_SMTP_TLS:
+          #  ESPER_MAIL_SMTP_TLS: false
           # -- SMTP ssl enabled
-          #  ESPER_MAIL_SMTP_SSL:
+          #  ESPER_MAIL_SMTP_SSL: false
           # -- SMTP username
           #  ESPER_MAIL_SMTP_USERNAME:
           # -- SMTP password
