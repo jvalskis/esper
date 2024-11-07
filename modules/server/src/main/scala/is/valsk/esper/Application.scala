@@ -173,13 +173,16 @@ object Application extends ZIOAppDefault {
       HttpClient.configuredLayer,
       quillPostgresLayer,
 
-      // Events
-      ZLayer.fromZIO(Queue.unbounded[FirmwareEvent]),
+      // Device Events
       ZLayer.fromZIO(Queue.unbounded[DeviceEvent]),
+      DeviceEventProducer.layer,
       deviceEventListenerLayer,
+      DeviceEventDispatcher.layer,
+      // Firmware Events
+      ZLayer.fromZIO(Queue.unbounded[FirmwareEvent]),
+      FirmwareEventProducer.layer,
       firmwareEventListenerLayer,
       FirmwareEventDispatcher.layer,
-      DeviceEventDispatcher.layer,
     )
     .onError(cause =>
       val effect = if (cause.failures.exists(_.isInstanceOf[Config.Error])) {

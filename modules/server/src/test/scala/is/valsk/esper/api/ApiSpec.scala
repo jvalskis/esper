@@ -4,13 +4,14 @@ import eu.timepit.refined.types.string.NonEmptyString
 import is.valsk.esper.device.DeviceManufacturerHandler
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain
-import is.valsk.esper.domain.Types.{DeviceId, Manufacturer, Model, Name, UrlString}
 import is.valsk.esper.domain.*
-import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
+import is.valsk.esper.domain.Types.*
+import is.valsk.esper.event.{DeviceEvent, DeviceEventProducer}
 import is.valsk.esper.repositories.*
+import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import is.valsk.esper.services.{EmailService, FirmwareDownloader}
 import zio.mock.Mock
-import zio.{IO, Ref, Task, ULayer, URIO, URLayer, ZIO, ZLayer, mock}
+import zio.{IO, Queue, Ref, Task, UIO, ULayer, URIO, URLayer, ZIO, ZLayer, mock}
 
 import java.io.IOException
 
@@ -38,10 +39,27 @@ trait ApiSpec {
     version = Version("version"),
   )
 
-  val stubDeviceRepository: ULayer[DeviceRepository] = ZLayer {
+  val stubDeviceRepository: URLayer[DeviceEventProducer, DeviceRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, Device])
-    } yield InMemoryDeviceRepository(ref)
+      eventProducer <- ZIO.service[DeviceEventProducer]
+    } yield InMemoryDeviceRepository(ref, eventProducer)
+  }
+
+  class DeviceEventProducerProbe(db: Ref[Seq[DeviceEvent]], val eventQueue: Queue[DeviceEvent]) extends DeviceEventProducer {
+
+    override def produceEvent(event: DeviceEvent): UIO[Unit] = for {
+      _ <- db.update(_ :+ event)
+    } yield ()
+
+    def probeInvocations: Ref[Seq[DeviceEvent]] = db
+  }
+
+  val stubDeviceEventProducer: ULayer[DeviceEventProducerProbe] = ZLayer {
+    for {
+      ref <- Ref.make(Seq.empty[DeviceEvent])
+      queue <- Queue.unbounded[DeviceEvent]
+    } yield DeviceEventProducerProbe(ref, queue)
   }
 
   class FirmwareDownloaderProbe(db: Ref[Seq[FirmwareDescriptor]]) extends FirmwareDownloader {

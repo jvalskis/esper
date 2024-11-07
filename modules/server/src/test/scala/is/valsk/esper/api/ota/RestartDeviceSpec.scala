@@ -11,16 +11,15 @@ import is.valsk.esper.hass.messages.responses.HassResult
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
 import is.valsk.esper.services.*
 import sttp.model.StatusCode
-import zio.*
 import zio.mock.{Expectation, Mock}
 import zio.test.*
 import zio.test.Assertion.*
+import zio.{ZLayer, *}
 
 object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
 
   def spec = suite("RestartDeviceSpec")(
     test("Return a 404 (Not Found) if the device does not exist") {
-      val mockEmailService = MockEmailService.empty
       val mockDeviceHandler = MockDeviceHandler.empty
       {
         for {
@@ -33,13 +32,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
       }
         .provide(
           stubDeviceRepository,
-          stubPendingUpdateRepository,
           InMemoryManufacturerRepository.layer,
           InMemoryFirmwareRepository.layer,
           FirmwareService.layer,
           stubFirmwareDownloader,
-          PendingUpdateService.layer,
-          mockEmailService,
           RestartDevice.layer,
           GetDeviceStatus.layer,
           FlashDevice.layer,
@@ -54,11 +50,11 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
             } yield Seq(
               mockDeviceHandler,
             )
-          }
+          },
+          stubDeviceEventProducer,
         )
     },
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
-      val mockEmailService = MockEmailService.empty
       val mockDeviceHandler = MockDeviceHandler.empty
       {
         for {
@@ -70,13 +66,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
       }
         .provide(
           stubDeviceRepositoryThatThrowsException,
-          stubPendingUpdateRepository,
           InMemoryManufacturerRepository.layer,
           InMemoryFirmwareRepository.layer,
           FirmwareService.layer,
           stubFirmwareDownloader,
-          PendingUpdateService.layer,
-          mockEmailService,
           RestartDevice.layer,
           GetDeviceStatus.layer,
           FlashDevice.layer,
@@ -91,11 +84,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
             } yield Seq(
               mockDeviceHandler,
             )
-          }
+          },
         )
     },
     test("Fail with 412 (Precondition Failed) when device manufacturer is not supported") {
-      val mockEmailService = MockEmailService.empty
       val mockDeviceHandler = MockDeviceHandler.empty
       {
         for {
@@ -108,13 +100,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
       }
         .provide(
           stubDeviceRepository,
-          stubPendingUpdateRepository,
           InMemoryManufacturerRepository.layer,
           InMemoryFirmwareRepository.layer,
           FirmwareService.layer,
           stubFirmwareDownloader,
-          PendingUpdateService.layer,
-          mockEmailService,
           RestartDevice.layer,
           GetDeviceStatus.layer,
           FlashDevice.layer,
@@ -129,11 +118,11 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
             } yield Seq(
               mockDeviceHandler,
             )
-          }
+          },
+          stubDeviceEventProducer,
         )
     },
     test("Fail with 502 (Bad Gateway) when there is an exception while calling the device") {
-      val mockEmailService = MockEmailService.empty
       val mockDeviceHandler = MockDeviceHandler.Restart(
         assertion = Assertion.equalTo(device1),
         result = Expectation.failure(ApiCallFailed("error", device1))
@@ -149,13 +138,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
       }
         .provide(
           stubDeviceRepository,
-          stubPendingUpdateRepository,
           InMemoryManufacturerRepository.layer,
           InMemoryFirmwareRepository.layer,
           FirmwareService.layer,
           stubFirmwareDownloader,
-          PendingUpdateService.layer,
-          mockEmailService,
           RestartDevice.layer,
           GetDeviceStatus.layer,
           FlashDevice.layer,
@@ -170,11 +156,11 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
             } yield Seq(
               mockDeviceHandler,
             )
-          }
+          },
+          stubDeviceEventProducer,
         )
     },
     test("Restart the device") {
-      val mockEmailService = MockEmailService.empty
       val mockDeviceHandler = MockDeviceHandler.Restart(
         assertion = Assertion.equalTo(device1),
         result = Expectation.unit
@@ -187,13 +173,10 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
       }
         .provide(
           stubDeviceRepository,
-          stubPendingUpdateRepository,
           InMemoryManufacturerRepository.layer,
           InMemoryFirmwareRepository.layer,
           FirmwareService.layer,
           stubFirmwareDownloader,
-          PendingUpdateService.layer,
-          mockEmailService,
           RestartDevice.layer,
           GetDeviceStatus.layer,
           FlashDevice.layer,
@@ -208,7 +191,8 @@ object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
             } yield Seq(
               mockDeviceHandler,
             )
-          }
+          },
+          stubDeviceEventProducer,
         )
     },
   )

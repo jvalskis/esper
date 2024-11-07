@@ -20,7 +20,7 @@ object SemanticVersionSuite extends ZIOSpecDefault {
       ("1.0.1-suffix", "1.0.1", 1),
       ("1.0.1-suffix", "1.0.2", -1),
       ("1.0.1-suffix", "1.0.1-suffix1", -1),
-    ).map((testCase _).tupled)
+    ).map(testCase.tupled)
   ))
 
   private def testCase(string1: String, string2: String, expected: Int): Spec[Any, Nothing] = {

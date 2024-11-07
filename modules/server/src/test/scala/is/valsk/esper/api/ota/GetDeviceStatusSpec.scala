@@ -1,12 +1,12 @@
 package is.valsk.esper.api.ota
 
-import is.valsk.esper.api.devices.GetDeviceSpec.test
+import is.valsk.esper.api.devices.GetDeviceSpec.{stubDeviceEventProducer, test}
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
 import is.valsk.esper.device.*
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.DeviceStatus.UpdateStatus
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService}
 import sttp.model.StatusCode
 import zio.*
 import zio.json.*
@@ -59,9 +59,6 @@ object GetDeviceStatusSpec extends ZIOSpecDefault with OtaSpec {
       InMemoryFirmwareRepository.layer,
       FirmwareService.layer,
       stubFirmwareDownloader,
-      PendingUpdateService.layer,
-      stubPendingUpdateRepository,
-      MockEmailService.empty,
       RestartDevice.layer,
       GetDeviceStatus.layer,
       FlashDevice.layer,
@@ -70,9 +67,9 @@ object GetDeviceStatusSpec extends ZIOSpecDefault with OtaSpec {
       OtaApi.layer,
       DeviceProxyRegistry.layer,
       stubManufacturerRegistryLayer,
+      stubDeviceEventProducer,
     ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
-      val mockEmailService = MockEmailService.empty
       {
         for {
           response <- getDeviceStatus(device1.id)
@@ -86,9 +83,6 @@ object GetDeviceStatusSpec extends ZIOSpecDefault with OtaSpec {
         InMemoryFirmwareRepository.layer,
         FirmwareService.layer,
         stubFirmwareDownloader,
-        PendingUpdateService.layer,
-        stubPendingUpdateRepository,
-        mockEmailService,
         RestartDevice.layer,
         GetDeviceStatus.layer,
         FlashDevice.layer,
@@ -97,6 +91,7 @@ object GetDeviceStatusSpec extends ZIOSpecDefault with OtaSpec {
         OtaApi.layer,
         DeviceProxyRegistry.layer,
         stubManufacturerRegistryLayer,
+//        stubDeviceEventProducer,
       )
     }
   )

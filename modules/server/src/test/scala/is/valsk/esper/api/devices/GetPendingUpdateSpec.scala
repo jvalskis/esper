@@ -1,6 +1,6 @@
 package is.valsk.esper.api.devices
 
-import is.valsk.esper.api.devices.GetDeviceSpec.{nonExistentDeviceId, test}
+import is.valsk.esper.api.devices.GetDeviceSpec.{nonExistentDeviceId, stubDeviceEventProducer, test}
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.DeviceRepository
@@ -20,7 +20,7 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with DevicesSpec {
           response <- getPendingUpdate(nonExistentDeviceId)
         } yield {
           assert(response.code)(equalTo(StatusCode.NotFound)) &&
-          assert(response.body.swap.toOption)(isSome(equalTo("Not found")))
+            assert(response.body.swap.toOption)(isSome(equalTo("Not found")))
         }
       },
       test("Return the pending update") {
@@ -41,13 +41,14 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with DevicesSpec {
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
+        stubDeviceEventProducer,
       ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the pending update") {
       for {
         response <- getPendingUpdate(device1.id)
       } yield {
         assert(response.code)(equalTo(StatusCode.InternalServerError)) &&
-        assert(response.body.swap.toOption)(isSome(equalTo("message")))
+          assert(response.body.swap.toOption)(isSome(equalTo("message")))
       }
     }
       .provide(
@@ -58,6 +59,7 @@ object GetPendingUpdateSpec extends ZIOSpecDefault with DevicesSpec {
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
+        stubDeviceEventProducer,
       ),
   )
 }

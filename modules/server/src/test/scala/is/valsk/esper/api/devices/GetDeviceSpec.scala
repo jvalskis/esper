@@ -3,7 +3,7 @@ package is.valsk.esper.api.devices
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.devices.endpoints.{GetDevice, GetPendingUpdate, GetPendingUpdates, ListDevices}
 import is.valsk.esper.domain.Device
-import is.valsk.esper.repositories.InMemoryPendingUpdateRepository
+import is.valsk.esper.repositories.{InMemoryPendingUpdateRepository, PendingUpdateRepository}
 import sttp.model.StatusCode
 import zio.*
 import zio.json.DecoderOps
@@ -11,7 +11,7 @@ import zio.test.*
 import zio.test.Assertion.*
 
 object GetDeviceSpec extends ZIOSpecDefault with DevicesSpec {
-
+Clock.ClockLive
   def spec = suite("GetDeviceSpec")(
     suite("Normal flow")(
       test("Return a 404 (Not Found) if the device does not exist") {
@@ -41,6 +41,7 @@ object GetDeviceSpec extends ZIOSpecDefault with DevicesSpec {
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
         InMemoryPendingUpdateRepository.layer,
+        stubDeviceEventProducer,
       ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {

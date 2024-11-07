@@ -39,6 +39,7 @@ object ListDevicesSpec extends ZIOSpecDefault with DevicesSpec {
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
         InMemoryPendingUpdateRepository.layer,
+        stubDeviceEventProducer,
       ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching devices") {
       for {

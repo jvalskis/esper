@@ -5,7 +5,7 @@ import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDevice
 import is.valsk.esper.device.{DeviceHandler, DeviceProxyRegistry}
 import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService}
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
@@ -53,13 +53,10 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
       },
     ).provide(
       stubDeviceRepository,
-      stubPendingUpdateRepository,
       InMemoryManufacturerRepository.layer,
       InMemoryFirmwareRepository.layer,
       FirmwareService.layer,
       stubFirmwareDownloader,
-      PendingUpdateService.layer,
-      MockEmailService.empty,
       RestartDevice.layer,
       GetDeviceStatus.layer,
       FlashDevice.layer,
@@ -68,6 +65,7 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
       OtaApi.layer,
       DeviceProxyRegistry.layer,
       stubManufacturerRegistryLayer,
+      stubDeviceEventProducer,
     ),
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
       for {
@@ -79,13 +77,10 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
     }
       .provide(
         stubDeviceRepositoryThatThrowsException,
-        stubPendingUpdateRepository,
         InMemoryManufacturerRepository.layer,
         InMemoryFirmwareRepository.layer,
         FirmwareService.layer,
         stubFirmwareDownloader,
-        PendingUpdateService.layer,
-        MockEmailService.empty,
         RestartDevice.layer,
         GetDeviceStatus.layer,
         FlashDevice.layer,
@@ -94,6 +89,7 @@ object GetDeviceVersionSpec extends ZIOSpecDefault with OtaSpec {
         OtaApi.layer,
         DeviceProxyRegistry.layer,
         stubManufacturerRegistryLayer,
+//        stubDeviceEventProducer,
       ),
   )
 }

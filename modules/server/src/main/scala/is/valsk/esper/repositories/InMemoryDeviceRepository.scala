@@ -2,12 +2,12 @@ package is.valsk.esper.repositories
 
 import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.event.{DeviceAdded, DeviceEvent, DeviceRemoved, DeviceUpdated}
+import is.valsk.esper.event.*
 import zio.*
 
 class InMemoryDeviceRepository(
     map: Ref[Map[DeviceId, Device]],
-    deviceEventQueue: Queue[DeviceEvent],
+    deviceEventProducer: DeviceEventProducer,
 ) extends DeviceRepository {
 
   override def getOpt(id: DeviceId): UIO[Option[Device]] = map.get.map(_.get(id))
@@ -16,27 +16,27 @@ class InMemoryDeviceRepository(
 
   override def add(device: Device): UIO[Device] = for {
     result <- map.update(map => map + (device.id -> device)).as(device)
-    _ <- deviceEventQueue.offer(DeviceAdded(result))
+    _ <- deviceEventProducer.produceEvent(DeviceAdded(result))
   } yield result
 
   override def update(device: Device): UIO[Device] = for {
     result <- map.update(map => map + (device.id -> device)).as(device)
-    _ <- deviceEventQueue.offer(DeviceUpdated(result))
+    _ <- deviceEventProducer.produceEvent(DeviceUpdated(result))
   } yield result
 
   override def delete(id: DeviceId): UIO[Unit] = for {
     deviceToRemove <- map.get.map(_.get(id))
     result <- map.update(map => map - id)
-    _ <- deviceToRemove.fold(ZIO.unit)(device => deviceEventQueue.offer(DeviceRemoved(device)))
+    _ <- deviceToRemove.fold(ZIO.unit)(device => deviceEventProducer.produceEvent(DeviceRemoved(device)))
   } yield result
 }
 
 object InMemoryDeviceRepository {
 
-  val layer: RLayer[Queue[DeviceEvent], DeviceRepository] = ZLayer {
+  val layer: RLayer[DeviceEventProducer, DeviceRepository] = ZLayer {
     for {
       ref <- Ref.make(Map.empty[DeviceId, Device])
-      eventQueue <- ZIO.service[Queue[DeviceEvent]]
-    } yield new InMemoryDeviceRepository(ref, eventQueue)
+      eventProducer <- ZIO.service[DeviceEventProducer]
+    } yield new InMemoryDeviceRepository(ref, eventProducer)
   }
 }

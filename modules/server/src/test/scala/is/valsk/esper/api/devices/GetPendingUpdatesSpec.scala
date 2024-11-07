@@ -6,8 +6,8 @@ import is.valsk.esper.domain.PendingUpdate
 import is.valsk.esper.repositories.DeviceRepository
 import sttp.model.StatusCode
 import zio.*
-import zio.test.*
 import zio.json.*
+import zio.test.*
 import zio.test.Assertion.*
 
 object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
@@ -38,6 +38,7 @@ object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
+        stubDeviceEventProducer,
       ),
 
     test("Fail with 500 (Internal Server Error) when there is an exception while fetching the pending update") {
@@ -56,6 +57,7 @@ object GetPendingUpdatesSpec extends ZIOSpecDefault with DevicesSpec {
         ListDevices.layer,
         GetPendingUpdate.layer,
         GetPendingUpdates.layer,
+        stubDeviceEventProducer,
       ),
   )
 }

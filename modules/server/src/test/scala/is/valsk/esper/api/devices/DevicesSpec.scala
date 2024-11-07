@@ -1,7 +1,6 @@
 package is.valsk.esper.api.devices
 
 import is.valsk.esper.api.ApiSpec
-import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
 import sttp.client3.testing.SttpBackendStub
 import sttp.client3.{Response, UriContext, basicRequest}

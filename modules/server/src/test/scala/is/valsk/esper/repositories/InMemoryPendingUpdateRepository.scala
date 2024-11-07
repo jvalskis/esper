@@ -2,7 +2,6 @@ package is.valsk.esper.repositories
 
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.domain.PendingUpdate
 import zio.*
 
 class InMemoryPendingUpdateRepository(
