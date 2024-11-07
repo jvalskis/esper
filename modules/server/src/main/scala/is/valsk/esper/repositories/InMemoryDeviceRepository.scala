@@ -27,9 +27,7 @@ class InMemoryDeviceRepository(
   override def delete(id: DeviceId): UIO[Unit] = for {
     deviceToRemove <- map.get.map(_.get(id))
     result <- map.update(map => map - id)
-    _ <- ZIO.fromOption(deviceToRemove)
-      .map(device => deviceEventQueue.offer(DeviceRemoved(device)))
-      .orDie
+    _ <- deviceToRemove.fold(ZIO.unit)(device => deviceEventQueue.offer(DeviceRemoved(device)))
   } yield result
 }
 

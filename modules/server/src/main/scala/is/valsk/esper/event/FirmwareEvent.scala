@@ -1,6 +1,6 @@
 package is.valsk.esper.event
 
-import is.valsk.esper.domain.{Device, Firmware}
+import is.valsk.esper.domain.Firmware
 
 sealed trait FirmwareEvent
 

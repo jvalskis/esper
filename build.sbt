@@ -3,7 +3,7 @@ import sbtrelease.ReleaseStateTransformations.*
 import scala.sys.process.Process
 
 ThisBuild / organization := "is.valsk"
-ThisBuild / scalaVersion := "3.3.3"
+ThisBuild / scalaVersion := "3.5.0"
 ThisBuild / scalacOptions ++= Seq(
   "-Werror",
   "-Wunused:all",

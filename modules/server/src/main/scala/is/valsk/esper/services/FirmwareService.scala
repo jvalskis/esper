@@ -23,7 +23,6 @@ object FirmwareService {
       firmwareRepository: FirmwareRepository,
       manufacturerRepository: ManufacturerRepository,
       firmwareDownloader: FirmwareDownloader,
-      pendingUpdateService: PendingUpdateService,
   ) extends FirmwareService {
 
     override def getFirmware(manufacturer: Manufacturer, model: Model, version: Version): IO[EsperError, Firmware] = {
@@ -88,7 +87,7 @@ object FirmwareService {
     private def persistFirmware(firmware: Firmware) = firmwareRepository.add(firmware)
   }
 
-  val layer: URLayer[FirmwareRepository & ManufacturerRepository & FirmwareDownloader & PendingUpdateService, FirmwareService] = ZLayer.fromFunction(FirmwareServiceLive(_, _, _, _))
+  val layer: URLayer[FirmwareRepository & ManufacturerRepository & FirmwareDownloader, FirmwareService] = ZLayer.fromFunction(FirmwareServiceLive(_, _, _))
 
   object LatestFirmwareStatus {
     sealed trait LatestFirmwareStatus

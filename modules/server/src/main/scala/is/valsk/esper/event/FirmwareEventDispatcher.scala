@@ -1,15 +1,17 @@
 package is.valsk.esper.event
 
-import zio.{Queue, Ref, Task, URLayer, ZIO, ZLayer}
+import zio.{Queue, Task, URLayer, ZLayer}
+
+trait FirmwareEventDispatcher extends EventDispatcher[FirmwareEvent, FirmwareEventListener]
 
 object FirmwareEventDispatcher {
 
   private class FirmwareEventDispatcherLive(
-      eventQueue: Queue[FirmwareEvent],
-      listeners: Seq[FirmwareEventListener],
-  ) extends EventDispatcher[FirmwareEvent, FirmwareEventListener] {
+      val eventQueue: Queue[FirmwareEvent],
+      val listeners: List[FirmwareEventListener],
+  ) extends FirmwareEventDispatcher {
     override def invokeListener(event: FirmwareEvent)(listener: FirmwareEventListener): Task[Unit] = listener.onFirmwareEvent(event)
   }
 
-  val layer: URLayer[Queue[FirmwareEvent] & Seq[FirmwareEventListener], EventDispatcher[FirmwareEvent, FirmwareEventListener]] = ZLayer.fromFunction(FirmwareEventDispatcherLive(_, _))
+  val layer: URLayer[Queue[FirmwareEvent] & List[FirmwareEventListener], FirmwareEventDispatcher] = ZLayer.fromFunction(FirmwareEventDispatcherLive(_, _))
 }

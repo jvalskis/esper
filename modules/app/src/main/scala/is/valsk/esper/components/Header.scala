@@ -4,7 +4,6 @@ import com.raquo.laminar.api.L.*
 import com.raquo.laminar.codecs.StringAsIsCodec
 import com.raquo.laminar.nodes.ReactiveHtmlElement
 import is.valsk.esper.common.Constants
-import is.valsk.esper.components.Anchors.renderNavLink
 import org.scalajs.dom
 import org.scalajs.dom.HTMLElement
 

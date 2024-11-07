@@ -1,11 +1,10 @@
 package is.valsk.esper.services
 
 import is.valsk.esper.domain.*
-import is.valsk.esper.event.*
-import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository, PendingUpdateRepository}
+import is.valsk.esper.repositories.{FirmwareRepository, ManufacturerRepository, PendingUpdateRepository}
 import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus
 import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus.LatestFirmwareStatus
-import zio.{IO, Queue, Task, UIO, URLayer, ZIO, ZLayer}
+import zio.{IO, URLayer, ZIO, ZLayer}
 
 trait PendingUpdateService {
   def checkForPendingUpdates(device: Device): IO[EsperError, Option[PendingUpdate]]
@@ -54,5 +53,5 @@ object PendingUpdateService {
   }
 
   val layer: URLayer[FirmwareRepository & PendingUpdateRepository & ManufacturerRepository, PendingUpdateService] =
-    ZLayer.fromFunction(PendingUpdateServiceLive(_, _, _, _, _))
+    ZLayer.fromFunction(PendingUpdateServiceLive(_, _, _))
 }

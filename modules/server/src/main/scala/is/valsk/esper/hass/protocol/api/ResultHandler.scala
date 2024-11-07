@@ -6,14 +6,12 @@ import is.valsk.esper.hass.messages.MessageParser.ParseError
 import is.valsk.esper.hass.messages.responses.*
 import is.valsk.esper.hass.protocol.api.HassResponseMessageHandler.{HassResponseMessageContext, PartialHassResponseMessageHandler}
 import is.valsk.esper.repositories.{DeviceRepository, ManufacturerRepository}
-import is.valsk.esper.services.PendingUpdateService
-import zio.{Queue, *}
+import zio.*
 import zio.http.*
 
 class ResultHandler(
     deviceRepository: DeviceRepository,
     manufacturerRegistry: ManufacturerRepository,
-    pendingUpdateService: PendingUpdateService,
 ) extends HassResponseMessageHandler {
 
   override def get: PartialHassResponseMessageHandler = {
@@ -49,5 +47,5 @@ class ResultHandler(
 }
 
 object ResultHandler {
-  val layer: URLayer[PendingUpdateService & DeviceRepository & ManufacturerRepository, ResultHandler] = ZLayer.fromFunction(ResultHandler(_, _, _))
+  val layer: URLayer[DeviceRepository & ManufacturerRepository, ResultHandler] = ZLayer.fromFunction(ResultHandler(_, _))
 }

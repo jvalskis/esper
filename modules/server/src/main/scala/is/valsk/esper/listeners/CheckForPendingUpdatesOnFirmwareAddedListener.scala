@@ -2,11 +2,9 @@ package is.valsk.esper.listeners
 
 import is.valsk.esper.domain.*
 import is.valsk.esper.event.*
-import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository, PendingUpdateRepository}
-import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus
-import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus.LatestFirmwareStatus
+import is.valsk.esper.repositories.DeviceRepository
 import is.valsk.esper.services.{EmailService, PendingUpdateService}
-import zio.{IO, Queue, Task, UIO, URLayer, ZIO, ZLayer}
+import zio.{Task, URLayer, ZIO, ZLayer}
 
 object CheckForPendingUpdatesOnFirmwareAddedListener {
   class CheckForPendingUpdatesOnFirmwareAddedListenerLive(
@@ -28,7 +26,6 @@ object CheckForPendingUpdatesOnFirmwareAddedListener {
         case EmailDeliveryError(message, _) =>
           ZIO.logError(s"Failed to send email: $message")
       }
-      case _ => ZIO.unit
     }
 
     private def sendNotificationIfNeeded(pendingUpdates: List[PendingUpdate]): Task[Unit] = pendingUpdates match {
@@ -55,5 +52,5 @@ object CheckForPendingUpdatesOnFirmwareAddedListener {
   }
 
   val layer: URLayer[EmailService & DeviceRepository & PendingUpdateService, CheckForPendingUpdatesOnFirmwareAddedListenerLive] =
-    ZLayer.fromFunction(CheckForPendingUpdatesOnFirmwareAddedListener.CheckForPendingUpdatesOnFirmwareAddedListenerLive(_, _, _, _, _))
+    ZLayer.fromFunction(CheckForPendingUpdatesOnFirmwareAddedListener.CheckForPendingUpdatesOnFirmwareAddedListenerLive(_, _, _))
 }

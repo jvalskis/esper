@@ -1,15 +1,17 @@
 package is.valsk.esper.event
 
-import zio.{Queue, Ref, Task, URLayer, ZIO, ZLayer}
+import zio.{Queue, Task, URLayer, ZLayer}
+
+trait DeviceEventDispatcher extends EventDispatcher[DeviceEvent, DeviceEventListener]
 
 object DeviceEventDispatcher {
 
   private class DeviceEventDispatcherLive(
-      eventQueue: Queue[DeviceEvent],
-      listeners: Seq[DeviceEventListener],
-  ) extends EventDispatcher[DeviceEvent, DeviceEventListener] {
+      val eventQueue: Queue[DeviceEvent],
+      val listeners: List[DeviceEventListener],
+  ) extends DeviceEventDispatcher {
     override def invokeListener(event: DeviceEvent)(listener: DeviceEventListener): Task[Unit] = listener.onDeviceEvent(event)
   }
 
-  val layer: URLayer[Seq[DeviceEventListener] & Queue[DeviceEvent], EventDispatcher[DeviceEvent, DeviceEventListener]] = ZLayer.fromFunction(DeviceEventDispatcherLive(_, _))
+  val layer: URLayer[List[DeviceEventListener] & Queue[DeviceEvent], DeviceEventDispatcher] = ZLayer.fromFunction(DeviceEventDispatcherLive(_, _))
 }

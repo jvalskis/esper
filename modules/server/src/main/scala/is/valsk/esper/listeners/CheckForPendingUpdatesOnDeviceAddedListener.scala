@@ -1,12 +1,9 @@
-package is.valsk.esper.services
+package is.valsk.esper.listeners
 
 import is.valsk.esper.domain.*
-import is.valsk.esper.domain.PendingUpdate
-import is.valsk.esper.event.{DeviceAdded, DeviceEvent, DeviceEventListener, FirmwareDownloaded, FirmwareEvent, FirmwareEventListener}
-import is.valsk.esper.repositories.{DeviceRepository, FirmwareRepository, ManufacturerRepository, PendingUpdateRepository}
-import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus
-import is.valsk.esper.services.FirmwareService.LatestFirmwareStatus.LatestFirmwareStatus
-import zio.{IO, Queue, Task, UIO, URLayer, ZIO, ZLayer}
+import is.valsk.esper.event.*
+import is.valsk.esper.services.PendingUpdateService
+import zio.{Task, URLayer, ZIO, ZLayer}
 
 object CheckForPendingUpdatesOnDeviceAddedListener {
   class CheckForPendingUpdatesOnDeviceAddedListenerLive(
