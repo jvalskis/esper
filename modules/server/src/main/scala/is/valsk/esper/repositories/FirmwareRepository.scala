@@ -1,10 +1,11 @@
 package is.valsk.esper.repositories
 
 import eu.timepit.refined.types.string.NonEmptyString
-import io.getquill.jdbczio.Quill
 import io.getquill.*
+import io.getquill.jdbczio.Quill
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
+import is.valsk.esper.event.{FirmwareDownloaded, FirmwareEventProducer}
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
 
@@ -20,6 +21,7 @@ trait FirmwareRepository extends Repository[FirmwareKey, Firmware] {
 object FirmwareRepository {
   private class FirmwareRepositoryLive(
       quill: Quill.Postgres[SnakeCase],
+      firmwareEventProducer: FirmwareEventProducer,
   ) extends FirmwareRepository {
 
     import quill.*
@@ -32,7 +34,7 @@ object FirmwareRepository {
 
     given MappedEncoding[String, Version] = MappedEncoding[String, Version](Version(_))
 
-    override def getOpt(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = {
+    override def find(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = {
       val q = quote {
         query[Firmware]
           .filter(_.model == lift(key.model))
@@ -59,9 +61,12 @@ object FirmwareRepository {
           .insertValue(lift(firmware))
           .returning(fw => fw)
       }
-      run(q)
-        .mapError(e => PersistenceException(e.getMessage, Some(e)))
-        .map(_ => firmware)
+      for {
+        persistedFirmware <- run(q)
+          .mapError(e => PersistenceException(e.getMessage, Some(e)))
+          .map(_ => firmware)
+        _ <- firmwareEventProducer.produceEvent(FirmwareDownloaded(firmware))
+      } yield firmware
     }
 
     override def getLatestFirmware(manufacturer: Manufacturer, model: Model)(using ordering: Ordering[Version]): IO[PersistenceException, Option[Firmware]] = for {
@@ -69,7 +74,7 @@ object FirmwareRepository {
       maybeLatestVersion <- listVersions(manufacturer, model)
         .map(_.maxOption)
       maybeLatestFirmware <- maybeLatestVersion match {
-        case Some(version) => getOpt(FirmwareKey(manufacturer, model, version))
+        case Some(version) => find(FirmwareKey(manufacturer, model, version))
         case None => ZIO.succeed(None)
       }
     } yield maybeLatestFirmware
@@ -91,7 +96,7 @@ object FirmwareRepository {
     override def delete(key: FirmwareKey): IO[PersistenceException, Unit] = ???
   }
 
-  val live: URLayer[Quill.Postgres[SnakeCase], FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_))
+  val live: URLayer[Quill.Postgres[SnakeCase] & FirmwareEventProducer, FirmwareRepository] = ZLayer.fromFunction(FirmwareRepositoryLive(_, _))
 
   case class FirmwareKey(
       manufacturer: Manufacturer,

@@ -41,11 +41,6 @@ object Types {
   type UrlString = NonEmptyString//String Refined Url TODO issue with scalajs and refined Url type
 
   object UrlString extends RefinedTypeOps[NonEmptyString, String] {
-//    given encoder: JsonEncoder[UrlString] = JsonEncoder[String].contramap(_.toString)
-//
-//    given decoder: JsonDecoder[UrlString] = JsonDecoder[String].mapOrFail(UrlString.from)
-//
-//    given codec: JsonCodec[UrlString] = JsonCodec(encoder, decoder)
     given encoder: JsonEncoder[NonEmptyString] = JsonEncoder[String].contramap(_.toString)
 
     given decoder: JsonDecoder[NonEmptyString] = JsonDecoder[String].mapOrFail(NonEmptyString.from)

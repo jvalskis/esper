@@ -2,7 +2,6 @@ package is.valsk.esper.repositories
 
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.DeviceId
-import is.valsk.esper.domain.PendingUpdate
 import zio.*
 
 class InMemoryPendingUpdateRepository(
@@ -20,7 +19,7 @@ class InMemoryPendingUpdateRepository(
   override def delete(id: DeviceId): IO[PersistenceException, Unit] =
     map.update(map => map - id).unit
     
-  override def getOpt(id: DeviceId): UIO[Option[PendingUpdate]] = map.get.map(_.get(id))
+  override def find(id: DeviceId): UIO[Option[PendingUpdate]] = map.get.map(_.get(id))
 
 }
 

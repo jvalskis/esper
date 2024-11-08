@@ -1,4 +1,4 @@
-package is.valsk.esper.hass
+package is.valsk.esper
 
 import is.valsk.esper.config.HassConfig
 import is.valsk.esper.hass.protocol.ChannelHandler

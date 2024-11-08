@@ -1,17 +1,18 @@
 package is.valsk.esper.api.firmware
 
 import is.valsk.esper.api.devices.GetDeviceSpec.test
-import is.valsk.esper.api.firmware.endpoints.{DeleteFirmware, DownloadFirmware, DownloadLatestFirmware, GetFirmware, ListFirmwareVersions}
+import is.valsk.esper.api.firmware.endpoints.*
+import is.valsk.esper.ctx.FirmwareCtx
 import is.valsk.esper.device.*
 import is.valsk.esper.domain.*
-import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, PendingUpdateService}
+import is.valsk.esper.repositories.{InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService}
 import sttp.model.StatusCode
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object GetFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
+object GetFirmwareSpec extends ZIOSpecDefault with FirmwareSpec with FirmwareCtx {
 
   def spec = suite("GetFirmwareSpec")(
     suite("Normal flow")(
@@ -117,14 +118,10 @@ object GetFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
         }
       }
     ).provide(
-      stubDeviceRepository,
       InMemoryManufacturerRepository.layer,
       InMemoryFirmwareRepository.layer,
       FirmwareService.layer,
       stubFirmwareDownloader,
-      PendingUpdateService.layer,
-      stubPendingUpdateRepository,
-      MockEmailService.empty,
       DeleteFirmware.layer,
       DownloadFirmware.layer,
       DownloadLatestFirmware.layer,
@@ -141,14 +138,10 @@ object GetFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
         assert(response.body.swap.toOption)(isSome(equalTo("message")))
       }
     }.provide(
-      stubDeviceRepositoryThatThrowsException,
       InMemoryManufacturerRepository.layer,
       stubFirmwareRepositoryThatThrowsException,
       FirmwareService.layer,
       stubFirmwareDownloader,
-      PendingUpdateService.layer,
-      stubPendingUpdateRepository,
-      MockEmailService.empty,
       DeleteFirmware.layer,
       DownloadFirmware.layer,
       DownloadLatestFirmware.layer,

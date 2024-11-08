@@ -23,7 +23,6 @@ object FirmwareService {
       firmwareRepository: FirmwareRepository,
       manufacturerRepository: ManufacturerRepository,
       firmwareDownloader: FirmwareDownloader,
-      pendingUpdateService: PendingUpdateService,
   ) extends FirmwareService {
 
     override def getFirmware(manufacturer: Manufacturer, model: Model, version: Version): IO[EsperError, Firmware] = {
@@ -73,7 +72,7 @@ object FirmwareService {
     } yield firmware
 
     private def downloadIfNecessary(firmwareKey: FirmwareKey)(download: => IO[EsperError, Firmware]) = for {
-      maybeFirmware <- firmwareRepository.getOpt(firmwareKey)
+      maybeFirmware <- firmwareRepository.find(firmwareKey)
       firmware <- maybeFirmware match {
         case Some(firmware) => ZIO
           .logInfo(s"Skipping download - firmware already exists: $firmware")
@@ -85,15 +84,10 @@ object FirmwareService {
       }
     } yield firmware
 
-    private def persistFirmware(firmware: Firmware) = for {
-      firmware <- firmwareRepository
-        .add(firmware)
-        .logError("Failed to persist firmware")
-      _ <- pendingUpdateService.firmwareDownloaded(firmware)
-    } yield firmware
+    private def persistFirmware(firmware: Firmware) = firmwareRepository.add(firmware)
   }
 
-  val layer: URLayer[FirmwareRepository & ManufacturerRepository & FirmwareDownloader & PendingUpdateService, FirmwareService] = ZLayer.fromFunction(FirmwareServiceLive(_, _, _, _))
+  val layer: URLayer[FirmwareRepository & ManufacturerRepository & FirmwareDownloader, FirmwareService] = ZLayer.fromFunction(FirmwareServiceLive(_, _, _))
 
   object LatestFirmwareStatus {
     sealed trait LatestFirmwareStatus

@@ -1,5 +1,6 @@
-package is.valsk.esper.api
+package is.valsk.esper
 
+import is.valsk.esper.api.HttpApi
 import is.valsk.esper.config.HttpServerConfig
 import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}

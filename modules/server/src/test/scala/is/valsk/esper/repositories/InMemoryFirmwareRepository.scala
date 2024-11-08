@@ -6,10 +6,10 @@ import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
 
 class InMemoryFirmwareRepository(
-    map: Ref[Map[FirmwareKey, Firmware]]
+    map: Ref[Map[FirmwareKey, Firmware]],
 ) extends FirmwareRepository {
 
-  override def getOpt(id: FirmwareKey): UIO[Option[Firmware]] = map.get.map(_.get(id))
+  override def find(id: FirmwareKey): UIO[Option[Firmware]] = map.get.map(_.get(id))
 
   override def getAll: UIO[List[Firmware]] = map.get.map(_.values.toList)
 
@@ -20,7 +20,7 @@ class InMemoryFirmwareRepository(
   override def update(firmware: Firmware): IO[PersistenceException, Firmware] = for {
     _ <- map.update(map => map + (FirmwareKey(firmware) -> firmware))
   } yield firmware
-  
+
   override def delete(id: FirmwareKey): IO[PersistenceException, Unit] = for {
     _ <- map.update(map => map - id)
   } yield ()

@@ -1,22 +1,22 @@
 package is.valsk.esper.api.ota
 
-import is.valsk.esper.api.devices.GetDeviceSpec.test
+import is.valsk.esper.api.devices.GetDeviceSpec.{stubDeviceEventProducer, test}
 import is.valsk.esper.api.firmware.DownloadLatestFirmwareSpec.unsupportedManufacturer
-import is.valsk.esper.api.ota.GetDeviceStatusSpec.stubPendingUpdateRepository
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
+import is.valsk.esper.ctx.{DeviceCtx, FirmwareCtx}
 import is.valsk.esper.device.*
 import is.valsk.esper.domain
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.DeviceStatus.UpdateStatus
 import is.valsk.esper.repositories.{DeviceRepository, InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
-import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService, PendingUpdateService}
+import is.valsk.esper.services.{FirmwareDownloader, FirmwareService, OtaService}
 import sttp.model.StatusCode
 import zio.*
 import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
+object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec with DeviceCtx with FirmwareCtx {
 
   def spec = suite("FlashDeviceSpec")(
     suite("without explicit version")(
@@ -127,8 +127,6 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         InMemoryFirmwareRepository.layer,
         FirmwareService.layer,
         stubFirmwareDownloader,
-        PendingUpdateService.layer,
-        stubPendingUpdateRepository,
         RestartDevice.layer,
         GetDeviceStatus.layer,
         FlashDevice.layer,
@@ -137,7 +135,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaApi.layer,
         DeviceProxyRegistry.layer,
         stubManufacturerRegistryLayer,
-        MockEmailService.empty,
+        stubDeviceEventProducer,
       ),
       test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
         for {
@@ -152,8 +150,6 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         InMemoryFirmwareRepository.layer,
         FirmwareService.layer,
         stubFirmwareDownloader,
-        PendingUpdateService.layer,
-        stubPendingUpdateRepository,
         RestartDevice.layer,
         GetDeviceStatus.layer,
         FlashDevice.layer,
@@ -162,7 +158,6 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaApi.layer,
         DeviceProxyRegistry.layer,
         stubManufacturerRegistryLayer,
-        MockEmailService.empty,
       ),
     ),
     suite("with explicit version")(
@@ -295,8 +290,6 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         InMemoryFirmwareRepository.layer,
         FirmwareService.layer,
         stubFirmwareDownloader,
-        PendingUpdateService.layer,
-        stubPendingUpdateRepository,
         RestartDevice.layer,
         GetDeviceStatus.layer,
         FlashDevice.layer,
@@ -305,7 +298,7 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaApi.layer,
         DeviceProxyRegistry.layer,
         stubManufacturerRegistryLayer,
-        MockEmailService.empty,
+        stubDeviceEventProducer,
       ),
 
       test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
@@ -321,8 +314,6 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         InMemoryFirmwareRepository.layer,
         FirmwareService.layer,
         stubFirmwareDownloader,
-        PendingUpdateService.layer,
-        stubPendingUpdateRepository,
         RestartDevice.layer,
         GetDeviceStatus.layer,
         FlashDevice.layer,
@@ -331,7 +322,6 @@ object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
         OtaApi.layer,
         DeviceProxyRegistry.layer,
         stubManufacturerRegistryLayer,
-        MockEmailService.empty
       )
     )
   )
