@@ -36,7 +36,9 @@ object PendingUpdateService {
     } yield pendingUpdate
 
     private def latestFirmwareStatus(device: Device): IO[EsperError, LatestFirmwareStatus] = for {
-      manufacturerHandler <- manufacturerRepository.get(device.manufacturer)
+      manufacturerHandler <- manufacturerRepository.get(device.manufacturer).catchSome {
+        case EntityNotFound(_) => ZIO.fail(ManufacturerNotSupported(device.manufacturer))
+      }
       maybeLatestFirmware <- firmwareRepository.getLatestFirmware(device.manufacturer, device.model)(using manufacturerHandler.versionOrdering)
       maybeCurrentVersion <- ZIO.succeed(device.softwareVersion)
       status = (maybeCurrentVersion, maybeLatestFirmware.map(_.version)) match {
