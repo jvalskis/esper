@@ -5,13 +5,13 @@ import zio.*
 
 trait Repository[K, R] {
   def get(id: K): IO[EntityNotFound | PersistenceException, R] = for {
-    maybeEntity <- getOpt(id)
+    maybeEntity <- find(id)
     entity <- ZIO
       .fromOption(maybeEntity)
       .mapError(_ => EntityNotFound(id.toString))
   } yield entity
 
-  def getOpt(id: K): IO[PersistenceException, Option[R]]
+  def find(id: K): IO[PersistenceException, Option[R]]
 
   def getAll: IO[PersistenceException, List[R]]
 

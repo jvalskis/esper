@@ -9,7 +9,7 @@ class InMemoryFirmwareRepository(
     map: Ref[Map[FirmwareKey, Firmware]],
 ) extends FirmwareRepository {
 
-  override def getOpt(id: FirmwareKey): UIO[Option[Firmware]] = map.get.map(_.get(id))
+  override def find(id: FirmwareKey): UIO[Option[Firmware]] = map.get.map(_.get(id))
 
   override def getAll: UIO[List[Firmware]] = map.get.map(_.values.toList)
 

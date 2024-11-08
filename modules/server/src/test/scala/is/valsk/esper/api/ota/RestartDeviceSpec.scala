@@ -3,6 +3,7 @@ package is.valsk.esper.api.ota
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.ota.GetDeviceVersionSpec.unsupportedManufacturer
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
+import is.valsk.esper.ctx.DeviceCtx
 import is.valsk.esper.device.*
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.{Manufacturer, Model}
@@ -16,7 +17,7 @@ import zio.test.*
 import zio.test.Assertion.*
 import zio.{ZLayer, *}
 
-object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec {
+object RestartDeviceSpec extends ZIOSpecDefault with OtaSpec with DeviceCtx {
 
   def spec = suite("RestartDeviceSpec")(
     test("Return a 404 (Not Found) if the device does not exist") {

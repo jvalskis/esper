@@ -22,7 +22,7 @@ object CheckForPendingUpdatesOnFirmwareAddedListener {
           result <- ZIO.foreach(devices)(pendingUpdateService.checkForPendingUpdates)
           _ <- sendNotificationIfNeeded(result.flatten)
         } yield ()
-      }.catchAll {
+      }.catchSome {
         case EmailDeliveryError(message, _) =>
           ZIO.logError(s"Failed to send email: $message")
       }
@@ -52,5 +52,5 @@ object CheckForPendingUpdatesOnFirmwareAddedListener {
   }
 
   val layer: URLayer[EmailService & DeviceRepository & PendingUpdateService, CheckForPendingUpdatesOnFirmwareAddedListenerLive] =
-    ZLayer.fromFunction(CheckForPendingUpdatesOnFirmwareAddedListener.CheckForPendingUpdatesOnFirmwareAddedListenerLive(_, _, _))
+    ZLayer.derive[CheckForPendingUpdatesOnFirmwareAddedListenerLive]
 }

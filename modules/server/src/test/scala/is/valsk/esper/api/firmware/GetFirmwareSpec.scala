@@ -2,6 +2,7 @@ package is.valsk.esper.api.firmware
 
 import is.valsk.esper.api.devices.GetDeviceSpec.test
 import is.valsk.esper.api.firmware.endpoints.*
+import is.valsk.esper.ctx.FirmwareCtx
 import is.valsk.esper.device.*
 import is.valsk.esper.domain.*
 import is.valsk.esper.repositories.{InMemoryFirmwareRepository, InMemoryManufacturerRepository, ManufacturerRepository}
@@ -11,7 +12,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object GetFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
+object GetFirmwareSpec extends ZIOSpecDefault with FirmwareSpec with FirmwareCtx {
 
   def spec = suite("GetFirmwareSpec")(
     suite("Normal flow")(

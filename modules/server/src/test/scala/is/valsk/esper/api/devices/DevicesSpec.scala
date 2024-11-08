@@ -13,7 +13,7 @@ trait DevicesSpec extends ApiSpec {
 
   private given zioMonadError: MonadError[Task] = new RIOMonadError[Any]
 
-  def getDevice(deviceId: DeviceId): ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
+  def invokeGetDevice(deviceId: DeviceId): ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
     backendStub <- ZIO.succeed(
       TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
@@ -25,7 +25,7 @@ trait DevicesSpec extends ApiSpec {
       .send(backendStub)
   } yield response
 
-  def getPendingUpdate(deviceId: DeviceId): ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
+  def invokeGetPendingUpdate(deviceId: DeviceId): ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
     backendStub <- ZIO.succeed(
       TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
@@ -37,7 +37,7 @@ trait DevicesSpec extends ApiSpec {
       .send(backendStub)
   } yield response
 
-  def getPendingUpdates: ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
+  def invokeGetPendingUpdates: ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
     backendStub <- ZIO.succeed(
       TapirStubInterpreter(SttpBackendStub(MonadError[Task]))
@@ -49,7 +49,7 @@ trait DevicesSpec extends ApiSpec {
       .send(backendStub)
   } yield response
 
-  def listDevices: ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
+  def invokeListDevices: ZIO[DeviceApi, Throwable, Response[Either[String, String]]] = for {
     deviceApi <- ZIO.service[DeviceApi]
     backendStub <- ZIO.succeed(
       TapirStubInterpreter(SttpBackendStub(MonadError[Task]))

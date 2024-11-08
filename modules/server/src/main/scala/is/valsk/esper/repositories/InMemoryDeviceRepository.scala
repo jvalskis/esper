@@ -10,7 +10,7 @@ class InMemoryDeviceRepository(
     deviceEventProducer: DeviceEventProducer,
 ) extends DeviceRepository {
 
-  override def getOpt(id: DeviceId): UIO[Option[Device]] = map.get.map(_.get(id))
+  override def find(id: DeviceId): UIO[Option[Device]] = map.get.map(_.get(id))
 
   override def getAll: UIO[List[Device]] = map.get.map(_.values.toList)
 

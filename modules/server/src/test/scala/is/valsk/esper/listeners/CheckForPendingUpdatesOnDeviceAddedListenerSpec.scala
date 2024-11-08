@@ -1,15 +1,12 @@
 package is.valsk.esper.listeners
 
 import is.valsk.esper.api.ApiSpec
-import is.valsk.esper.api.devices.GetDeviceSpec.test
-import is.valsk.esper.api.firmware.DownloadLatestFirmwareSpec.{givenFirmwares, unsupportedManufacturer}
-import is.valsk.esper.api.ota.FlashDeviceSpec.givenPendingUpdates
 import is.valsk.esper.api.ota.GetDeviceVersionSpec.stubManufacturerRegistryLayer
+import is.valsk.esper.ctx.{FirmwareCtx, PendingUpdateCtx}
 import is.valsk.esper.device.*
-import is.valsk.esper.domain
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
-import is.valsk.esper.event.{DeviceAdded, DeviceEvent}
+import is.valsk.esper.event.DeviceAdded
 import is.valsk.esper.listeners.CheckForPendingUpdatesOnDeviceAddedListener.CheckForPendingUpdatesOnDeviceAddedListenerLive
 import is.valsk.esper.listeners.CheckForPendingUpdatesOnDeviceAddedListenerSpec.Ctx
 import is.valsk.esper.repositories.*
@@ -29,9 +26,7 @@ object CheckForPendingUpdatesOnDeviceAddedListenerSpec extends ZIOSpecDefault wi
             latestFirmware,
           )
           deviceWithOldVersion = device1.copy(softwareVersion = Some(oldVersion))
-          _ <- onDeviceEvent(DeviceAdded(
-            deviceWithOldVersion
-          ))
+          _ <- onDeviceAdded(deviceWithOldVersion)
           repository <- ZIO.service[PendingUpdateRepository]
           pendingUpdate <- repository.get(device1.id)
         } yield {
@@ -44,11 +39,8 @@ object CheckForPendingUpdatesOnDeviceAddedListenerSpec extends ZIOSpecDefault wi
 
       test("Do nothing when new Device has an outdated firmware version but there are no firmwares downloaded") {
         for {
-          _ <- onDeviceEvent(DeviceAdded(
-            device1.copy(softwareVersion = Some(oldVersion))
-          ))
-          repository <- ZIO.service[PendingUpdateRepository]
-          maybePendingUpdate <- repository.getOpt(device1.id)
+          _ <- onDeviceAdded(device1.copy(softwareVersion = Some(oldVersion)))
+          maybePendingUpdate <- findPendingUpdate(device1.id)
         } yield {
           assert(maybePendingUpdate)(isNone)
         }
@@ -65,11 +57,8 @@ object CheckForPendingUpdatesOnDeviceAddedListenerSpec extends ZIOSpecDefault wi
               version = oldVersion,
             )
           )
-          _ <- onDeviceEvent(DeviceAdded(
-            device1.copy(softwareVersion = Some(oldVersion))
-          ))
-          repository <- ZIO.service[PendingUpdateRepository]
-          pendingUpdate <- repository.get(device1.id)
+          _ <- onDeviceAdded(device1.copy(softwareVersion = Some(oldVersion)))
+          pendingUpdate <- getPendingUpdate(device1.id)
         } yield {
           assert(pendingUpdate)(equalTo(PendingUpdate(
             device = device1,
@@ -82,7 +71,7 @@ object CheckForPendingUpdatesOnDeviceAddedListenerSpec extends ZIOSpecDefault wi
         val unsupportedDevice = device1.copy(manufacturer = unsupportedManufacturer)
 
         for {
-          exit <- onDeviceEvent(DeviceAdded(unsupportedDevice)).exit
+          exit <- onDeviceAdded(unsupportedDevice).exit
         } yield {
           assertTrue(exit == Exit.fail(ManufacturerNotSupported(unsupportedManufacturer)))
         }
@@ -96,8 +85,7 @@ object CheckForPendingUpdatesOnDeviceAddedListenerSpec extends ZIOSpecDefault wi
       stubManufacturerRegistryLayer,
     )
 
-  trait Ctx {
-
+  trait Ctx extends PendingUpdateCtx with FirmwareCtx {
     val oldVersion: Version = Version("1.0.0")
     val oldFirmware: Firmware = Firmware(
       manufacturer = device1.manufacturer,
@@ -114,9 +102,9 @@ object CheckForPendingUpdatesOnDeviceAddedListenerSpec extends ZIOSpecDefault wi
       data = Array.emptyByteArray,
       size = 0,
     )
-
-    def onDeviceEvent(event: DeviceEvent): ZIO[CheckForPendingUpdatesOnDeviceAddedListenerLive, Throwable, Unit] =
-      ZIO.service[CheckForPendingUpdatesOnDeviceAddedListenerLive].flatMap(_.onDeviceEvent(event))
+    
+    def onDeviceAdded(device: Device): ZIO[CheckForPendingUpdatesOnDeviceAddedListenerLive, Throwable, Unit] =
+      ZIO.service[CheckForPendingUpdatesOnDeviceAddedListenerLive].flatMap(_.onDeviceEvent(DeviceAdded(device)))
 
   }
 }

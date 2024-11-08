@@ -2,6 +2,7 @@ package is.valsk.esper.api.ota
 
 import is.valsk.esper.api.devices.GetDeviceSpec.{stubDeviceEventProducer, test}
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
+import is.valsk.esper.ctx.DeviceCtx
 import is.valsk.esper.device.*
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.DeviceStatus.UpdateStatus
@@ -13,7 +14,7 @@ import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object GetDeviceStatusSpec extends ZIOSpecDefault with OtaSpec {
+object GetDeviceStatusSpec extends ZIOSpecDefault with OtaSpec with DeviceCtx {
 
   def spec = suite("GetDeviceStatusSpec")(
     suite("Normal flow")(

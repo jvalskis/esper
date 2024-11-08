@@ -30,7 +30,7 @@ object PendingUpdateRepository {
 
     given MappedEncoding[String, Version] = MappedEncoding[String, Version](Version(_))
 
-    override def getOpt(key: DeviceId): IO[PersistenceException, Option[PendingUpdate]] = {
+    override def find(key: DeviceId): IO[PersistenceException, Option[PendingUpdate]] = {
       val q = quote {
         query[PendingUpdateDto]
           .filter(_.id == lift(key))

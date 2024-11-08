@@ -34,7 +34,7 @@ object FirmwareRepository {
 
     given MappedEncoding[String, Version] = MappedEncoding[String, Version](Version(_))
 
-    override def getOpt(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = {
+    override def find(key: FirmwareKey): IO[PersistenceException, Option[Firmware]] = {
       val q = quote {
         query[Firmware]
           .filter(_.model == lift(key.model))
@@ -74,7 +74,7 @@ object FirmwareRepository {
       maybeLatestVersion <- listVersions(manufacturer, model)
         .map(_.maxOption)
       maybeLatestFirmware <- maybeLatestVersion match {
-        case Some(version) => getOpt(FirmwareKey(manufacturer, model, version))
+        case Some(version) => find(FirmwareKey(manufacturer, model, version))
         case None => ZIO.succeed(None)
       }
     } yield maybeLatestFirmware

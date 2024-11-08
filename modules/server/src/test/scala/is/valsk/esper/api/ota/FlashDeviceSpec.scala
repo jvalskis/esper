@@ -3,6 +3,7 @@ package is.valsk.esper.api.ota
 import is.valsk.esper.api.devices.GetDeviceSpec.{stubDeviceEventProducer, test}
 import is.valsk.esper.api.firmware.DownloadLatestFirmwareSpec.unsupportedManufacturer
 import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDeviceVersion, RestartDevice}
+import is.valsk.esper.ctx.{DeviceCtx, FirmwareCtx}
 import is.valsk.esper.device.*
 import is.valsk.esper.domain
 import is.valsk.esper.domain.*
@@ -15,7 +16,7 @@ import zio.json.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec {
+object FlashDeviceSpec extends ZIOSpecDefault with OtaSpec with DeviceCtx with FirmwareCtx {
 
   def spec = suite("FlashDeviceSpec")(
     suite("without explicit version")(

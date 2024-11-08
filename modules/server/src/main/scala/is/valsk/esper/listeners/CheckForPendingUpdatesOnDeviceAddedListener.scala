@@ -20,5 +20,5 @@ object CheckForPendingUpdatesOnDeviceAddedListener {
   }
 
   val layer: URLayer[PendingUpdateService, CheckForPendingUpdatesOnDeviceAddedListenerLive] =
-    ZLayer.fromFunction(CheckForPendingUpdatesOnDeviceAddedListenerLive(_))
+    ZLayer.derive[CheckForPendingUpdatesOnDeviceAddedListenerLive]
 }

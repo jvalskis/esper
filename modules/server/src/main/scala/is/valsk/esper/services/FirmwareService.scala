@@ -72,7 +72,7 @@ object FirmwareService {
     } yield firmware
 
     private def downloadIfNecessary(firmwareKey: FirmwareKey)(download: => IO[EsperError, Firmware]) = for {
-      maybeFirmware <- firmwareRepository.getOpt(firmwareKey)
+      maybeFirmware <- firmwareRepository.find(firmwareKey)
       firmware <- maybeFirmware match {
         case Some(firmware) => ZIO
           .logInfo(s"Skipping download - firmware already exists: $firmware")

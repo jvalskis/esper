@@ -26,7 +26,7 @@ object PendingUpdateService {
     } yield result
 
     private def addPendingUpdate(device: Device, latestFirmwareVersion: Version): IO[EntityNotFound | PersistenceException, PendingUpdate] = for {
-      maybePendingUpdate <- pendingUpdateRepository.getOpt(device.id)
+      maybePendingUpdate <- pendingUpdateRepository.find(device.id)
       pendingUpdate <- maybePendingUpdate match {
         case Some(pendingUpdate) =>
           pendingUpdateRepository.update(pendingUpdate.copy(version = latestFirmwareVersion))

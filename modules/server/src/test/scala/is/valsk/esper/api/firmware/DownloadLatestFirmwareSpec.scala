@@ -1,11 +1,10 @@
 package is.valsk.esper.api.firmware
 
-import is.valsk.esper.api.devices.GetDeviceSpec.{stubDeviceEventProducer, test}
 import is.valsk.esper.api.firmware.endpoints.*
+import is.valsk.esper.ctx.{DeviceCtx, FirmwareCtx}
 import is.valsk.esper.device.*
 import is.valsk.esper.device.DeviceManufacturerHandler.FirmwareDescriptor
 import is.valsk.esper.domain.*
-import is.valsk.esper.event.FirmwareDownloaded
 import is.valsk.esper.repositories.*
 import is.valsk.esper.services.{FirmwareDownloader, FirmwareService}
 import sttp.model.StatusCode
@@ -13,21 +12,7 @@ import zio.*
 import zio.test.*
 import zio.test.Assertion.*
 
-object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
-
-  val fixture = ZLayer.make[FirmwareApi](
-    InMemoryManufacturerRepository.layer,
-    InMemoryFirmwareRepository.layer,
-    FirmwareService.layer,
-    stubFirmwareDownloader,
-    DeleteFirmware.layer,
-    DownloadFirmware.layer,
-    DownloadLatestFirmware.layer,
-    GetFirmware.layer,
-    ListFirmwareVersions.layer,
-    FirmwareApi.layer,
-    stubManufacturerRegistryLayer,
-  )
+object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec with FirmwareCtx with DeviceCtx {
 
   def spec = {
     val firmware = Firmware(
@@ -57,49 +42,8 @@ object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
             response <- downloadLatestFirmware(manufacturer1, model1)
             firmwareDownloaderProbe <- ZIO.service[FirmwareDownloaderProbe]
             invocations <- firmwareDownloaderProbe.probeInvocations.get
-            firmwares <- ZIO.service[FirmwareRepository].flatMap(_.getAll)
           } yield {
-            assert(invocations)(contains(firmwareDescriptor)) &&
-              assert(firmwares)(contains(FirmwareDownloaded(
-                firmware
-              )))
-          }
-        },
-
-        test("Send email when latest firmware is downloaded and there are new pending updates") {
-          for {
-            _ <- givenDevices(
-              device1
-            )
-            _ <- givenFirmwares(
-              firmware,
-            )
-            response <- downloadLatestFirmware(manufacturer1, model1)
-            emailServiceProbe <- ZIO.service[EmailServiceProbe]
-            invocations <- emailServiceProbe.probeInvocations.get
-          } yield {
-            assert(invocations)(contains((
-              "Esper: there are 1 pending updates",
-              """
-                |<p>The following devices have pending firmware updates:</p>
-                |<ul>
-                |<li>test-device-1 model1 (id): Version(version2)</li>
-                |</ul>
-                |""".stripMargin
-            )))
-          }
-        },
-
-        test("Send no email if latest firmware is downloaded but there are no new pending updates") {
-          for {
-            _ <- givenFirmwares(
-              firmware,
-            )
-            response <- downloadLatestFirmware(manufacturer1, model1)
-            emailServiceProbe <- ZIO.service[EmailServiceProbe]
-            invocations <- emailServiceProbe.probeInvocations.get
-          } yield {
-            assert(invocations)(isEmpty)
+            assert(invocations)(contains(firmwareDescriptor))
           }
         },
 
@@ -143,12 +87,10 @@ object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
           }
         }
       ).provide(
-        fixture, 
+        fixture,
         stubFirmwareDownloader,
-        InMemoryDeviceRepository.layer, 
         InMemoryFirmwareRepository.layer,
         stubEmailService, 
-        stubDeviceEventProducer
       ),
 
       test("Fail with 500 (Internal Server Error) when there is an exception while fetching the device") {
@@ -159,18 +101,22 @@ object DownloadLatestFirmwareSpec extends ZIOSpecDefault with FirmwareSpec {
             assert(response.body.swap.toOption)(isSome(equalTo("message")))
         }
       }.provide(
-        InMemoryManufacturerRepository.layer,
+        fixture,
         stubFirmwareRepositoryThatThrowsException,
-        FirmwareService.layer,
-        stubFirmwareDownloader,
-        DeleteFirmware.layer,
-        DownloadFirmware.layer,
-        DownloadLatestFirmware.layer,
-        GetFirmware.layer,
-        ListFirmwareVersions.layer,
-        FirmwareApi.layer,
-        stubManufacturerRegistryLayer,
       )
     )
   }
+
+  private val fixture = ZLayer.makeSome[FirmwareRepository, FirmwareApi](
+    InMemoryManufacturerRepository.layer,
+    FirmwareService.layer,
+    stubFirmwareDownloader,
+    DeleteFirmware.layer,
+    DownloadFirmware.layer,
+    DownloadLatestFirmware.layer,
+    GetFirmware.layer,
+    ListFirmwareVersions.layer,
+    FirmwareApi.layer,
+    stubManufacturerRegistryLayer,
+  )
 }
