@@ -11,7 +11,7 @@ trait ChannelHandler {
 
 object ChannelHandler {
 
-  type PartialChannelHandler = PartialFunction[(WebSocketChannel, WebSocketChannelEvent), Task[Unit]]
+  type PartialChannelHandler = PartialFunction[(WebSocketChannel, Promise[Nothing, Throwable], WebSocketChannelEvent), Task[Unit]]
 
-  val empty: PartialChannelHandler = PartialFunction.empty[(WebSocketChannel, WebSocketChannelEvent), Task[Unit]]
+  val empty: PartialChannelHandler = PartialFunction.empty[(WebSocketChannel, Promise[Nothing, Throwable], WebSocketChannelEvent), Task[Unit]]
 }

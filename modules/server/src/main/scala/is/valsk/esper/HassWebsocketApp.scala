@@ -7,7 +7,7 @@ import zio.*
 import zio.http.*
 
 trait HassWebsocketApp {
-  def run: Task[Nothing]
+  def run: Task[Unit]
 }
 
 object HassWebsocketApp {
@@ -16,22 +16,28 @@ object HassWebsocketApp {
       config: HassConfig,
   ) extends HassWebsocketApp {
 
-    def run: Task[Nothing] = {
-      val client = Handler
-        .webSocket {
-          channel => channel.receiveAll(event => channelHandler(channel, event))
+    private def webSocketHandler(p: Promise[Nothing, Throwable]): ZIO[Client & Scope, Throwable, Response] = {
+      Handler
+        .webSocket { channel =>
+          for {
+            _ <- channel.receiveAll(channelHandler(channel, p, _)).catchAll {
+              e => p.succeed(e) *> ZIO.fail(e)
+            }
+          } yield ()
         }
         .connect(config.webSocketUrl)
-      for {
-        _ <- ZIO.logInfo(s"Connecting to HASS @ ${config.webSocketUrl}")
-        result <- (client *> ZIO.never)
-          .provide(
-            Client.default,
-            Scope.default,
-          )
-          .logError("Error connecting to HASS")
-      } yield result
     }
+
+    override def run: Task[Unit] = ZIO
+      .scoped(for {
+        p <- Promise.make[Nothing, Throwable]
+        _ <- webSocketHandler(p)
+        _ <- p.await
+        _ <- ZIO.logInfo(s"Trying to reconnect...")
+      } yield ())
+      .provide(
+        Client.default,
+      ) *> run
   }
 
   val layer: URLayer[HassConfig & List[ChannelHandler], HassWebsocketApp] = ZLayer {

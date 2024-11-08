@@ -50,7 +50,7 @@ object Application extends ZIOAppDefault {
     firmwareEventDispatcher <- ZIO.service[FirmwareEventDispatcher]
     _ <- ZStream
       .mergeAllUnbounded(16)(
-        ZStream.fromZIO(hassWebsocketApp.run).retry(Schedule.fixed(1000.seconds)),
+        ZStream.fromZIO(hassWebsocketApp.run).retry(Schedule.forever),
         ZStream.fromZIO(apiServerApp.run),
         ZStream.fromZIO(periodicLatestFirmwareDownloadApp.run),
         ZStream.fromZIO(deviceEventDispatcher.run()),
