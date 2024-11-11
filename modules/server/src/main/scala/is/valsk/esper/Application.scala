@@ -12,12 +12,15 @@ import is.valsk.esper.api.ota.endpoints.{FlashDevice, GetDeviceStatus, GetDevice
 import is.valsk.esper.device.shelly.ShellyDeviceHandler
 import is.valsk.esper.device.{DeviceHandler, DeviceProxyRegistry}
 import is.valsk.esper.event.*
+import is.valsk.esper.event.DeviceEvent.{DeviceEventDispatcher, DeviceEventListener, DeviceEventProducer}
+import is.valsk.esper.event.FirmwareEvent.{FirmwareEventDispatcher, FirmwareEventListener, FirmwareEventProducer}
+import is.valsk.esper.event.PendingUpdateEvent.{PendingUpdateEventDispatcher, PendingUpdateEventListener, PendingUpdateEventProducer}
 import is.valsk.esper.hass.messages.{HassResponseMessageParser, MessageIdGenerator, MessageParser, SequentialMessageIdGenerator}
 import is.valsk.esper.hass.protocol.api.{AuthenticationHandler, ConnectHandler, HassResponseMessageHandler, ResultHandler}
 import is.valsk.esper.hass.protocol.{ChannelHandler, ProtocolHandler, TextHandler, UnhandledMessageHandler}
 import is.valsk.esper.listeners.CheckForPendingUpdatesOnDeviceAddedListener.CheckForPendingUpdatesOnDeviceAddedListenerLive
-import is.valsk.esper.listeners.{CheckForPendingUpdatesOnDeviceAddedListener, CheckForPendingUpdatesOnFirmwareAddedListener}
 import is.valsk.esper.listeners.CheckForPendingUpdatesOnFirmwareAddedListener.CheckForPendingUpdatesOnFirmwareAddedListenerLive
+import is.valsk.esper.listeners.{CheckForPendingUpdatesOnDeviceAddedListener, CheckForPendingUpdatesOnFirmwareAddedListener}
 import is.valsk.esper.repositories.*
 import is.valsk.esper.services.*
 import zio.*
@@ -107,6 +110,18 @@ object Application extends ZIOAppDefault {
     )
   }
 
+  private val pendingUpdateEventListenerLayer: URLayer[EmailService & DeviceRepository & PendingUpdateService, List[PendingUpdateEventListener]] = ZLayer {
+    {
+      for {
+        listener <- ZIO.service[CheckForPendingUpdatesOnFirmwareAddedListenerLive]
+      } yield List(
+        listener
+      )
+    }.provideSome[EmailService & DeviceRepository & PendingUpdateService](
+      CheckForPendingUpdatesOnFirmwareAddedListener.layer
+    )
+  }
+  
   private val quillPostgresLayer = Quill.DataSource.fromPrefix("esper.db") >>> Quill.Postgres.fromNamingStrategy(SnakeCase)
 
   override val run: URIO[Any, ExitCode] = ZIO.scoped(program)
@@ -183,6 +198,11 @@ object Application extends ZIOAppDefault {
       FirmwareEventProducer.layer,
       firmwareEventListenerLayer,
       FirmwareEventDispatcher.layer,
+      // Pending Update Events
+      ZLayer.fromZIO(Queue.unbounded[PendingUpdateEvent]),
+      PendingUpdateEventProducer.layer,
+      pendingUpdateEventListenerLayer,
+      PendingUpdateEventDispatcher.layer,
     )
     .onError(cause =>
       val effect = if (cause.failures.exists(_.isInstanceOf[Config.Error])) {

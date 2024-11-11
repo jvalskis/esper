@@ -7,6 +7,8 @@ import is.valsk.esper.domain
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
 import is.valsk.esper.domain.PendingUpdate
+import is.valsk.esper.event.PendingUpdateAdded
+import is.valsk.esper.event.PendingUpdateEvent.PendingUpdateEventProducer
 import is.valsk.esper.model.db.PendingUpdateDto
 import zio.*
 
@@ -18,6 +20,7 @@ object PendingUpdateRepository {
   private class PendingUpdateRepositoryLive(
       quill: Quill.Postgres[SnakeCase],
       deviceRepository: DeviceRepository,
+      pendingUpdateEventProducer: PendingUpdateEventProducer,
   ) extends PendingUpdateRepository {
 
     import quill.*
@@ -49,7 +52,8 @@ object PendingUpdateRepository {
             }
             .map(device => Some(PendingUpdate(
               device = device,
-              version = dto.version
+              version = dto.version,
+              lastNotification = dto.lastNotification,
             )))
           case None => ZIO.succeed(None)
         }
@@ -66,7 +70,8 @@ object PendingUpdateRepository {
         devices <- deviceRepository.getAll.map(_.map(device => device.id -> device).toMap)
         pendingUpdates <- ZIO.foreach(result)(dto => ZIO.succeed(PendingUpdate(
           device = devices(dto.id),
-          version = dto.version
+          version = dto.version,
+          lastNotification = dto.lastNotification,
         )))
       } yield pendingUpdates
     }
@@ -77,9 +82,12 @@ object PendingUpdateRepository {
           .insertValue(lift(map(pendingUpdate)))
           .returning(dto => dto)
       }
-      run(q)
-        .mapError(e => PersistenceException(e.getMessage, Some(e)))
-        .map(_ => pendingUpdate)
+      for {
+        insertedEntity <- run(q)
+          .mapError(e => PersistenceException(e.getMessage, Some(e)))
+          .map(_ => pendingUpdate)
+        _ <- pendingUpdateEventProducer.produceEvent(PendingUpdateAdded(insertedEntity))
+      } yield insertedEntity
     }
 
     override def update(value: PendingUpdate): IO[EntityNotFound | PersistenceException, PendingUpdate] = {
@@ -93,18 +101,20 @@ object PendingUpdateRepository {
         .mapError(e => PersistenceException(e.getMessage, Some(e)))
         .map(_ => value)
     }
-    
+
     override def delete(id: DeviceId): IO[EntityNotFound | PersistenceException, Unit] = ???
-    
+
     private def map(value: PendingUpdate): PendingUpdateDto = {
       PendingUpdateDto(
         id = value.device.id,
-        version = value.version
+        version = value.version,
+        lastNotification = value.lastNotification,
       )
     }
 
   }
 
-  val live: URLayer[Quill.Postgres[SnakeCase] & DeviceRepository, PendingUpdateRepository] = ZLayer.fromFunction(PendingUpdateRepositoryLive(_, _))
+  val live: URLayer[Quill.Postgres[SnakeCase] & DeviceRepository & PendingUpdateEventProducer, PendingUpdateRepository] =
+    ZLayer.derive[PendingUpdateRepositoryLive]
 
 }

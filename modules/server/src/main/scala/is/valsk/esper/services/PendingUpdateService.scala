@@ -55,5 +55,5 @@ object PendingUpdateService {
   }
 
   val layer: URLayer[FirmwareRepository & PendingUpdateRepository & ManufacturerRepository, PendingUpdateService] =
-    ZLayer.fromFunction(PendingUpdateServiceLive(_, _, _))
+    ZLayer.derive[PendingUpdateServiceLive]
 }

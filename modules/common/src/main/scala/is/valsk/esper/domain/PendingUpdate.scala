@@ -2,9 +2,12 @@ package is.valsk.esper.domain
 
 import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
+import java.time.LocalDateTime
+
 case class PendingUpdate(
     device: Device,
-    version: Version
+    version: Version,
+    lastNotification: Option[LocalDateTime] = None,
 )
 
 object PendingUpdate {

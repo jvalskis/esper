@@ -5,7 +5,8 @@ import io.getquill.*
 import io.getquill.jdbczio.Quill
 import is.valsk.esper.domain.*
 import is.valsk.esper.domain.Types.*
-import is.valsk.esper.event.{FirmwareDownloaded, FirmwareEventProducer}
+import is.valsk.esper.event.FirmwareDownloaded
+import is.valsk.esper.event.FirmwareEvent.FirmwareEventProducer
 import is.valsk.esper.repositories.FirmwareRepository.FirmwareKey
 import zio.*
 

@@ -3,6 +3,7 @@ package is.valsk.esper.repositories
 import is.valsk.esper.domain.Device
 import is.valsk.esper.domain.Types.DeviceId
 import is.valsk.esper.event.*
+import is.valsk.esper.event.DeviceEvent.DeviceEventProducer
 import zio.*
 
 class InMemoryDeviceRepository(

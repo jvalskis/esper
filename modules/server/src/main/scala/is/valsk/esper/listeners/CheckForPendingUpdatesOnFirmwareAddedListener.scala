@@ -2,6 +2,7 @@ package is.valsk.esper.listeners
 
 import is.valsk.esper.domain.*
 import is.valsk.esper.event.*
+import is.valsk.esper.event.FirmwareEvent.FirmwareEventListener
 import is.valsk.esper.repositories.DeviceRepository
 import is.valsk.esper.services.{EmailService, PendingUpdateService}
 import zio.{Task, URLayer, ZIO, ZLayer}
